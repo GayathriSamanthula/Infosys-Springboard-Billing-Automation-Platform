@@ -1,0 +1,28 @@
+from passlib.context import CryptContext
+
+
+password_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
+
+
+def hash_password(password: str) -> str:
+    """
+    Converts a plain password into a secure hashed password.
+    """
+    return password_context.hash(password)
+
+
+def verify_password(
+    plain_password: str,
+    hashed_password: str
+) -> bool:
+    """
+    Checks whether the entered password matches
+    the hashed password stored in the database.
+    """
+    return password_context.verify(
+        plain_password,
+        hashed_password
+    )

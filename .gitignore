@@ -1,0 +1,16 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+backend/venv/
+
+# Environment variables
+.env
+
+# Celery Beat schedule files
+celerybeat-schedule*
+# Python cache
+__pycache__/
+*.pyc
