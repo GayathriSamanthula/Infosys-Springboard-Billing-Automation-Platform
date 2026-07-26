@@ -1,9 +1,8 @@
 from datetime import date, datetime
-
+from typing import Optional
 from pydantic import BaseModel
 
-from backend.app.models.subscription import SubscriptionStatus
-
+from app.models.subscription import SubscriptionStatus
 
 
 class SubscriptionBase(BaseModel):
@@ -20,16 +19,17 @@ class SubscriptionCreate(BaseModel):
     customer_id: int
     plan_id: int
     auto_renew: bool = True
-    
+    status: Optional[SubscriptionStatus] = None
+
 
 class SubscriptionUpdate(BaseModel):
-    customer_id: int | None = None
-    plan_id: int | None = None
-    start_date: date | None = None
-    end_date: date | None = None
-    next_billing_date: date | None = None
-    status: SubscriptionStatus | None = None
-    auto_renew: bool | None = None
+    customer_id: Optional[int] = None
+    plan_id: Optional[int] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    next_billing_date: Optional[date] = None
+    status: Optional[SubscriptionStatus] = None
+    auto_renew: Optional[bool] = None
 
 
 class SubscriptionResponse(SubscriptionBase):
@@ -37,10 +37,16 @@ class SubscriptionResponse(SubscriptionBase):
     is_deleted: bool
     cancel_at_period_end: bool
 
-    trial_started_at: datetime | None = None
-    activated_at: datetime | None = None
-    past_due_at: datetime | None = None
-    cancelled_at: datetime | None = None
-    pause_date: datetime | None = None
+    customer_name: Optional[str] = None
+    customer_email: Optional[str] = None
+    plan_name: Optional[str] = None
+
+    trial_started_at: Optional[datetime] = None
+    activated_at: Optional[datetime] = None
+    past_due_at: Optional[datetime] = None
+    cancelled_at: Optional[datetime] = None
+    pause_date: Optional[datetime] = None
+
     class Config:
         from_attributes = True
+        use_enum_values = True

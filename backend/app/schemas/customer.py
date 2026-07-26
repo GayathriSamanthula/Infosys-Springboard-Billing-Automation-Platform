@@ -11,7 +11,16 @@ class CustomerBase(BaseModel):
 
 
 class CustomerCreate(CustomerBase):
-    customer_status: str
+    customer_status: Optional[str] = "ACTIVE"
+
+
+class CustomerUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone_number: Optional[str] = None
+    country: Optional[str] = None
+    address: Optional[str] = None
+    customer_status: Optional[str] = None
 
 
 class CustomerResponse(CustomerBase):

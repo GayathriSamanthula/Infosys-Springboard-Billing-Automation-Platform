@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from backend.app.database.database import get_db
-from backend.app.schemas.notification import (
+from app.database.database import get_db
+from app.schemas.notification import (
     NotificationCreate,
     NotificationResponse,
 )
-from backend.app.services.notification_service import (
+from app.services.notification_service import (
     create_notification,
     get_notifications,
     get_notification,

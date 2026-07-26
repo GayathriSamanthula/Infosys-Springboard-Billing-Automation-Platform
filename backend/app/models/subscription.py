@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey, Boolean
-from backend.app.database.database import Base
-from sqlalchemy import Enum, DateTime
+from sqlalchemy import Column, Integer, String, Date, ForeignKey, Boolean, Enum, DateTime
+from sqlalchemy.orm import relationship
+from app.database.database import Base
 from datetime import datetime
 import enum
 
@@ -11,7 +11,8 @@ class SubscriptionStatus(str, enum.Enum):
     PAST_DUE = "PAST_DUE"
     CANCELLED = "CANCELLED"
     PAUSED = "PAUSED"
-    
+
+
 class Subscription(Base):
     __tablename__ = "subscriptions"
 
@@ -45,15 +46,15 @@ class Subscription(Base):
     )
 
     status = Column(
-    Enum(SubscriptionStatus),
-    default=SubscriptionStatus.TRIAL,
-    nullable=False
+        Enum(SubscriptionStatus),
+        default=SubscriptionStatus.TRIAL,
+        nullable=False
     )
     
     trial_started_at = Column(
-    DateTime,
-    default=datetime.utcnow,
-    nullable=False
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False
     )
 
     activated_at = Column(
@@ -89,3 +90,9 @@ class Subscription(Base):
         Boolean,
         default=False
     )
+
+    customer = relationship("Customer", back_populates="subscriptions")
+    plan = relationship("Plan", back_populates="subscriptions")
+    invoices = relationship("Invoice", back_populates="subscription", cascade="all, delete-orphan")
+    payments = relationship("Payment", back_populates="subscription", cascade="all, delete-orphan")
+    billing_cycles = relationship("BillingCycle", back_populates="subscription", cascade="all, delete-orphan")

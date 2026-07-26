@@ -1,0 +1,40 @@
+:root {
+  --primary-color: #F59E0B;
+  --primary-hover: #D97706;
+  --bg-default: #111827;
+  --bg-paper: #FFFFFF;
+  --bg-sidebar: #1F2937;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-default);
+  font-family: "Inter", "Plus Jakarta Sans", sans-serif;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: #FEF3C7;
+  color: #D97706;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111827;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #F59E0B;
+}

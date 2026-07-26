@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from typing import Optional
 
-from backend.app.database.database import get_db
-from backend.app.schemas.plan import PlanCreate, PlanResponse
-from backend.app.services.plan_service import (
+from app.database.database import get_db
+from app.schemas.plan import PlanCreate, PlanUpdate, PlanResponse
+from app.services.plan_service import (
     create_plan,
     get_all_plans,
     get_plan_by_id,
@@ -29,15 +30,18 @@ def create_subscription_plan(
 ):
     return create_plan(db, plan)
 
+
 @router.get(
     "/",
     response_model=list[PlanResponse]
 )
 def get_subscription_plans(
-    status: str = None,
+    status: Optional[str] = Query(None, description="Filter by status"),
+    include_archived: bool = Query(False, description="Include archived plans"),
     db: Session = Depends(get_db)
 ):
-    return get_all_plans(db, status)
+    return get_all_plans(db, status=status, include_archived=include_archived)
+
 
 @router.get(
     "/{plan_id}",
@@ -49,16 +53,18 @@ def get_subscription_plan(
 ):
     return get_plan_by_id(db, plan_id)
 
+
 @router.put(
     "/{plan_id}",
     response_model=PlanResponse
 )
 def update_subscription_plan(
     plan_id: int,
-    plan: PlanCreate,
+    plan: PlanUpdate,
     db: Session = Depends(get_db)
 ):
     return update_plan(db, plan_id, plan)
+
 
 @router.delete(
     "/{plan_id}"
@@ -68,6 +74,7 @@ def delete_subscription_plan(
     db: Session = Depends(get_db)
 ):
     return delete_plan(db, plan_id)
+
 
 @router.put(
     "/{plan_id}/archive",

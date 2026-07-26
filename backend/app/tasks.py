@@ -1,31 +1,40 @@
-from backend.app.models.customer import Customer
-from backend.app.models.subscription import Subscription
-from backend.app.models.plan import Plan
-from backend.app.celery_app import celery_app
-from backend.app.database.database import SessionLocal
-from backend.app.services.subscription_service import process_due_subscription_renewals
+from app.models.customer import Customer
+from app.models.subscription import Subscription
+from app.models.plan import Plan
+from app.celery_app import celery_app
+from app.database.database import SessionLocal
+from app.services.subscription_service import process_due_subscription_renewals
+from app.services.billing_cycle_service import generate_due_invoices
 
 
 @celery_app.task(name="subscription.process_renewals")
 def process_subscription_renewals():
     """
-    Background task that processes subscription renewals.
+    Background task that processes subscription renewals automatically.
     """
-
     db = SessionLocal()
-
     try:
         processed = process_due_subscription_renewals(db)
-        print("Processed value:", processed)
-        print("Processed type:", type(processed))
-        # TODO: After implementing invoice_service.generate_invoice(),
-        # automatically generate invoices for successfully renewed subscriptions.
-
         return {
             "status": "success",
             "processed_subscriptions": processed,
             "count": len(processed)
         }
+    finally:
+        db.close()
 
+
+@celery_app.task(name="billing.generate_due_invoices")
+def generate_due_billing_invoices():
+    """
+    Background task that generates due invoices for active subscriptions automatically.
+    """
+    db = SessionLocal()
+    try:
+        res = generate_due_invoices(db)
+        return {
+            "status": "success",
+            "result": res
+        }
     finally:
         db.close()

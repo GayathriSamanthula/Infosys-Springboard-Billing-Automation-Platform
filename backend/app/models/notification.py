@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Date, ForeignKey, Boolean
-from backend.app.database.database import Base
+from sqlalchemy.orm import relationship
+from app.database.database import Base
 
 
 class Notification(Base):
@@ -47,3 +48,5 @@ class Notification(Base):
         Boolean,
         default=False
     )
+
+    customer = relationship("Customer", back_populates="notifications")

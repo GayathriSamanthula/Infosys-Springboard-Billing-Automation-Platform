@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, Float, String, Date, ForeignKey, Boolean
-from backend.app.database.database import Base
+from sqlalchemy.orm import relationship
+from app.database.database import Base
 
 
 class Payment(Base):
@@ -52,3 +53,5 @@ class Payment(Base):
         Boolean,
         default=False
     )
+
+    subscription = relationship("Subscription", back_populates="payments")

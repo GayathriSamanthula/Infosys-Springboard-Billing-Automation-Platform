@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, Float, String, Date, ForeignKey, Boolean
-from backend.app.database.database import Base
+from sqlalchemy.orm import relationship
+from app.database.database import Base
 
 
 class Invoice(Base):
@@ -21,6 +22,12 @@ class Invoice(Base):
 
     amount = Column(
         Float,
+        nullable=False
+    )
+
+    tax_amount = Column(
+        Float,
+        default=0.0,
         nullable=False
     )
 
@@ -48,7 +55,23 @@ class Invoice(Base):
         String(255)
     )
 
+    refund_amount = Column(
+        Float,
+        default=0.0,
+        nullable=False
+    )
+
+    billing_direction = Column(
+        String(50),
+        default="CUSTOMER_PAYS",
+        nullable=False
+    )
+
     is_deleted = Column(
         Boolean,
         default=False
     )
+
+    subscription = relationship("Subscription", back_populates="invoices")
+    line_items = relationship("InvoiceLineItem", back_populates="invoice", cascade="all, delete-orphan")
+    refunds = relationship("Refund", back_populates="invoice", cascade="all, delete-orphan")

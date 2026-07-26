@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from backend.app.models.audit_log import AuditLog
-from backend.app.schemas.audit_log import AuditLogCreate
+from app.models.audit_log import AuditLog
+from app.schemas.audit_log import AuditLogCreate
 
 
 def create_audit_log(db: Session, audit_log: AuditLogCreate):
@@ -12,7 +12,7 @@ def create_audit_log(db: Session, audit_log: AuditLogCreate):
 
 
 def get_audit_logs(db: Session):
-    return db.query(AuditLog).all()
+    return db.query(AuditLog).order_by(AuditLog.id.desc()).all()
 
 
 def get_audit_log(db: Session, audit_log_id: int):

@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
+from typing import Optional, List
 
-from backend.app.database.database import get_db
-from backend.app.schemas.customer import CustomerCreate, CustomerResponse
-from backend.app.services.customer_service import (
+from app.database.database import get_db
+from app.schemas.customer import CustomerCreate, CustomerUpdate, CustomerResponse
+from app.services.customer_service import (
     create_customer,
     get_all_customers,
     get_customer_by_id,
+    get_customer_history,
     update_customer,
     delete_customer
 )
@@ -17,9 +19,11 @@ router = APIRouter(
 )
 
 
+
 @router.post(
     "/",
-    response_model=CustomerResponse
+    response_model=CustomerResponse,
+    status_code=status.HTTP_201_CREATED
 )
 def create_new_customer(
     customer: CustomerCreate,
@@ -30,12 +34,13 @@ def create_new_customer(
 
 @router.get(
     "/",
-    response_model=list[CustomerResponse]
+    response_model=List[CustomerResponse]
 )
 def get_customers(
     db: Session = Depends(get_db)
 ):
     return get_all_customers(db)
+
 
 @router.get(
     "/{customer_id}",
@@ -47,16 +52,28 @@ def get_customer(
 ):
     return get_customer_by_id(db, customer_id)
 
+
+@router.get(
+    "/{customer_id}/history"
+)
+def get_customer_activity_history(
+    customer_id: int,
+    db: Session = Depends(get_db)
+):
+    return get_customer_history(db, customer_id)
+
+
 @router.put(
     "/{customer_id}",
     response_model=CustomerResponse
 )
 def update_existing_customer(
     customer_id: int,
-    customer: CustomerCreate,
+    customer: CustomerUpdate,
     db: Session = Depends(get_db)
 ):
     return update_customer(db, customer_id, customer)
+
 
 @router.delete("/{customer_id}")
 def remove_customer(
@@ -64,5 +81,3 @@ def remove_customer(
     db: Session = Depends(get_db)
 ):
     return delete_customer(db, customer_id)
-
-

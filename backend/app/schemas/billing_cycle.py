@@ -3,6 +3,9 @@ from datetime import date
 from pydantic import BaseModel
 
 
+from typing import Optional
+
+
 class BillingCycleBase(BaseModel):
     subscription_id: int
     billing_start_date: date
@@ -18,6 +21,9 @@ class BillingCycleCreate(BillingCycleBase):
 
 class BillingCycleResponse(BillingCycleBase):
     id: int
+    customer_name: Optional[str] = None
+    customer_email: Optional[str] = None
+    plan_name: Optional[str] = None
 
     class Config:
         from_attributes = True

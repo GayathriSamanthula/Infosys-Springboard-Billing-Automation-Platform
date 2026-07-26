@@ -3,14 +3,25 @@ from datetime import timedelta
 from sqlalchemy.orm import Session
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
+from app.models.subscription import Subscription, SubscriptionStatus
+from app.schemas.subscription import SubscriptionCreate,SubscriptionUpdate
+from app.models.plan import Plan
+from app.models.invoice import Invoice
+from app.models.billing_cycle import BillingCycle
+from app.schemas.audit_log import AuditLogCreate
+from app.services.audit_log_service import create_audit_log
+from app.services.invoice_service import (
+    create_invoice,
+    generate_itemized_invoice,
+)
+from app.services.notification_service import send_subscription_notification
+from app.schemas.invoice import InvoiceCreate
+from app.models.customer import Customer
 
-from backend.app.models.subscription import Subscription, SubscriptionStatus
-from backend.app.schemas.subscription import SubscriptionCreate,SubscriptionUpdate
-from backend.app.models.plan import Plan
-from backend.app.models.invoice import Invoice
-from backend.app.schemas.audit_log import AuditLogCreate
-from backend.app.services.audit_log_service import create_audit_log
-from backend.app.services.invoice_service import create_invoice
+
+def _get_customer_name(db: Session, customer_id: int) -> str:
+    c = db.query(Customer).filter(Customer.id == customer_id).first()
+    return c.full_name if c else f"Customer #{customer_id}"
 
 
 def create_subscription(db: Session, subscription: SubscriptionCreate):
@@ -38,22 +49,34 @@ def create_subscription(db: Session, subscription: SubscriptionCreate):
     )
         
     today = date.today()
+    now = datetime.utcnow()
 
-    if plan.trial_period_days > 0:
+    # Module 1 Requirement: Determine Initial Subscription Status based on Plan Trial Period
+    if getattr(subscription, 'status', None) is not None:
+        initial_status = subscription.status
+    elif plan.trial_period_days and plan.trial_period_days > 0:
+        initial_status = SubscriptionStatus.TRIAL
+    else:
+        initial_status = SubscriptionStatus.ACTIVE
+
+    if initial_status == SubscriptionStatus.TRIAL:
         start_date = today
-        next_billing_date = today + timedelta(days=plan.trial_period_days)
-        status = SubscriptionStatus.TRIAL
+        trial_days = plan.trial_period_days or 14
+        next_billing_date = today + timedelta(days=trial_days)
+        trial_started_at = now
+        activated_at = None
     else:
         start_date = today
         next_billing_date = today
-        status = SubscriptionStatus.ACTIVE
+        trial_started_at = now
+        activated_at = now
 
-    if plan.billing_cycle.lower() == "monthly":
-        end_date = next_billing_date + timedelta(days=30)
+    if plan.billing_cycle.lower() in ["monthly", "annual"]:
+        end_date = next_billing_date + timedelta(days=30 if plan.billing_cycle.lower() == "monthly" else 365)
     elif plan.billing_cycle.lower() == "yearly":
         end_date = next_billing_date + timedelta(days=365)
     else:
-        end_date = next_billing_date
+        end_date = next_billing_date + timedelta(days=30)
 
     db_subscription = Subscription(
         customer_id=subscription.customer_id,
@@ -61,8 +84,10 @@ def create_subscription(db: Session, subscription: SubscriptionCreate):
         start_date=start_date,
         end_date=end_date,
         next_billing_date=next_billing_date,
-        status=status,
-        auto_renew=subscription.auto_renew
+        status=initial_status,
+        auto_renew=subscription.auto_renew,
+        trial_started_at=trial_started_at,
+        activated_at=activated_at
     )
 
     db.add(db_subscription)
@@ -72,24 +97,43 @@ def create_subscription(db: Session, subscription: SubscriptionCreate):
         db,
         AuditLogCreate(
             event="Subscription Created",
-            performed_by=str(db_subscription.customer_id),
-            description=f"Subscription {db_subscription.id} created." 
+            performed_by="System",
+            customer_id=db_subscription.customer_id,
+            description=f"Subscription #{db_subscription.id} created with initial status '{initial_status.value if hasattr(initial_status, 'value') else initial_status}' for plan '{plan.name}'." 
         )
     )
 
     return db_subscription
 
 
-def get_all_subscriptions(db: Session):
-    return (
-        db.query(Subscription)
-        .filter(Subscription.is_deleted == False)
-        .all()
-    )
-    
-    
+def _enrich_subscription(db: Session, sub: Subscription):
+    if not sub:
+        return None
+    cust = db.query(Customer).filter(Customer.id == sub.customer_id).first()
+    plan = db.query(Plan).filter(Plan.id == sub.plan_id).first()
+    if cust:
+        sub.customer_name = cust.full_name
+        sub.customer_email = cust.email
+    if plan:
+        sub.plan_name = plan.name
+    return sub
+
+
+def get_all_subscriptions(
+    db: Session,
+    status: str = None
+):
+    query = db.query(Subscription).filter(Subscription.is_deleted == False)
+
+    if status:
+        query = query.filter(Subscription.status == status.upper())
+
+    subs = query.order_by(Subscription.id.desc()).all()
+    return [_enrich_subscription(db, s) for s in subs]
+
+
 def get_subscription_by_id(db: Session, subscription_id: int):
-    return (
+    sub = (
         db.query(Subscription)
         .filter(
             Subscription.id == subscription_id,
@@ -97,6 +141,14 @@ def get_subscription_by_id(db: Session, subscription_id: int):
         )
         .first()
     )
+    if not sub:
+        raise HTTPException(
+            status_code=404,
+            detail="Subscription not found"
+        )
+    return _enrich_subscription(db, sub)
+
+
 
 
 def update_subscription(
@@ -159,21 +211,23 @@ def update_subscription(
     db.commit()
     db.refresh(db_subscription)
     if old_status != new_status:
-      create_audit_log(
-        db,
-        AuditLogCreate(
-            event="Status Changed",
-            performed_by=str(db_subscription.customer_id),
-            description=f"Subscription status changed from {old_status.value} to {new_status.value}."
+        create_audit_log(
+            db,
+            AuditLogCreate(
+                event="Status Changed",
+                performed_by="System",
+                customer_id=db_subscription.customer_id,
+                description=f"Subscription status changed from {old_status.value if hasattr(old_status, 'value') else old_status} to {new_status.value if hasattr(new_status, 'value') else new_status}."
+            )
         )
-    )
-      
+
     create_audit_log(
         db,
         AuditLogCreate(
             event="Subscription Updated",
-            performed_by=str(db_subscription.customer_id),
-            description=f"Subscription {db_subscription.id} updated."
+            performed_by="System",
+            customer_id=db_subscription.customer_id,
+            description=f"Subscription #{db_subscription.id} updated."
         )
     )
 
@@ -213,14 +267,36 @@ def pause_subscription(db: Session, subscription_id: int):
     if not subscription:
         return None
 
-    if subscription.status != SubscriptionStatus.ACTIVE:
+    status_str = subscription.status.value if hasattr(subscription.status, 'value') else str(subscription.status)
+    if status_str.upper() != "ACTIVE":
         return None
 
+    old_status = subscription.status
     subscription.status = SubscriptionStatus.PAUSED
     subscription.pause_date = datetime.utcnow()
 
     db.commit()
     db.refresh(subscription)
+
+    create_audit_log(
+        db,
+        AuditLogCreate(
+            event="Subscription Paused",
+            performed_by="System",
+            customer_id=subscription.customer_id,
+            description=f"Subscription #{subscription.id} was paused."
+        )
+    )
+
+    create_audit_log(
+        db,
+        AuditLogCreate(
+            event="Status Changed",
+            performed_by="System",
+            customer_id=subscription.customer_id,
+            description=f"Subscription #{subscription.id} status changed from {old_status.value if hasattr(old_status, 'value') else old_status} to PAUSED."
+        )
+    )
 
     return subscription
 
@@ -238,9 +314,11 @@ def resume_subscription(db: Session, subscription_id: int):
     if not subscription:
         return None
 
-    if subscription.status != SubscriptionStatus.PAUSED:
+    status_str = subscription.status.value if hasattr(subscription.status, 'value') else str(subscription.status)
+    if status_str.upper() != "PAUSED":
         return None
 
+    old_status = subscription.status
     subscription.status = SubscriptionStatus.ACTIVE
     subscription.pause_date = None
     subscription.activated_at = datetime.utcnow()
@@ -251,8 +329,19 @@ def resume_subscription(db: Session, subscription_id: int):
         db,
         AuditLogCreate(
             event="Subscription Resumed",
-            performed_by=str(subscription.customer_id),
-            description=f"Subscription {subscription.id} was resumed."
+            performed_by="System",
+            customer_id=subscription.customer_id,
+            description=f"Subscription #{subscription.id} was resumed."
+        )
+    )
+
+    create_audit_log(
+        db,
+        AuditLogCreate(
+            event="Status Changed",
+            performed_by="System",
+            customer_id=subscription.customer_id,
+            description=f"Subscription #{subscription.id} status changed from {old_status.value if hasattr(old_status, 'value') else old_status} to ACTIVE."
         )
     )
 
@@ -278,8 +367,6 @@ def get_subscriptions_ready_for_billing(db: Session):
     return subscriptions
 
 
-from datetime import date
-
 def generate_due_invoices(db: Session):
     today = date.today()
 
@@ -294,8 +381,8 @@ def generate_due_invoices(db: Session):
         .all()
     )
 
+    generated_invoices = []
     for subscription in due_subscriptions:
-
         plan = (
             db.query(Plan)
             .filter(Plan.id == subscription.plan_id)
@@ -305,64 +392,27 @@ def generate_due_invoices(db: Session):
         if not plan:
             continue
 
-        invoice = Invoice(
+        inv = generate_itemized_invoice(
+            db=db,
             subscription_id=subscription.id,
-            invoice_number=f"INV-{subscription.id}-{today.strftime('%Y%m%d')}",
-            amount=plan.price,
-            issue_date=today,
-            due_date=today,
-            status="PENDING",
+            proration_credit=0.0,
+            proration_debit=0.0,
+            tax_rate=0.18,
             remarks="Automatically generated by billing engine"
         )
+        generated_invoices.append(inv)
 
-        db.add(invoice)
         # Update next billing date based on billing cycle
         if plan.billing_cycle.upper() == "MONTHLY":
             subscription.next_billing_date = subscription.next_billing_date + timedelta(days=30)
-
         elif plan.billing_cycle.upper() == "YEARLY":
             subscription.next_billing_date = subscription.next_billing_date + timedelta(days=365)
 
         db.commit()
-        db.refresh(invoice)
+
+    return generated_invoices
         
-def pause_subscription(db: Session, subscription_id: int):
-    subscription = (
-        db.query(Subscription)
-        .filter(
-            Subscription.id == subscription_id,
-            Subscription.is_deleted == False
-        )
-        .first()
-    )
 
-    if not subscription:
-        raise HTTPException(
-            status_code=404,
-            detail="Subscription not found"
-        )
-
-    if subscription.status != SubscriptionStatus.ACTIVE:
-        raise HTTPException(
-            status_code=400,
-            detail="Only ACTIVE subscriptions can be paused"
-        )
-
-    subscription.status = SubscriptionStatus.PAUSED
-    subscription.pause_date = datetime.utcnow()
-
-    db.commit()
-    db.refresh(subscription)
-    create_audit_log(
-        db,
-        AuditLogCreate(
-            event="Subscription Paused",
-            performed_by=str(subscription.customer_id),
-            description=f"Subscription {subscription.id} was paused."
-        )
-    )
-
-    return subscription  
 
 
 from datetime import datetime
@@ -380,8 +430,9 @@ def cancel_subscription(db: Session, subscription_id: int):
     if subscription is None:
         return None
 
-    if subscription.status == SubscriptionStatus.CANCELLED:
-        return subscription
+    old_status = subscription.status
+    status_str = old_status.value if hasattr(old_status, 'value') else str(old_status)
+    is_trial = (status_str.upper() == "TRIAL")
 
     subscription.status = SubscriptionStatus.CANCELLED
     subscription.cancelled_at = datetime.utcnow()
@@ -389,12 +440,30 @@ def cancel_subscription(db: Session, subscription_id: int):
 
     db.commit()
     db.refresh(subscription)
+
+    audit_desc = (
+        f"Trial Subscription #{subscription.id} was cancelled during trial period. No charges or refunds incurred."
+        if is_trial else
+        f"Subscription #{subscription.id} was cancelled."
+    )
+
     create_audit_log(
         db,
         AuditLogCreate(
             event="Subscription Cancelled",
-            performed_by=str(subscription.customer_id),
-            description=f"Subscription {subscription.id} was cancelled."
+            performed_by="System",
+            customer_id=subscription.customer_id,
+            description=audit_desc
+        )
+    )
+
+    create_audit_log(
+        db,
+        AuditLogCreate(
+            event="Status Changed",
+            performed_by="System",
+            customer_id=subscription.customer_id,
+            description=f"Subscription #{subscription.id} status changed from {old_status.value if hasattr(old_status, 'value') else old_status} to CANCELLED."
         )
     )
 
@@ -515,7 +584,7 @@ def get_subscriptions_by_customer(db: Session, customer_id: int):
         .all()
     )
 
-    return subscriptions
+    return [_enrich_subscription(db, s) for s in subscriptions]
 
 
 def schedule_subscription_cancellation(db: Session, subscription_id: int):
@@ -647,18 +716,36 @@ def process_due_subscription_renewals(db: Session):
     Process all active subscriptions that are due for renewal.
     Used by the Celery scheduler.
     """
+    print("Today's date:", date.today())
 
+    all_subscriptions = db.query(Subscription).all()
+    
+    print("ALL SUBSCRIPTIONS")
+    for s in all_subscriptions:
+        print(
+            "ID:", s.id,
+            "Status:", s.status,
+            "Deleted:", s.is_deleted,
+            "Next Billing:", s.next_billing_date
+        )
+    
     due_subscriptions = (
         db.query(Subscription)
         .filter(
             Subscription.status == SubscriptionStatus.ACTIVE,
             Subscription.is_deleted == False,
-            Subscription.next_billing_date <= datetime.utcnow()
+            Subscription.next_billing_date <= date.today()
         )
         .all()
     )
+    
+    print("Due subscriptions:", len(due_subscriptions))
 
     processed_subscriptions = []
+    
+    if not due_subscriptions:
+        print("No subscriptions due.")
+        return []
 
     for subscription in due_subscriptions:
         print("Function:", process_subscription_renewal)
@@ -670,6 +757,9 @@ def process_due_subscription_renewals(db: Session):
             subscription_id=subscription.id
         )
         
+        print("renewed_subscription =", renewed_subscription)
+        print("type =", type(renewed_subscription))
+        
 
         if renewed_subscription is None:
             continue
@@ -679,18 +769,47 @@ def process_due_subscription_renewals(db: Session):
 
         try:
             # Generate invoice after successful renewal
-            create_invoice(
-                db=db,
-                subscription_id=subscription.id
+            plan = (
+                db.query(Plan)
+                .filter(Plan.id == subscription.plan_id)
+                .first()
             )
+
+            if not plan:
+                continue
+            
+            
+            generate_itemized_invoice(
+                db=db,
+                subscription_id=subscription.id,
+                proration_credit=0.0,
+                proration_debit=0.0,
+                tax_rate=0.0,
+                remarks="Automatically generated by Celery renewal"
+            )
+
+            # Record Billing Cycle entry
+            db_cycle = BillingCycle(
+                subscription_id=subscription.id,
+                billing_start_date=date.today(),
+                billing_end_date=subscription.next_billing_date,
+                renewal_date=subscription.next_billing_date,
+                next_billing_date=subscription.next_billing_date,
+                cycle_status="PROCESSED",
+                is_processed=True
+            )
+            db.add(db_cycle)
+            db.commit()
 
             # Record audit log
             create_audit_log(
-                db=db,
-                action="SUBSCRIPTION_RENEWED",
-                entity_type="Subscription",
-                entity_id=subscription.id,
-                description="Subscription renewed automatically by Celery Beat."
+                db,
+                AuditLogCreate(
+                    event="Subscription Renewed",
+                    performed_by=_get_customer_name(db, subscription.customer_id),
+                    customer_id=subscription.customer_id,
+                    description=f"Subscription #{subscription.id} renewed automatically by Celery Beat."
+                )
             )
 
             # Send notification
@@ -700,10 +819,14 @@ def process_due_subscription_renewals(db: Session):
             )
 
         except Exception as e:
-            print(f"Background task error for subscription {subscription.id}: {e}")
+            import traceback
+
+            print("========== ERROR ==========")
+            traceback.print_exc()
+            print("===========================")
 
         processed_subscriptions.append(subscription.id)
         
-        print("Returning:", processed_subscriptions)
-        return processed_subscriptions
+    print("Returning:", processed_subscriptions)
+    return processed_subscriptions
         

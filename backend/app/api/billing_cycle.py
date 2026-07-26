@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from backend.app.database.database import get_db
-from backend.app.schemas.billing_cycle import (
+from app.database.database import get_db
+from app.schemas.billing_cycle import (
     BillingCycleCreate,
     BillingCycleResponse,
 )
-from backend.app.services.billing_cycle_service import (
+from app.services.billing_cycle_service import (
     create_billing_cycle,
     get_all_billing_cycles,
     get_billing_cycle,

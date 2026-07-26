@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from backend.app.database.database import get_db
-from backend.app.schemas.audit_log import AuditLogCreate, AuditLogResponse
-from backend.app.services.audit_log_service import (
+from app.database.database import get_db
+from app.schemas.audit_log import AuditLogCreate, AuditLogResponse
+from app.services.audit_log_service import (
     create_audit_log,
     get_audit_logs,
     get_audit_log,

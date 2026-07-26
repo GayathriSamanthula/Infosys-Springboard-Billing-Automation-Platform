@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, DateTime
-from backend.app.database.database import Base
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from app.database.database import Base
 from datetime import datetime
 
 
@@ -18,6 +19,18 @@ class AuditLog(Base):
         nullable=False
     )
 
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=True
+    )
+
+    customer_id = Column(
+        Integer,
+        ForeignKey("customers.id"),
+        nullable=True
+    )
+
     description = Column(
         String(255),
         nullable=False
@@ -28,3 +41,6 @@ class AuditLog(Base):
         default=datetime.utcnow,
         nullable=False
     )
+
+    user = relationship("User", back_populates="audit_logs")
+    customer = relationship("Customer", back_populates="audit_logs")

@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, Date, ForeignKey, String, Boolean
-from backend.app.database.database import Base
+from sqlalchemy.orm import relationship
+from app.database.database import Base
 
 
 class BillingCycle(Base):
@@ -43,3 +44,5 @@ class BillingCycle(Base):
         Boolean,
         default=False
     )
+
+    subscription = relationship("Subscription", back_populates="billing_cycles")

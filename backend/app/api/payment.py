@@ -1,13 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from typing import Optional
 
-from backend.app.database.database import get_db
-from backend.app.schemas.payment import PaymentCreate, PaymentResponse
-from backend.app.services.payment_service import (
+from app.database.database import get_db
+from app.schemas.payment import (
+    PaymentCreate,
+    PaymentResponse,
+    PaymentProcessRequest,
+    PaymentProcessResponse,
+)
+from app.services.payment_service import (
     create_payment,
     get_all_payments,
     get_payment_by_id,
     delete_payment,
+    process_payment,
+    retry_failed_payment,
 )
 
 router = APIRouter(
@@ -63,3 +71,30 @@ def remove_payment(
     return {
         "message": "Payment deleted successfully"
     }
+
+
+@router.post(
+    "/process",
+    response_model=PaymentProcessResponse,
+)
+def process_payment_request(
+    request: PaymentProcessRequest,
+    db: Session = Depends(get_db),
+):
+    result = process_payment(
+        db=db,
+        request=request,
+    )
+
+    return result["gateway_response"]
+
+
+@router.post("/{payment_id}/retry")
+def retry_payment_request(
+    payment_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    M8 Gap Endpoint: Retry a failed payment attempt through Mock Payment Gateway.
+    """
+    return retry_failed_payment(db=db, payment_id=payment_id)
