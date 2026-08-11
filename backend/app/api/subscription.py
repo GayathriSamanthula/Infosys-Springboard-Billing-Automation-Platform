@@ -141,9 +141,10 @@ def remove_subscription(
 @router.put("/{subscription_id}/cancel")
 def cancel_subscription_api(
     subscription_id: int,
+    request_refund: bool = True,
     db: Session = Depends(get_db)
 ):
-    cancelled_subscription = cancel_subscription(db, subscription_id)
+    cancelled_subscription = cancel_subscription(db, subscription_id, request_refund=request_refund)
 
     if cancelled_subscription is None:
         raise HTTPException(
@@ -158,7 +159,7 @@ def cancel_subscription_api(
         )
 
     return {
-        "message": "Subscription cancelled successfully",
+        "message": "Subscription cancelled successfully and prorated refund processed.",
         "subscription": cancelled_subscription
     }
     

@@ -40,4 +40,9 @@ export const subscriptionService = {
     const response = await api.put(ENDPOINTS.CANCEL_SUBSCRIPTION(id));
     return response.data;
   },
+
+  cancelAtPeriodEnd: async (id) => {
+    const response = await api.put(`/subscriptions/${id}/cancel-period-end`);
+    return response.data;
+  },
 };

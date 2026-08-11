@@ -9,6 +9,7 @@ from app.services.customer_service import (
     get_all_customers,
     get_customer_by_id,
     get_customer_history,
+    get_customer_portal_dashboard,
     update_customer,
     delete_customer
 )
@@ -61,6 +62,25 @@ def get_customer_activity_history(
     db: Session = Depends(get_db)
 ):
     return get_customer_history(db, customer_id)
+
+
+@router.get(
+    "/{customer_id}/portal"
+)
+def get_customer_landing_portal_data(
+    customer_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Returns dedicated Customer Portal / Landing Page dashboard data:
+    - Customer Profile Details
+    - Active Subscription & Plan Price/Cycle
+    - Invoices & Billing History
+    - Payment History
+    - Account Notifications
+    - Spend Summary Metrics
+    """
+    return get_customer_portal_dashboard(db, customer_id)
 
 
 @router.put(

@@ -13,10 +13,14 @@ export const refundService = {
   },
 
   processRefund: async (data) => {
-    const response = await api.post(ENDPOINTS.PROCESS_REFUND, {
+    const payload = {
       invoice_id: Number(data.invoice_id),
       reason: data.reason || null,
-    });
+    };
+    if (data.amount !== undefined && data.amount !== null && data.amount !== '') {
+      payload.amount = Number(data.amount);
+    }
+    const response = await api.post(ENDPOINTS.PROCESS_REFUND, payload);
     return response.data;
   },
 };

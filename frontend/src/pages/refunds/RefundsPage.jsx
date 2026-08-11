@@ -51,8 +51,10 @@ const RefundsPage = () => {
       await refundService.processRefund(data);
       showNotification('Refund processed successfully', 'success');
       fetchRefunds();
-    } catch {
-      showNotification('Failed to process refund', 'error');
+      window.dispatchEvent(new CustomEvent('dashboard_refresh'));
+    } catch (error) {
+      const errorMsg = error?.response?.data?.detail || 'Failed to process refund';
+      showNotification(errorMsg, 'error');
     }
   };
 

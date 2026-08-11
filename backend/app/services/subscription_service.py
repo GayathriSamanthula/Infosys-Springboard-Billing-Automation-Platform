@@ -71,9 +71,14 @@ def create_subscription(db: Session, subscription: SubscriptionCreate):
         trial_started_at = now
         activated_at = now
 
-    if plan.billing_cycle.lower() in ["monthly", "annual"]:
-        end_date = next_billing_date + timedelta(days=30 if plan.billing_cycle.lower() == "monthly" else 365)
-    elif plan.billing_cycle.lower() == "yearly":
+    cycle_lower = (plan.billing_cycle or "monthly").lower()
+    if cycle_lower == "monthly":
+        end_date = next_billing_date + timedelta(days=30)
+    elif cycle_lower == "quarterly":
+        end_date = next_billing_date + timedelta(days=90)
+    elif cycle_lower in ["semi_annually", "semi_annual", "semi-annually", "semi-annual"]:
+        end_date = next_billing_date + timedelta(days=182)
+    elif cycle_lower in ["yearly", "annual"]:
         end_date = next_billing_date + timedelta(days=365)
     else:
         end_date = next_billing_date + timedelta(days=30)
@@ -86,6 +91,7 @@ def create_subscription(db: Session, subscription: SubscriptionCreate):
         next_billing_date=next_billing_date,
         status=initial_status,
         auto_renew=subscription.auto_renew,
+        platform_source=getattr(subscription, "platform_source", None) or "NEXORA_DIRECT",
         trial_started_at=trial_started_at,
         activated_at=activated_at
     )
@@ -116,6 +122,14 @@ def _enrich_subscription(db: Session, sub: Subscription):
         sub.customer_email = cust.email
     if plan:
         sub.plan_name = plan.name
+    if not getattr(sub, 'platform_source', None):
+        setattr(sub, 'platform_source', 'NEXORA_DIRECT')
+    if not getattr(sub, 'start_date', None):
+        setattr(sub, 'start_date', date.today())
+    if not getattr(sub, 'end_date', None):
+        setattr(sub, 'end_date', date.today() + timedelta(days=30))
+    if not getattr(sub, 'next_billing_date', None):
+        setattr(sub, 'next_billing_date', sub.end_date)
     return sub
 
 
@@ -129,7 +143,14 @@ def get_all_subscriptions(
         query = query.filter(Subscription.status == status.upper())
 
     subs = query.order_by(Subscription.id.desc()).all()
-    return [_enrich_subscription(db, s) for s in subs]
+    seen_ids = set()
+    unique_subs = []
+    for s in subs:
+        if s.id not in seen_ids:
+            seen_ids.add(s.id)
+            unique_subs.append(s)
+
+    return [_enrich_subscription(db, s) for s in unique_subs]
 
 
 def get_subscription_by_id(db: Session, subscription_id: int):
@@ -417,7 +438,7 @@ def generate_due_invoices(db: Session):
 
 from datetime import datetime
 
-def cancel_subscription(db: Session, subscription_id: int):
+def cancel_subscription(db: Session, subscription_id: int, request_refund: bool = True):
     subscription = (
         db.query(Subscription)
         .filter(
@@ -441,10 +462,32 @@ def cancel_subscription(db: Session, subscription_id: int):
     db.commit()
     db.refresh(subscription)
 
+    # Process Prorated Refund if requested and subscription is not trial
+    if request_refund and not is_trial:
+        try:
+            from app.services.refund_service import process_subscription_refund
+            from app.schemas.refund import RefundRequest
+            target_invoice = (
+                db.query(Invoice)
+                .filter(Invoice.subscription_id == subscription.id)
+                .order_by(Invoice.id.desc())
+                .first()
+            )
+            if target_invoice and target_invoice.status in ["PAID", "UNPAID"]:
+                process_subscription_refund(
+                    db,
+                    RefundRequest(
+                        invoice_id=target_invoice.id,
+                        reason="Customer requested cancellation and prorated refund"
+                    )
+                )
+        except Exception as refund_err:
+            print("Cancellation prorated refund notice:", refund_err)
+
     audit_desc = (
         f"Trial Subscription #{subscription.id} was cancelled during trial period. No charges or refunds incurred."
         if is_trial else
-        f"Subscription #{subscription.id} was cancelled."
+        f"Subscription #{subscription.id} was cancelled and prorated refund was processed."
     )
 
     create_audit_log(

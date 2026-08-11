@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Nexora Payment Action Required</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #1e293b; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+    .test-banner { background-color: #ef4444; color: #ffffff; font-size: 12px; font-weight: bold; text-align: center; padding: 8px 12px; letter-spacing: 0.5px; }
+    .header { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); padding: 30px; text-align: center; color: #ffffff; }
+    .header h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .header p { margin: 6px 0 0 0; opacity: 0.9; font-size: 14px; }
+    .badge-failed { display: inline-block; background-color: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 10px; }
+    .content { padding: 30px; }
+    .greeting { font-size: 16px; margin-bottom: 20px; }
+    .alert-box { background: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; border-radius: 4px; margin-bottom: 24px; color: #7f1d1d; font-size: 14px; }
+    .receipt-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+    .receipt-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #cbd5e1; font-size: 14px; }
+    .receipt-row:last-child { border-bottom: none; font-weight: bold; font-size: 16px; color: #0f172a; padding-top: 12px; }
+    .receipt-label { color: #64748b; }
+    .receipt-value { color: #0f172a; text-align: right; }
+    .btn-container { text-align: center; margin: 30px 0 10px 0; }
+    .btn { background: #dc2626; color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; display: inline-block; }
+    .footer { background: #f1f5f9; padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    {% if is_dev_mode %}
+    <div class="test-banner">
+      🧪 [DEV TEST MODE] Intended Recipient: {{ customer_name }} ({{ customer_email }})
+    </div>
+    {% endif %}
+    
+    <div class="header">
+      <h1>NEXORA BILLING</h1>
+      <p>Payment Action Required</p>
+      <span class="badge-failed">Payment Attempt Failed</span>
+    </div>
+
+    <div class="content">
+      <div class="greeting">
+        Hello <strong>{{ customer_name }}</strong>,
+      </div>
+      
+      <div class="alert-box">
+        ⚠️ <strong>Important Notice:</strong> We were unable to process your payment for Invoice <strong>{{ invoice_number }}</strong>. Your subscription has been marked as <strong>PAST_DUE</strong>.
+      </div>
+
+      <p>Please update your billing information or retry payment to prevent any service interruption to your subscription.</p>
+
+      <div class="receipt-box">
+        <div class="receipt-row">
+          <span class="receipt-label">Invoice Number</span>
+          <span class="receipt-value">{{ invoice_number }}</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Attempted Date</span>
+          <span class="receipt-value">{{ payment_date }}</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Current Status</span>
+          <span class="receipt-value" style="color: #ef4444; font-weight: bold;">PAST_DUE</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Outstanding Balance</span>
+          <span class="receipt-value">${{ amount }}</span>
+        </div>
+      </div>
+
+      <div class="btn-container">
+        <a href="http://localhost/customer/login" class="btn">Update Payment Details</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      &copy; 2026 Nexora Billing Automation Engine. All rights reserved.<br>
+      Need help? Contact support at support@nexora.com
+    </div>
+  </div>
+</body>
+</html>

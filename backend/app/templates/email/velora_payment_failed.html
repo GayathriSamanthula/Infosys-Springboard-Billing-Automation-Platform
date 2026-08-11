@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Velora Payment Alert</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #0b0f19; margin: 0; padding: 20px; color: #f1f5f9; }
+    .container { max-width: 600px; margin: 0 auto; background: #111827; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #1f2937; }
+    .test-banner { background-color: #f43f5e; color: #ffffff; font-size: 12px; font-weight: bold; text-align: center; padding: 8px 12px; letter-spacing: 0.5px; }
+    .header { background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); padding: 32px; text-align: center; color: #ffffff; }
+    .header h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+    .header p { margin: 6px 0 0 0; opacity: 0.9; font-size: 14px; color: #ffe4e6; }
+    .badge-failed { display: inline-block; background: rgba(244, 63, 94, 0.2); border: 1px solid #f43f5e; color: #fda4af; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 12px; }
+    .content { padding: 32px; }
+    .greeting { font-size: 16px; margin-bottom: 20px; color: #f8fafc; }
+    .alert-box { background: rgba(225, 29, 72, 0.1); border-left: 4px solid #f43f5e; padding: 16px; border-radius: 6px; margin-bottom: 24px; color: #fecdd3; font-size: 14px; }
+    .receipt-box { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+    .receipt-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #374151; font-size: 14px; }
+    .receipt-row:last-child { border-bottom: none; font-weight: bold; font-size: 16px; color: #f43f5e; padding-top: 14px; }
+    .receipt-label { color: #9ca3af; }
+    .receipt-value { color: #f3f4f6; text-align: right; }
+    .btn-container { text-align: center; margin: 30px 0 10px 0; }
+    .btn { background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 700; font-size: 14px; display: inline-block; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4); }
+    .footer { background: #0f172a; padding: 22px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #1e293b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    {% if is_dev_mode %}
+    <div class="test-banner">
+      🧪 [DEV TEST MODE] Intended Recipient: {{ customer_name }} ({{ customer_email }})
+    </div>
+    {% endif %}
+    
+    <div class="header">
+      <h1>VELORA FINTECH</h1>
+      <p>Payment Processing Alert</p>
+      <span class="badge-failed">⚠ Payment Failed</span>
+    </div>
+
+    <div class="content">
+      <div class="greeting">
+        Hello <strong>{{ customer_name }}</strong>,
+      </div>
+      
+      <div class="alert-box">
+        🚨 <strong>Action Required:</strong> We attempted to charge your billing account for invoice <strong>{{ invoice_number }}</strong>, but the transaction was declined. Your Velora account status is now <strong>PAST_DUE</strong>.
+      </div>
+
+      <div class="receipt-box">
+        <div class="receipt-row">
+          <span class="receipt-label">Invoice Ref</span>
+          <span class="receipt-value">{{ invoice_number }}</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Attempted Date</span>
+          <span class="receipt-value">{{ payment_date }}</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Account Status</span>
+          <span class="receipt-value" style="color: #f43f5e; font-weight: bold;">PAST_DUE</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Amount Due</span>
+          <span class="receipt-value">${{ amount }} USD</span>
+        </div>
+      </div>
+
+      <div class="btn-container">
+        <a href="http://localhost/velora/customer/login" class="btn">Update Payment Details</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      &copy; 2026 Velora Fintech Platform. Powered by Nexora Billing Architecture.<br>
+      Please update your payment method to maintain uninterrupted service.
+    </div>
+  </div>
+</body>
+</html>

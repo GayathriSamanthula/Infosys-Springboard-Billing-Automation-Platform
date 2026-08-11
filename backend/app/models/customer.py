@@ -12,7 +12,9 @@ class Customer(Base):
     phone_number = Column(String(20), unique=True)
     country = Column(String(60))
     address = Column(String(255))
+    password = Column(String(255), nullable=True)
     customer_status = Column(String(20), default="ACTIVE", nullable=False)
+    platform_source = Column(String(50), default="NEXORA_DIRECT", nullable=False)
     is_deleted = Column(Boolean, default=False)
 
     subscriptions = relationship("Subscription", back_populates="customer", cascade="all, delete-orphan")

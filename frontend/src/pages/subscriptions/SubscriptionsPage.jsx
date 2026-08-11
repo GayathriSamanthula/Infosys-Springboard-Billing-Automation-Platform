@@ -10,6 +10,10 @@ import {
   DialogContent,
   DialogActions,
   Grid,
+  Chip,
+  Card,
+  CardContent,
+  Avatar,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
@@ -17,6 +21,9 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import PersonSearchIcon from '@mui/icons-material/PersonSearch';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useNavigate } from 'react-router-dom';
 
 import DataTable from '../../components/common/DataTable';
@@ -44,13 +51,19 @@ const SubscriptionsPage = () => {
     setLoading(true);
     try {
       const data = await subscriptionService.getAll();
-      setSubscriptions(data);
+      const uniqueData = Array.from(new Map((Array.isArray(data) ? data : []).map(item => [item.id, item])).values());
+      setSubscriptions(uniqueData);
     } catch {
       showNotification('Failed to fetch subscriptions', 'error');
     } finally {
       setLoading(false);
     }
   };
+
+  const activeSubCount = subscriptions.filter(s => ['ACTIVE', 'PAID', 'TRIAL'].includes(String(s.status || '').toUpperCase())).length;
+  const totalSubCount = subscriptions.length;
+  const pausedSubCount = subscriptions.filter(s => String(s.status || '').toUpperCase() === 'PAUSED').length;
+  const cancelledSubCount = subscriptions.filter(s => String(s.status || '').toUpperCase() === 'CANCELLED').length;
 
   useEffect(() => {
     fetchSubscriptions();
@@ -61,6 +74,7 @@ const SubscriptionsPage = () => {
       await subscriptionService.create(data);
       showNotification('Subscription activated successfully', 'success');
       fetchSubscriptions();
+      window.dispatchEvent(new CustomEvent('dashboard_refresh'));
     } catch {
       showNotification('Failed to create subscription', 'error');
     }
@@ -81,6 +95,7 @@ const SubscriptionsPage = () => {
       }
       setConfirmOpen(false);
       fetchSubscriptions();
+      window.dispatchEvent(new CustomEvent('dashboard_refresh'));
     } catch {
       showNotification(`Failed to ${actionType} subscription`, 'error');
     }
@@ -90,17 +105,20 @@ const SubscriptionsPage = () => {
     { id: 'id', label: 'Sub ID', render: (row) => `#${row.id}`, width: '90px' },
     {
       id: 'customer_name',
-      label: 'Customer',
+      label: 'Customer & Customer ID',
       render: (row) => (
         <Box>
           <Typography fontWeight={700} color="#0f172a">
             {row.customer_name || row.customerName || `Customer #${row.customer_id}`}
           </Typography>
-          {row.customer_email && (
-            <Typography variant="caption" color="#64748b" display="block">
-              {row.customer_email}
-            </Typography>
-          )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.3 }}>
+            <Chip
+              size="small"
+              label={`Customer ID: #${row.customer_id}`}
+              onClick={() => navigate(`/customers?id=${row.customer_id}`)}
+              sx={{ bgcolor: '#e0f2fe', color: '#0284c7', fontWeight: 800, cursor: 'pointer', fontSize: '0.72rem' }}
+            />
+          </Box>
         </Box>
       ),
     },
@@ -121,6 +139,26 @@ const SubscriptionsPage = () => {
       ),
     },
 
+    {
+      id: 'platform_source',
+      label: 'Origin Channel',
+      render: (row) => {
+        const isVelora = String(row.platform_source || '').toUpperCase().includes('VELORA');
+        return (
+          <Chip
+            size="small"
+            label={isVelora ? 'Velora Gateway' : 'Nexora Direct'}
+            sx={{
+              bgcolor: isVelora ? '#fff7ed' : '#e0f2fe',
+              color: isVelora ? '#e65100' : '#0284c7',
+              border: `1.5px solid ${isVelora ? '#f57c00' : '#0284c7'}`,
+              fontWeight: 800,
+              fontSize: '0.72rem',
+            }}
+          />
+        );
+      },
+    },
     { id: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
     { id: 'start_date', label: 'Start Date', render: (row) => formatDate(row.start_date) },
     { id: 'next_billing_date', label: 'Next Renewal', render: (row) => formatDate(row.next_billing_date || row.end_date) },
@@ -130,6 +168,14 @@ const SubscriptionsPage = () => {
       align: 'right',
       render: (row) => (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+          <Tooltip title="Inspect Customer (Method A)">
+            <IconButton
+              size="small"
+              onClick={() => navigate(`/customers?id=${row.customer_id}`)}
+            >
+              <PersonSearchIcon fontSize="small" sx={{ color: '#0284c7' }} />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="View Details">
             <IconButton
               size="small"
@@ -147,7 +193,7 @@ const SubscriptionsPage = () => {
               size="small"
               onClick={() => navigate(`/subscriptions/change-plan/${row.id}`)}
             >
-              <SwapHorizIcon fontSize="small" sx={{ color: '#F59E0B' }} />
+              <SwapHorizIcon fontSize="small" sx={{ color: '#0284c7' }} />
             </IconButton>
           </Tooltip>
 
@@ -161,7 +207,7 @@ const SubscriptionsPage = () => {
                   setConfirmOpen(true);
                 }}
               >
-                <PauseCircleIcon fontSize="small" sx={{ color: '#F97316' }} />
+                <PauseCircleIcon fontSize="small" sx={{ color: '#0284c7' }} />
               </IconButton>
             </Tooltip>
           )}
@@ -204,10 +250,10 @@ const SubscriptionsPage = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
-          <Typography variant="h4" fontWeight={900} color="#F9FAFB" gutterBottom>
+          <Typography variant="h4" fontWeight={900} color="#0f172a" gutterBottom>
             Subscriptions Engine
           </Typography>
-          <Typography variant="body2" color="#F59E0B" fontWeight={600}>
+          <Typography variant="body2" color="#0284c7" fontWeight={600}>
             Manage subscriber billing lifecycles, plans, and renewals
           </Typography>
         </Box>
@@ -215,18 +261,36 @@ const SubscriptionsPage = () => {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setCreateOpen(true)}
-          sx={{ py: 1.2, px: 2.5 }}
+          sx={{ py: 1.2, px: 2.5, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' }, fontWeight: 800 }}
         >
           Create Subscription
         </Button>
       </Box>
+
+      {/* SUBSCRIPTIONS ENGINE TOP KPI SUMMARY CARD */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {/* CARD: LIVE ACTIVE SUBSCRIBERS */}
+        <Grid item xs={12} sm={6} md={4}>
+          <Card sx={{ p: 0.5, borderRadius: 2.5, bgcolor: '#FFFFFF', border: '2px solid #0284c7', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.22)' }}>
+            <CardContent sx={{ p: 1.2, '&:last-child': { pb: 1.2 } }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                <Typography variant="caption" sx={{ color: '#0284c7', fontWeight: 900, fontSize: '0.72rem' }}>LIVE ACTIVE SUBSCRIBERS</Typography>
+                <Avatar sx={{ bgcolor: '#0284c7', color: '#ffffff', width: 28, height: 28, boxShadow: '0 2px 8px rgba(2, 132, 199, 0.4)' }}>
+                  <AutorenewIcon sx={{ fontSize: '1rem' }} />
+                </Avatar>
+              </Box>
+              <Typography variant="h5" fontWeight={900} color="#0284c7">{activeSubCount}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       <DataTable
         columns={columns}
         data={subscriptions}
         loading={loading}
         emptyTitle="No subscriptions found."
-        emptyDescription="There are currently no active subscriptions in your FastAPI backend database. Click below to activate a subscription!"
+        emptyDescription="There are currently no active subscriptions in your database."
         filterField="status"
         filterOptions={[
           { label: 'Active', value: 'ACTIVE' },

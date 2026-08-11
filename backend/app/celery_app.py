@@ -28,6 +28,10 @@ celery_app.conf.update(
         "billing-cycle-invoice-scheduler": {
             "task": "billing.generate_due_invoices",
             "schedule": 60.0,  # Runs every 60 seconds
+        },
+        "dunning-retry-scheduler": {
+            "task": "dunning.process_due_retries",
+            "schedule": 60.0,  # Runs every 60 seconds
         }
     }
 )

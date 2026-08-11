@@ -25,7 +25,17 @@ const PlansPage = () => {
     setLoading(true);
     try {
       const data = await planService.getAll();
-      setPlans(Array.isArray(data) ? data : []);
+      const uniquePlans = Array.isArray(data)
+        ? Array.from(
+            new Map(
+              data.map((p) => [
+                p.name ? p.name.trim().toLowerCase() : p.id,
+                p,
+              ])
+            ).values()
+          )
+        : [];
+      setPlans(uniquePlans);
     } catch {
       showNotification('Failed to fetch subscription plans from backend API', 'error');
       setPlans([]);
@@ -43,6 +53,7 @@ const PlansPage = () => {
       await planService.create(data);
       showNotification('Subscription plan created in database', 'success');
       fetchPlans();
+      window.dispatchEvent(new CustomEvent('dashboard_refresh'));
     } catch (err) {
       showNotification(String(err?.response?.data?.detail || 'Failed to create plan in backend'), 'error');
     }
@@ -54,6 +65,7 @@ const PlansPage = () => {
       await planService.update(selectedPlan.id, data);
       showNotification('Subscription plan updated in database', 'success');
       fetchPlans();
+      window.dispatchEvent(new CustomEvent('dashboard_refresh'));
     } catch (err) {
       showNotification(String(err?.response?.data?.detail || 'Failed to update plan in backend'), 'error');
     }
@@ -66,67 +78,30 @@ const PlansPage = () => {
       showNotification('Plan archived in database', 'success');
       setArchiveOpen(false);
       fetchPlans();
+      window.dispatchEvent(new CustomEvent('dashboard_refresh'));
     } catch (err) {
       showNotification(String(err?.response?.data?.detail || 'Failed to archive plan in backend'), 'error');
     }
   };
 
   const columns = [
-    { id: 'id', label: 'ID', render: (row) => `#${row.id}`, width: '80px' },
     {
       id: 'name',
       label: 'Plan Name',
       render: (row) => (
-        <Box>
-          <Typography fontWeight={700} color="#0f172a">{row.name}</Typography>
-          {row.description && (
-            <Typography variant="caption" color="#64748b" display="block">
-              {row.description}
-            </Typography>
-          )}
-        </Box>
+        <Typography fontWeight={900} color="#0284c7">
+          {row.name}
+        </Typography>
       ),
     },
     {
       id: 'price',
       label: 'Price',
       render: (row) => (
-        <Typography fontWeight={700} color="#F59E0B">
+        <Typography fontWeight={900} color="#0f172a">
           {formatCurrency(row.price)}
         </Typography>
       ),
-    },
-
-    {
-      id: 'billing_cycle',
-      label: 'Billing Cycle',
-      render: (row) => (
-        <Chip
-          label={row.billing_cycle || 'monthly'}
-          size="small"
-          variant="outlined"
-          sx={{ textTransform: 'capitalize', fontWeight: 600, borderColor: '#D1D5DB', color: '#111827' }}
-        />
-      ),
-    },
-    {
-      id: 'trial_period_days',
-      label: 'Trial Period',
-      render: (row) => `${row.trial_period_days ?? 0} Days`,
-    },
-    {
-      id: 'features',
-      label: 'Features',
-      render: (row) => (
-        <Typography variant="body2" color="#4B5563" noWrap sx={{ maxWidth: 200 }}>
-          {row.features || 'N/A'}
-        </Typography>
-      ),
-    },
-    {
-      id: 'status',
-      label: 'Status',
-      render: (row) => <StatusBadge status={row.status || (row.is_archived ? 'ARCHIVED' : 'ACTIVE')} />,
     },
     {
       id: 'actions',
@@ -142,7 +117,7 @@ const PlansPage = () => {
                 setFormOpen(true);
               }}
             >
-              <EditIcon fontSize="small" sx={{ color: '#F59E0B' }} />
+              <EditIcon fontSize="small" sx={{ color: '#0284c7' }} />
             </IconButton>
           </Tooltip>
           {!row.is_archived && row.status !== 'ARCHIVED' && (
@@ -154,7 +129,7 @@ const PlansPage = () => {
                   setArchiveOpen(true);
                 }}
               >
-                <ArchiveIcon fontSize="small" sx={{ color: '#F97316' }} />
+                <ArchiveIcon fontSize="small" sx={{ color: '#64748b' }} />
               </IconButton>
             </Tooltip>
           )}
@@ -167,10 +142,10 @@ const PlansPage = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
-          <Typography variant="h4" fontWeight={900} color="#F9FAFB" gutterBottom>
+          <Typography variant="h4" fontWeight={900} color="#000000" gutterBottom>
             Subscription Plans
           </Typography>
-          <Typography variant="body2" color="#F59E0B" fontWeight={600}>
+          <Typography variant="body2" color="#64748b" fontWeight={700}>
             Configure pricing tiers, billing cycles (monthly/annual), and trial period entitlements
           </Typography>
         </Box>

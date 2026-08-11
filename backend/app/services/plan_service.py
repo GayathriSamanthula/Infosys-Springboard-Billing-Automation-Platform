@@ -41,16 +41,8 @@ def create_plan(db: Session, plan: PlanCreate):
     return db_plan
 
 
-def get_all_plans(db: Session, status: Optional[str] = None, include_archived: bool = False):
-    query = db.query(Plan).filter(Plan.is_deleted == False)
-
-    if not include_archived and status != "ARCHIVED":
-        query = query.filter(Plan.is_archived == False)
-
-    if status:
-        query = query.filter(Plan.status == status)
-
-    return query.order_by(Plan.id.desc()).all()
+def get_all_plans(db: Session):
+    return db.query(Plan).filter(Plan.is_deleted == False).order_by(Plan.id.asc()).all()
 
 
 def get_plan_by_id(db: Session, plan_id: int):
@@ -169,3 +161,29 @@ def archive_plan(db: Session, plan_id: int):
     )
 
     return existing_plan
+
+
+def init_default_plans(db: Session):
+    """Seed standard 4 pricing plans across Nexora and Velora platforms."""
+    default_plans = [
+        {"name": "Basic Plan", "price": 499.0, "billing_cycle": "MONTHLY", "description": "Essential billing automation for individuals & growing startups."},
+        {"name": "Premium Plan", "price": 999.0, "billing_cycle": "MONTHLY", "description": "Advanced proration engine, tax calculations, and email receipts."},
+        {"name": "Premium Plus Plan", "price": 1499.0, "billing_cycle": "MONTHLY", "description": "Enterprise-grade Fintech billing, dedicated webhooks & priority SLA."},
+        {"name": "Premium Pro Plan", "price": 2000.0, "billing_cycle": "MONTHLY", "description": "Full custom automated workflow suite with multi-currency taxation support."},
+    ]
+    for dp in default_plans:
+        existing = db.query(Plan).filter(Plan.name.ilike(dp["name"]), Plan.is_deleted == False).first()
+        if not existing:
+            new_p = Plan(
+                name=dp["name"],
+                description=dp["description"],
+                price=dp["price"],
+                billing_cycle=dp["billing_cycle"],
+                status="ACTIVE"
+            )
+            db.add(new_p)
+        else:
+            existing.price = dp["price"]
+            existing.status = "ACTIVE"
+            existing.is_archived = False
+    db.commit()

@@ -18,11 +18,15 @@ export const paymentService = {
   },
 
   processPayment: async (data) => {
-    const response = await api.post(ENDPOINTS.PROCESS_PAYMENT, {
+    const payload = {
       subscription_id: Number(data.subscription_id),
       amount: Number(data.amount),
       payment_method: data.payment_method,
-    });
+    };
+    if (data.invoice_id) {
+      payload.invoice_id = Number(data.invoice_id);
+    }
+    const response = await api.post(ENDPOINTS.PROCESS_PAYMENT, payload);
     return response.data;
   },
 };

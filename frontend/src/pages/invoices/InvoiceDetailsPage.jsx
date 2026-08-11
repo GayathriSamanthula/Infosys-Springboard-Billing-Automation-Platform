@@ -79,19 +79,28 @@ const InvoiceDetailsPage = () => {
         </Button>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
+            variant="contained"
+            color="success"
+            startIcon={<DownloadIcon />}
+            onClick={() => window.open(invoiceService.downloadPdfUrl(invoice.id), '_blank')}
+            sx={{ textTransform: 'none', fontWeight: 800 }}
+          >
+            Download ReportLab PDF
+          </Button>
+          <Button
             variant="outlined"
             startIcon={<DownloadIcon />}
             onClick={() => window.open(invoiceService.downloadHtmlUrl(invoice.id), '_blank')}
-            sx={{ textTransform: 'none' }}
+            sx={{ textTransform: 'none', fontWeight: 700 }}
           >
-            Print / Download Statement
+            Print / HTML Statement
           </Button>
-          {(invoice.status === 'PENDING' || invoice.status === 'pending') && (
+          {(invoice.status === 'PENDING' || invoice.status === 'pending' || invoice.status === 'UNPAID') && (
             <Button
               variant="contained"
               color="primary"
               startIcon={<CreditCardIcon />}
-              onClick={() => navigate('/payments/process', { state: { subscription_id: invoice.subscription_id, amount: invoice.amount, invoice_number: invoice.invoice_number } })}
+              onClick={() => navigate('/payments/process', { state: { subscription_id: invoice.subscription_id, invoice_id: invoice.id, amount: invoice.amount, invoice_number: invoice.invoice_number } })}
             >
               Process Payment Now
             </Button>

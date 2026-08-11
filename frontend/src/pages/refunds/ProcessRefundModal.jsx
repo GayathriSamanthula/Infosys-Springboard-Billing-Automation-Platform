@@ -11,13 +11,13 @@ const ProcessRefundModal = ({ open, onClose, onSubmit }) => {
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       invoice_id: '',
-      reason: 'Customer requested unused period refund upon downgrade',
+      reason: '',
     },
   });
 
   useEffect(() => {
     if (open) {
-      reset({ invoice_id: '', reason: 'Customer requested unused period refund upon downgrade' });
+      reset({ invoice_id: '', reason: '' });
       invoiceService.getAll().then((list) => {
         setInvoices(list);
       });
@@ -25,12 +25,9 @@ const ProcessRefundModal = ({ open, onClose, onSubmit }) => {
   }, [open, reset]);
 
   const handleFormSubmit = (data) => {
-    const inv = invoices.find((i) => i.id === Number(data.invoice_id));
     onSubmit({
       invoice_id: Number(data.invoice_id),
-      customerName: inv?.customerName || 'Subscriber',
-      amount: inv ? inv.amount * 0.25 : 1000.0,
-      reason: data.reason,
+      reason: data.reason || 'Customer refund request',
     });
     onClose();
   };

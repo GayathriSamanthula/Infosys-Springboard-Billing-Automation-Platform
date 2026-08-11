@@ -17,6 +17,16 @@ export const customerService = {
     return response.data;
   },
 
+  getHistory: async (id) => {
+    try {
+      const response = await api.get(`/customers/${id}/history`);
+      return response.data;
+    } catch (err) {
+      const custRes = await api.get(ENDPOINTS.CUSTOMER_BY_ID(id));
+      return { customer: custRes.data, subscriptions: [], invoices: [] };
+    }
+  },
+
   create: async (data) => {
     const response = await api.post(ENDPOINTS.CUSTOMERS, {
       full_name: data.full_name,

@@ -1,9 +1,9 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export const ENDPOINTS = {
   // Auth
-  LOGIN: '/auth/login',
-  REGISTER: '/auth/register',
+  LOGIN: '/auth/admin/login',
+  REGISTER: '/auth/admin/register',
 
   // Customers
   CUSTOMERS: '/customers/',
@@ -27,6 +27,7 @@ export const ENDPOINTS = {
   // Invoices (Module 2)
   INVOICES: '/invoices/',
   INVOICE_BY_ID: (id) => `/invoices/${id}`,
+  INVOICES_BY_CUSTOMER: (customerId) => `/invoices/customer/${customerId}`,
   GENERATE_INVOICE: '/invoices/generate-itemized',
 
   // Payments (Module 2)

@@ -35,10 +35,12 @@ const ProcessPaymentPage = () => {
 
   const prefilledSubId = location.state?.subscription_id || 101;
   const prefilledAmount = location.state?.amount || 9438.82;
+  const prefilledInvoiceId = location.state?.invoice_id || '';
 
   const { control, handleSubmit, setValue, watch } = useForm({
     defaultValues: {
       subscription_id: prefilledSubId,
+      invoice_id: prefilledInvoiceId,
       amount: prefilledAmount,
       payment_method: 'Credit Card',
     },
@@ -52,10 +54,23 @@ const ProcessPaymentPage = () => {
     setSubmitting(true);
     setPaymentResult(null);
     try {
-      const result = await paymentService.processPayment(data);
+      const payload = {
+        ...data,
+        subscription_id: parseInt(data.subscription_id, 10),
+        invoice_id: data.invoice_id ? parseInt(data.invoice_id, 10) : undefined,
+        amount: parseFloat(data.amount),
+      };
+      const result = await paymentService.processPayment(payload);
       setPaymentResult(result);
-      if (result.payment_status === 'success' || result.payment_status === 'SUCCESS') {
+      const isSuccess =
+        result &&
+        (String(result.payment_status).toUpperCase() === 'SUCCESS' ||
+          String(result.status).toUpperCase() === 'SUCCESS' ||
+          String(result.payment_status).toUpperCase() === 'PAID');
+
+      if (isSuccess) {
         showNotification('Payment processed successfully!', 'success');
+        window.dispatchEvent(new CustomEvent('dashboard_refresh'));
       } else {
         showNotification('Payment gateway transaction failed', 'error');
       }
@@ -99,6 +114,20 @@ const ProcessPaymentPage = () => {
                 type="number"
                 rules={{ required: 'Subscription ID is required' }}
               />
+
+              <FormInput
+                name="invoice_id"
+                control={control}
+                label="Target Invoice (Optional - Linked via FK)"
+                select
+              >
+                <MenuItem value="">Auto-Detect Open Invoice for Subscription</MenuItem>
+                {invoices.map((inv) => (
+                  <MenuItem key={inv.id} value={inv.id}>
+                    {inv.invoice_number} — {formatCurrency(inv.amount)} ({inv.status})
+                  </MenuItem>
+                ))}
+              </FormInput>
 
               <FormInput
                 name="amount"

@@ -82,7 +82,7 @@ const DataTable = ({
   }, [filteredData, page, rowsPerPage]);
 
   return (
-    <Paper sx={{ width: '100%', mb: 2, overflow: 'hidden', border: '1px solid #E5E7EB', borderRadius: 3, bgcolor: '#FFFFFF' }}>
+    <Paper sx={{ width: '100%', mb: 2, overflow: 'hidden', border: '2px solid #0284c7', borderRadius: 3, bgcolor: '#FFFFFF !important', background: '#FFFFFF !important' }}>
       <Box
         sx={{
           p: 2.5,
@@ -91,8 +91,9 @@ const DataTable = ({
           gap: 2,
           alignItems: 'center',
           justifyContent: 'space-between',
-          backgroundColor: '#FFFFFF',
-          borderBottom: '1px solid #E5E7EB',
+          backgroundColor: '#FFFFFF !important',
+          background: '#FFFFFF !important',
+          borderBottom: '2px solid #E5E7EB',
         }}
       >
         <Box sx={{ display: 'flex', gap: 2, flex: 1, minWidth: 280, maxWidth: 500 }}>
@@ -105,7 +106,7 @@ const DataTable = ({
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: '#F59E0B' }} />
+                  <SearchIcon sx={{ color: '#0284c7' }} />
                 </InputAdornment>
               ),
             }}
@@ -114,8 +115,8 @@ const DataTable = ({
               borderRadius: 1,
               '& .MuiOutlinedInput-root': {
                 '& fieldset': { borderColor: '#D1D5DB' },
-                '&:hover fieldset': { borderColor: '#F59E0B' },
-                '&.Mui-focused fieldset': { borderColor: '#F59E0B' },
+                '&:hover fieldset': { borderColor: '#0284c7' },
+                '&.Mui-focused fieldset': { borderColor: '#0284c7' },
               },
             }}
           />
@@ -131,8 +132,8 @@ const DataTable = ({
                   backgroundColor: '#FFFFFF',
                   color: '#111827',
                   '& .MuiOutlinedInput-notchedOutline': { borderColor: '#D1D5DB' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#F59E0B' },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#F59E0B' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#0284c7' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#0284c7' },
                 }}
               >
                 <MenuItem value="ALL">All Statuses</MenuItem>
@@ -147,9 +148,9 @@ const DataTable = ({
         </Box>
       </Box>
 
-      <TableContainer>
+      <TableContainer sx={{ bgcolor: '#FFFFFF !important', background: '#FFFFFF !important' }}>
         {loading ? (
-          <Box sx={{ p: 2 }}>
+          <Box sx={{ p: 2, bgcolor: '#FFFFFF !important' }}>
             <TableSkeleton rows={rowsPerPage > 5 ? 5 : rowsPerPage} columns={columns.length} />
           </Box>
         ) : paginatedData.length === 0 ? (
@@ -160,28 +161,34 @@ const DataTable = ({
             onAction={onAddClick}
           />
         ) : (
-          <Table sx={{ minWidth: 650 }}>
-            <TableHead>
-              <TableRow sx={{ bgcolor: '#111827' }}>
+          <Table sx={{ minWidth: 650, bgcolor: '#FFFFFF !important' }}>
+            <TableHead sx={{ bgcolor: '#FFFFFF !important', background: '#FFFFFF !important' }}>
+              {/* Pure White Header Row & Cells */}
+              <TableRow sx={{ bgcolor: '#FFFFFF !important', background: '#FFFFFF !important', borderBottom: '2px solid #E5E7EB' }}>
                 {columns.map((col) => (
-                  <TableCell key={col.id} align={col.align || 'left'} style={{ width: col.width }} sx={{ color: '#FFFFFF', fontWeight: 700 }}>
+                  <TableCell
+                    key={col.id}
+                    align={col.align || 'left'}
+                    style={{ width: col.width }}
+                    sx={{ color: '#0284c7', fontWeight: 900, bgcolor: '#FFFFFF !important', background: '#FFFFFF !important' }}
+                  >
                     {col.label}
                   </TableCell>
                 ))}
               </TableRow>
             </TableHead>
-            <TableBody>
+            <TableBody sx={{ bgcolor: '#FFFFFF !important' }}>
               {paginatedData.map((row, rIndex) => (
                 <TableRow
                   hover
                   key={row.id || rIndex}
                   sx={{
-                    bgcolor: rIndex % 2 === 1 ? '#F9FAFB' : '#FFFFFF',
-                    '&:hover': { bgcolor: '#FEF3C7 !important' },
+                    bgcolor: '#FFFFFF !important',
+                    '&:hover': { bgcolor: 'rgba(2, 132, 199, 0.05) !important' },
                   }}
                 >
                   {columns.map((col) => (
-                    <TableCell key={col.id} align={col.align || 'left'} sx={{ color: '#111827' }}>
+                    <TableCell key={col.id} align={col.align || 'left'} sx={{ color: '#111827', bgcolor: '#FFFFFF !important' }}>
                       {col.render ? col.render(row) : row[col.id]}
                     </TableCell>
                   ))}
@@ -201,7 +208,7 @@ const DataTable = ({
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          sx={{ borderTop: '1px solid #E5E7EB', color: '#4B5563' }}
+          sx={{ borderTop: '1px solid #E5E7EB', color: '#4B5563', bgcolor: '#FFFFFF !important' }}
         />
       )}
     </Paper>

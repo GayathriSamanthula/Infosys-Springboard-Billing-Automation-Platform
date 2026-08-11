@@ -6,12 +6,16 @@ import time
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 
+from app.models.customer import Customer
 from app.models.invoice import Invoice
 from app.models.subscription import Subscription, SubscriptionStatus
 from app.models.payment import Payment
 from app.models.audit_log import AuditLog
 from app.models.notification import Notification
+from app.models.retry import RetryQueue
 from app.schemas.webhook import PaymentWebhookPayload, WebhookResponse
+from app.services.notification_service import send_smart_email
+from app.services.retry_service import schedule_retry
 
 DEFAULT_WEBHOOK_URL = "http://127.0.0.1:8000/api/v1/payments/webhook"
 
@@ -85,6 +89,12 @@ def process_payment_webhook(db: Session, payload: PaymentWebhookPayload) -> Webh
         subscription.status = SubscriptionStatus.ACTIVE
         subscription.activated_at = datetime.utcnow()
 
+        # Cancel remaining pending retries for this invoice
+        db.query(RetryQueue).filter(
+            RetryQueue.invoice_id == invoice.id,
+            RetryQueue.retry_status == "PENDING"
+        ).update({"retry_status": "CANCELLED"})
+
         # Audit Log
         audit = AuditLog(
             event="PAYMENT_RECEIVED",
@@ -93,16 +103,35 @@ def process_payment_webhook(db: Session, payload: PaymentWebhookPayload) -> Webh
         )
         db.add(audit)
 
-        # Notification
+        # Notification & Real HTML Email Dispatch
         notif = Notification(
             customer_id=payload.customer_id,
             notification_type="PAYMENT_SUCCESS",
             message=f"Payment of ${payload.amount} for Invoice #{invoice.invoice_number} was successful.",
             sent_date=date.today(),
             status="SENT",
-            delivery_channel="SYSTEM"
+            delivery_channel="EMAIL"
         )
         db.add(notif)
+
+        # Trigger Smart HTML Email Dispatch
+        customer = db.query(Customer).filter(Customer.id == payload.customer_id).first()
+        if customer and customer.email:
+            send_smart_email(
+                to_email=customer.email,
+                customer_name=customer.name,
+                subject=f"Payment Receipt: Invoice #{invoice.invoice_number}",
+                template_name="nexora_payment_success.html",
+                context={
+                    "invoice_number": invoice.invoice_number,
+                    "transaction_id": payload.transaction_id,
+                    "payment_date": str(date.today()),
+                    "payment_method": "Payment Webhook",
+                    "plan_name": f"Subscription #{subscription.id}",
+                    "amount": str(payload.amount)
+                },
+                platform="NEXORA"
+            )
 
     elif status_str in ["FAILED"] or "failed" in event_str:
         # Payment Failed
@@ -110,24 +139,54 @@ def process_payment_webhook(db: Session, payload: PaymentWebhookPayload) -> Webh
         subscription.status = SubscriptionStatus.PAST_DUE
         subscription.past_due_at = datetime.utcnow()
 
+        # Automatically Schedule Attempt #1 in RetryQueue if no pending retry exists
+        existing_retry = db.query(RetryQueue).filter(
+            RetryQueue.invoice_id == invoice.id,
+            RetryQueue.retry_status == "PENDING"
+        ).first()
+
+        if not existing_retry:
+            schedule_retry(
+                db=db,
+                invoice_id=invoice.id,
+                customer_id=payload.customer_id,
+                attempt_number=1
+            )
+
         # Audit Log
         audit = AuditLog(
             event="PAYMENT_FAILED",
             performed_by="PAYMENT_GATEWAY",
-            description=f"Payment attempt failed for invoice {invoice.invoice_number}. Subscription marked PAST_DUE."
+            description=f"Payment attempt failed for invoice {invoice.invoice_number}. Subscription marked PAST_DUE. Attempt #1 queued for retry."
         )
         db.add(audit)
 
-        # Notification
+        # Notification & Real HTML Email Dispatch
         notif = Notification(
             customer_id=payload.customer_id,
             notification_type="PAYMENT_FAILED",
             message=f"Payment failed for Invoice #{invoice.invoice_number}. Account marked PAST_DUE.",
             sent_date=date.today(),
             status="SENT",
-            delivery_channel="SYSTEM"
+            delivery_channel="EMAIL"
         )
         db.add(notif)
+
+        # Trigger Smart HTML Email Dispatch
+        customer = db.query(Customer).filter(Customer.id == payload.customer_id).first()
+        if customer and customer.email:
+            send_smart_email(
+                to_email=customer.email,
+                customer_name=customer.name,
+                subject=f"Payment Action Required: Invoice #{invoice.invoice_number}",
+                template_name="nexora_payment_failed.html",
+                context={
+                    "invoice_number": invoice.invoice_number,
+                    "payment_date": str(date.today()),
+                    "amount": str(payload.amount)
+                },
+                platform="NEXORA"
+            )
 
     elif status_str in ["REFUNDED"] or "refunded" in event_str:
         # Payment Refunded

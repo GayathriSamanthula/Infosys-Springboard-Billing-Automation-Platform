@@ -27,8 +27,8 @@ const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchNotifications = async () => {
-    setLoading(true);
+  const fetchNotifications = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     try {
       const data = await notificationService.getAll();
       setNotifications(Array.isArray(data) ? data : []);
@@ -36,12 +36,23 @@ const NotificationsPage = () => {
       showNotification('Failed to fetch notifications from backend API', 'error');
       setNotifications([]);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchNotifications();
+    fetchNotifications(false);
+
+    const handleRefresh = () => {
+      fetchNotifications(true);
+    };
+
+    window.addEventListener('dashboard_refresh', handleRefresh);
+    window.addEventListener('notifications_refresh', handleRefresh);
+    return () => {
+      window.removeEventListener('dashboard_refresh', handleRefresh);
+      window.removeEventListener('notifications_refresh', handleRefresh);
+    };
   }, []);
 
   const handleMarkAsRead = async (id) => {
@@ -61,7 +72,7 @@ const NotificationsPage = () => {
           <Typography variant="h4" fontWeight={900} color="#F9FAFB" gutterBottom>
             System Event Notifications
           </Typography>
-          <Typography variant="body2" color="#F59E0B" fontWeight={600}>
+          <Typography variant="body2" color="#0284c7" fontWeight={600}>
             Dynamically fetched from FastAPI backend (`GET /notifications`)
           </Typography>
         </Box>
@@ -83,13 +94,13 @@ const NotificationsPage = () => {
                   sx={{
                     py: 2.5,
                     px: 3,
-                    bgcolor: item.is_read ? '#ffffff' : '#FEF3C7',
+                    bgcolor: item.is_read ? '#ffffff' : '#e0f2fe',
                     transition: 'background-color 0.2s',
                   }}
                   secondaryAction={
                     !item.is_read && (
                       <Tooltip title="Mark as read">
-                        <IconButton onClick={() => handleMarkAsRead(item.id)} sx={{ color: '#F59E0B' }}>
+                        <IconButton onClick={() => handleMarkAsRead(item.id)} sx={{ color: '#0284c7' }}>
                           <DoneAllIcon />
                         </IconButton>
                       </Tooltip>
@@ -97,12 +108,12 @@ const NotificationsPage = () => {
                   }
                 >
                   <ListItemIcon sx={{ minWidth: 46 }}>
-                    {item.notification_type === 'payment_success' ? (
+                    {String(item.notification_type || '').toLowerCase().includes('success') || String(item.notification_type || '').toLowerCase().includes('paid') ? (
                       <CheckCircleIcon sx={{ color: '#10B981' }} fontSize="large" />
-                    ) : item.notification_type === 'payment_failed' ? (
+                    ) : String(item.notification_type || '').toLowerCase().includes('failed') ? (
                       <ErrorOutlineIcon sx={{ color: '#EF4444' }} fontSize="large" />
                     ) : (
-                      <NotificationsIcon sx={{ color: '#F59E0B' }} fontSize="large" />
+                      <NotificationsIcon sx={{ color: '#0284c7' }} fontSize="large" />
                     )}
                   </ListItemIcon>
 
@@ -112,7 +123,7 @@ const NotificationsPage = () => {
                         <Typography variant="subtitle1" fontWeight={700} color="#111827">
                           {item.notification_type || 'Notification'}
                         </Typography>
-                        {!item.is_read && <Chip label="New" size="small" sx={{ bgcolor: '#F59E0B', color: '#FFFFFF', fontWeight: 700, fontSize: '0.65rem' }} />}
+                        {!item.is_read && <Chip label="New" size="small" sx={{ bgcolor: '#0284c7', color: '#FFFFFF', fontWeight: 700, fontSize: '0.65rem' }} />}
                       </Box>
                     }
                     secondary={

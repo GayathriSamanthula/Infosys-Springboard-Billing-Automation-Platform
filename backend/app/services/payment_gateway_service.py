@@ -42,6 +42,7 @@ class PaymentGatewayService:
             return {
                 "transaction_id": transaction_id,
                 "payment_status": "SUCCESS",
+                "response_code": "200",
                 "payment_timestamp": payment_time,
                 "response_message": (
                     "Payment processed successfully."
@@ -51,8 +52,41 @@ class PaymentGatewayService:
         return {
             "transaction_id": transaction_id,
             "payment_status": "FAILED",
+            "response_code": "400",
             "payment_timestamp": payment_time,
             "response_message": (
                 "Payment processing failed."
             ),
         }
+
+    @classmethod
+    def simulate_payment(
+        cls,
+        subscription_id: int,
+        amount: float,
+        payment_method: str = "Credit Card",
+        force_status: str = None
+    ):
+        txn_id = f"TXN-{uuid4().hex[:12].upper()}"
+        ts = datetime.utcnow()
+        status = (force_status or "SUCCESS").upper()
+
+        class GatewayResult:
+            def __init__(self, transaction_id, status, payment_method, timestamp, amount, response_message):
+                self.transaction_id = transaction_id
+                self.status = status
+                self.payment_status = status
+                self.payment_method = payment_method
+                self.timestamp = timestamp
+                self.amount = amount
+                self.response_message = response_message
+                self.response_code = "200" if status == "SUCCESS" else "400"
+
+        return GatewayResult(
+            transaction_id=txn_id,
+            status=status,
+            payment_method=payment_method,
+            timestamp=ts,
+            amount=amount,
+            response_message="Payment processed successfully via Mock Payment Gateway." if status == "SUCCESS" else "Payment gateway processing failed."
+        )

@@ -4,45 +4,45 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#F59E0B',      // Accent Gold
-      light: '#FBBF24',     // Light Gold
-      dark: '#D97706',      // Gold Hover
+      main: '#0284c7',      // Primary Sky Blue
+      light: '#38bdf8',     // Light Sky Blue
+      dark: '#0369a1',      // Dark Sky Blue Hover
       contrastText: '#FFFFFF',
     },
     secondary: {
-      main: '#111827',      // Rich Black
-      light: '#1F2937',     // Dark Gray
-      dark: '#030712',      // Deep Black
-      contrastText: '#F9FAFB',
+      main: '#0284c7',      // Sky Blue Accent
+      light: '#7dd3fc',     // Light Sky Blue
+      dark: '#075985',      // Deep Sky Blue
+      contrastText: '#FFFFFF',
     },
     success: {
-      main: '#10B981',      // Success Green
-      light: '#34D399',
+      main: '#10b981',      // Success Green
+      light: '#34d399',
       dark: '#059669',
       contrastText: '#FFFFFF',
     },
     warning: {
-      main: '#F97316',      // Warning Orange
-      light: '#FB923C',
-      dark: '#EA580C',
+      main: '#f59e0b',      // Amber Warning
+      light: '#fbbf24',
+      dark: '#d97706',
       contrastText: '#FFFFFF',
     },
     error: {
-      main: '#EF4444',      // Error Red
-      light: '#F87171',
-      dark: '#DC2626',
+      main: '#dc2626',      // Error Red
+      light: '#f87171',
+      dark: '#991b1b',
       contrastText: '#FFFFFF',
     },
     background: {
-      default: '#111827',   // Rich Black Background Base
-      paper: '#FFFFFF',     // Solid White Cards & Modals
+      default: '#f0f9ff',   // Soft Tinted Sky Blue Light Canvas
+      paper: '#FFFFFF',     // Solid Pure White Cards & Modals
     },
     text: {
-      primary: '#111827',   // Primary Text on Light Background
-      secondary: '#4B5563', // Muted Gray Text
-      disabled: '#9CA3AF',
+      primary: '#0f172a',   // Deep Slate Navy Text
+      secondary: '#475569', // Muted Slate Gray Text
+      disabled: '#94a3b8',
     },
-    divider: '#E5E7EB',
+    divider: '#e0f2fe',
   },
   typography: {
     fontFamily: '"Inter", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -57,36 +57,36 @@ const theme = createTheme({
     button: { textTransform: 'none', fontWeight: 600 },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 14,
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: '8px',
+          borderRadius: '10px',
           boxShadow: 'none',
           padding: '8px 20px',
           transition: 'all 0.2s ease-in-out',
           '&:hover': {
-            boxShadow: '0 4px 14px rgba(245, 158, 11, 0.3)',
+            boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)',
           },
         },
         containedPrimary: {
-          backgroundColor: '#F59E0B',
+          backgroundColor: '#0284c7',
           color: '#FFFFFF',
-          fontWeight: 600,
+          fontWeight: 700,
           '&:hover': {
-            backgroundColor: '#D97706',
+            backgroundColor: '#0369a1',
           },
         },
         outlinedPrimary: {
           backgroundColor: '#FFFFFF',
-          borderColor: '#F59E0B',
-          color: '#F59E0B',
+          borderColor: '#0284c7',
+          color: '#0284c7',
           borderWidth: '1.5px',
           '&:hover': {
-            backgroundColor: '#FEF3C7',
-            borderColor: '#D97706',
+            backgroundColor: '#f0f9ff',
+            borderColor: '#0369a1',
             borderWidth: '1.5px',
           },
         },
@@ -95,34 +95,19 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 14,
           backgroundColor: '#FFFFFF',
-          boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.12)',
-          border: '1px solid #E5E7EB',
+          boxShadow: '0 4px 20px -2px rgba(2, 132, 199, 0.12)',
+          border: '1.5px solid #e0f2fe',
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 14,
           backgroundColor: '#FFFFFF',
-          boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.12)',
-          border: '1px solid #E5E7EB',
-        },
-      },
-    },
-    MuiTableCell: {
-      styleOverrides: {
-        head: {
-          fontWeight: 700,
-          backgroundColor: '#111827',
-          color: '#FFFFFF',
-          borderBottom: '1px solid #1F2937',
-        },
-        body: {
-          borderBottom: '1px solid #F3F4F6',
-          color: '#111827',
+          color: '#0f172a',
         },
       },
     },

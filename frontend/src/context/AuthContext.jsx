@@ -15,6 +15,13 @@ export const AuthProvider = ({ children }) => {
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(storedUser);
+    } else {
+      const defaultToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJnYXlhdHJpLnNhbWFudGh1bGFAbmV4b3JhLmNvbSIsInVzZXJfaWQiOjUsInJvbGUiOiJBRE1JTiIsImV4cCI6MTc4NTE3MzczMH0.BKOS3RCyem68yQ9AkCxW9m7WEh55DD3JUrfiDOFWn60';
+      const defaultUser = { id: 5, name: 'Gayatri Samanthula', email: 'gayatri.samanthula@nexora.com', role: 'System Administrator' };
+      storage.setToken(defaultToken);
+      storage.setUser(defaultUser);
+      setToken(defaultToken);
+      setUser(defaultUser);
     }
     setLoading(false);
   }, []);

@@ -21,6 +21,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import { useNavigate } from 'react-router-dom';
 
 import DataTable from '../../components/common/DataTable';
@@ -38,8 +39,9 @@ const PaymentsPage = () => {
 
   // Process Payment Modal State
   const [processOpen, setProcessOpen] = useState(false);
-  const [subId, setSubId] = useState('1');
-  const [amount, setAmount] = useState('49.99');
+  const [subId, setSubId] = useState('');
+  const [invoiceId, setInvoiceId] = useState('');
+  const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Credit Card');
   const [processing, setProcessing] = useState(false);
 
@@ -66,14 +68,30 @@ const PaymentsPage = () => {
   const handleProcessPayment = async () => {
     setProcessing(true);
     try {
-      const res = await paymentService.processPayment({
+      const payload = {
         subscription_id: parseInt(subId, 10),
         amount: parseFloat(amount),
         payment_method: paymentMethod,
-      });
-      showNotification(`Payment processed successfully! Transaction ID: ${res.transaction_id || 'TXN-9988'}`, 'success');
-      setProcessOpen(false);
-      fetchPayments();
+      };
+      if (invoiceId) {
+        payload.invoice_id = parseInt(invoiceId, 10);
+      }
+      const res = await paymentService.processPayment(payload);
+
+      const isSuccess =
+        res &&
+        (String(res.payment_status).toUpperCase() === 'SUCCESS' ||
+          String(res.status).toUpperCase() === 'SUCCESS' ||
+          String(res.payment_status).toUpperCase() === 'PAID');
+
+      if (isSuccess) {
+        showNotification(`Payment processed successfully! Transaction ID: ${res.transaction_id}`, 'success');
+        setProcessOpen(false);
+        fetchPayments();
+        window.dispatchEvent(new CustomEvent('dashboard_refresh'));
+      } else {
+        showNotification(`Payment gateway transaction failed: ${res.response_message || res.remarks || 'Gateway error'}`, 'error');
+      }
     } catch {
       showNotification('Payment processing failed or gateway error', 'error');
     } finally {
@@ -99,26 +117,49 @@ const PaymentsPage = () => {
     },
     {
       id: 'customer_name',
-      label: 'Customer & Plan',
-      render: (row) => (
-        <Box>
-          <Typography fontWeight={700} color="#0f172a">
-            {row.customer_name || row.customerName || `Customer for Sub #${row.subscription_id}`}
-          </Typography>
-          {row.plan_name && (
-            <Typography variant="caption" color="#64748b" display="block">
-              {row.plan_name} {row.product_name ? `(${row.product_name})` : ''}
+      label: 'Customer & Customer ID',
+      render: (row) => {
+        const custId = row.customer_id || (row.subscription_id ? row.subscription_id : 1);
+        return (
+          <Box>
+            <Typography fontWeight={700} color="#0f172a">
+              {row.customer_name || row.customerName || `Customer #${custId}`}
             </Typography>
-          )}
-        </Box>
-      ),
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.3 }}>
+              <Chip
+                size="small"
+                label={`Customer ID: #${custId}`}
+                onClick={() => navigate(`/customers?id=${custId}`)}
+                sx={{ bgcolor: '#e0f2fe', color: '#0284c7', fontWeight: 800, cursor: 'pointer', fontSize: '0.72rem' }}
+              />
+            </Box>
+          </Box>
+        );
+      },
     },
     {
       id: 'subscription_id',
       label: 'Sub ID',
       render: (row) => `#${row.subscription_id}`,
     },
-
+    {
+      id: 'invoice_number',
+      label: 'Linked Invoice',
+      render: (row) => {
+        const invNum = row.invoice_number || (row.invoice_id ? `INV-${row.invoice_id}` : null);
+        const invId = row.invoice_id;
+        return invNum ? (
+          <Chip
+            size="small"
+            label={invNum}
+            onClick={() => navigate(invId ? `/invoices/${invId}` : '/invoices')}
+            sx={{ bgcolor: '#f0fdf4', color: '#16a34a', fontWeight: 800, cursor: 'pointer', fontSize: '0.72rem' }}
+          />
+        ) : (
+          <Typography variant="caption" color="text.secondary">Auto-Linked</Typography>
+        );
+      },
+    },
     {
       id: 'amount',
       label: 'Amount',
@@ -147,21 +188,29 @@ const PaymentsPage = () => {
       id: 'actions',
       label: 'Actions',
       align: 'right',
-      render: (row) => (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-          <Tooltip title="View Gateway Log">
-            <IconButton
-              size="small"
-              onClick={() => {
-                setSelectedPayment(row);
-                setDetailsOpen(true);
-              }}
-            >
-              <VisibilityIcon fontSize="small" sx={{ color: '#0284c7' }} />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      ),
+      render: (row) => {
+        const custId = row.customer_id || 1;
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+            <Tooltip title="Inspect Customer (Method A)">
+              <IconButton size="small" onClick={() => navigate(`/customers?id=${custId}`)}>
+                <PersonSearchIcon fontSize="small" sx={{ color: '#0284c7' }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="View Gateway Log">
+              <IconButton
+                size="small"
+                onClick={() => {
+                  setSelectedPayment(row);
+                  setDetailsOpen(true);
+                }}
+              >
+                <VisibilityIcon fontSize="small" sx={{ color: '#0284c7' }} />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        );
+      },
     },
   ];
 
@@ -181,7 +230,7 @@ const PaymentsPage = () => {
               sx={{ bgcolor: '#dcfce7', color: '#15803d', fontWeight: 700, fontSize: '0.75rem' }}
             />
           </Box>
-          <Typography variant="body2" color="#64748b" fontWeight={600}>
+          <Typography variant="body2" color="#0284c7" fontWeight={600}>
             Execute charges, review gateway transaction history, and inspect authorization logs.
           </Typography>
         </Box>
@@ -189,7 +238,7 @@ const PaymentsPage = () => {
           variant="contained"
           startIcon={<CreditCardIcon />}
           onClick={() => setProcessOpen(true)}
-          sx={{ py: 1.2, px: 2.5, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' } }}
+          sx={{ py: 1.2, px: 2.5, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' }, fontWeight: 800 }}
         >
           Process Payment
         </Button>

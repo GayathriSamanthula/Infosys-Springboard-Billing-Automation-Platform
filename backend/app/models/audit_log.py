@@ -31,6 +31,57 @@ class AuditLog(Base):
         nullable=True
     )
 
+    subscription_id = Column(
+        Integer,
+        ForeignKey("subscriptions.id"),
+        nullable=True
+    )
+
+    invoice_id = Column(
+        Integer,
+        ForeignKey("invoices.id"),
+        nullable=True
+    )
+
+    payment_id = Column(
+        Integer,
+        ForeignKey("payments.id"),
+        nullable=True
+    )
+
+    refund_id = Column(
+        Integer,
+        ForeignKey("refunds.id"),
+        nullable=True
+    )
+
+    old_value = Column(
+        String(255),
+        nullable=True
+    )
+
+    new_value = Column(
+        String(255),
+        nullable=True
+    )
+
+    user_role = Column(
+        String(50),
+        nullable=True,
+        default="ADMIN"
+    )
+
+    ip_address = Column(
+        String(45),
+        nullable=True,
+        default="127.0.0.1"
+    )
+
+    remarks = Column(
+        String(255),
+        nullable=True
+    )
+
     description = Column(
         String(255),
         nullable=False

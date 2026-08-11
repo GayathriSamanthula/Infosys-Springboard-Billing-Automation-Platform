@@ -88,10 +88,11 @@ const ChangePlanPage = () => {
         remarks: `Plan ${proration?.change_type || 'Adjustment'}: ${currentPlan?.name || 'Previous Plan'} -> ${targetPlan?.name || 'Target Plan'} (${proration?.change_type === 'DOWNGRADE' || (proration?.current_plan_credit > proration?.new_plan_charge) ? 'Platform Refunds Customer' : 'Customer Pays Additional Charge'})`,
         previous_plan_name: currentPlan?.name || 'Previous Plan',
         previous_plan_price: currentPlan?.price || 0,
-        remaining_days: proration?.remaining_days || 10,
+        remaining_days: proration?.remaining_days || 0,
         total_cycle_days: proration?.total_cycle_days || 30,
       });
       showNotification('Prorated Itemized Invoice generated successfully!', 'success');
+      window.dispatchEvent(new CustomEvent('dashboard_refresh'));
       navigate(`/invoices/${inv.id}`);
     } catch {
       showNotification('Failed to generate prorated itemized invoice', 'error');

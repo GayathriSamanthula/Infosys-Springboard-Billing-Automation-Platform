@@ -10,6 +10,7 @@ class User(Base):
     username = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=False)
+    working_id = Column(String(100), nullable=True)
     role = Column(String(30), default="ADMIN", nullable=False)
 
     audit_logs = relationship("AuditLog", back_populates="user")

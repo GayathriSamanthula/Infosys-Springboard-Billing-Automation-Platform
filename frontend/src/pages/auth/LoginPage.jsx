@@ -12,6 +12,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  TextField,
+  Alert,
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
@@ -22,6 +24,7 @@ import FormInput from '../../components/common/FormInput';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
 import { useNavigate } from 'react-router-dom';
+import api from '../../services/api';
 import { EMAIL_REGEX } from '../../utils/validators';
 
 const LoginPage = () => {
@@ -34,10 +37,19 @@ const LoginPage = () => {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Password Reset Modal States
+  const [resetEmail, setResetEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showResetNewPassword, setShowResetNewPassword] = useState(false);
+  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
+  const [resetSubmitting, setResetSubmitting] = useState(false);
+  const [resetError, setResetError] = useState('');
+
   const { control, handleSubmit } = useForm({
     defaultValues: {
-      email: 'gayatri.samanthula@nexora.com',
-      password: 'password123',
+      email: '',
+      password: '',
     },
   });
 
@@ -51,6 +63,49 @@ const LoginPage = () => {
       showNotification(String(err), 'error');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResetSubmit = async (e) => {
+    e.preventDefault();
+    setResetError('');
+
+    if (!resetEmail || !newPassword || !confirmPassword) {
+      setResetError('All fields are required.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setResetError('New password and confirm password do not match.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setResetError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setResetSubmitting(true);
+    try {
+      const res = await api.post('/auth/reset-password', {
+        email: resetEmail,
+        new_password: newPassword,
+      });
+      showNotification(res.data?.message || 'Password reset successfully!', 'success');
+      setForgotOpen(false);
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      let msg = 'Failed to reset password. Please check your email address.';
+      if (err?.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        msg = typeof detail === 'string' ? detail : (Array.isArray(detail) ? detail[0]?.msg || JSON.stringify(detail) : String(detail));
+      } else if (err?.message) {
+        msg = err.message;
+      }
+      setResetError(msg);
+    } finally {
+      setResetSubmitting(false);
     }
   };
 
@@ -131,23 +186,114 @@ const LoginPage = () => {
         variant="contained"
         size="large"
         disabled={isSubmitting}
-        sx={{ py: 1.5, mt: 2, fontSize: '0.95rem' }}
+        sx={{ py: 1.5, mt: 2, fontSize: '0.95rem', bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' } }}
       >
         {isSubmitting ? 'Authenticating...' : 'Sign In'}
       </Button>
 
+      <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+        <Typography variant="body2" color="text.secondary">
+          Don't have an admin account?{' '}
+          <Link
+            component="button"
+            type="button"
+            variant="body2"
+            onClick={() => navigate('/register')}
+            sx={{ fontWeight: 800, color: '#0284c7', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+          >
+            Register Admin Account
+          </Link>
+        </Typography>
+      </Box>
+
       <Dialog open={forgotOpen} onClose={() => setForgotOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>Reset Password</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Password reset is managed via FastAPI Auth endpoint (/auth/login). Contact your administrator to issue a reset link.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setForgotOpen(false)} variant="contained">
-            Close
-          </Button>
-        </DialogActions>
+        <Box component="form" onSubmit={handleResetSubmit}>
+          <DialogTitle sx={{ fontWeight: 800, color: '#0f172a' }}>Reset Admin Password</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Enter your admin email address and your new password below.
+            </Typography>
+
+            {resetError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {resetError}
+              </Alert>
+            )}
+
+            <TextField
+              fullWidth
+              label="Admin Email Address"
+              type="email"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+              margin="normal"
+              required
+              sx={{
+                '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="New Password"
+              type={showResetNewPassword ? 'text' : 'password'}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              margin="normal"
+              required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowResetNewPassword(!showResetNewPassword)} edge="end">
+                      {showResetNewPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Confirm New Password"
+              type={showResetConfirmPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              margin="normal"
+              required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowResetConfirmPassword(!showResetConfirmPassword)} edge="end">
+                      {showResetConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+              }}
+            />
+          </DialogContent>
+          <DialogActions sx={{ p: 2, gap: 1 }}>
+            <Button onClick={() => setForgotOpen(false)} variant="outlined" sx={{ color: '#64748b' }}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={resetSubmitting}
+              sx={{ bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' }, fontWeight: 800 }}
+            >
+              {resetSubmitting ? 'Updating...' : 'Reset Password'}
+            </Button>
+          </DialogActions>
+        </Box>
       </Dialog>
     </Box>
   );

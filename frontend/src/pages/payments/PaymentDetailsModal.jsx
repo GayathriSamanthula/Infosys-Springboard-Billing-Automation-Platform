@@ -34,6 +34,12 @@ const PaymentDetailsModal = ({ open, onClose, payment }) => {
           <Typography variant="body1" fontWeight={600}>#{payment.subscription_id}</Typography>
         </Grid>
         <Grid item xs={6}>
+          <Typography variant="caption" color="text.secondary">Linked Invoice FK</Typography>
+          <Typography variant="body1" fontWeight={700} color="success.main">
+            {payment.invoice_number || (payment.invoice_id ? `INV-${payment.invoice_id}` : 'Auto-Linked via Sub FK')}
+          </Typography>
+        </Grid>
+        <Grid item xs={6}>
           <Typography variant="caption" color="text.secondary">Amount Charged</Typography>
           <Typography variant="h6" fontWeight={800} color="text.primary">{formatCurrency(payment.amount)}</Typography>
         </Grid>

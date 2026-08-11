@@ -22,6 +22,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import CloseIcon from '@mui/icons-material/Close';
 import AddTaskIcon from '@mui/icons-material/AddTask';
 import ReceiptIcon from '@mui/icons-material/Receipt';
+import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import { useNavigate } from 'react-router-dom';
 
 import DataTable from '../../components/common/DataTable';
@@ -90,6 +91,7 @@ const InvoicesPage = () => {
       const newInv = await invoiceService.generateItemizedInvoice(1);
       showNotification(`Itemized Invoice ${newInv.invoice_number} generated!`, 'success');
       fetchInvoices();
+      window.dispatchEvent(new CustomEvent('dashboard_refresh'));
     } catch {
       showNotification('Failed to generate itemized invoice', 'error');
     }
@@ -110,26 +112,51 @@ const InvoicesPage = () => {
     },
     {
       id: 'customer_name',
-      label: 'Customer & Plan',
-      render: (row) => (
-        <Box>
-          <Typography fontWeight={700} color="#0f172a">
-            {row.customer_name || row.customerName || `Customer for Sub #${row.subscription_id}`}
-          </Typography>
-          {row.plan_name && (
-            <Typography variant="caption" color="#0284c7" display="block">
-              {row.plan_name} {row.product_name ? `(${row.product_name})` : ''}
+      label: 'Customer & Customer ID',
+      render: (row) => {
+        const custId = row.customer_id || (row.subscription_id ? row.subscription_id : 1);
+        return (
+          <Box>
+            <Typography fontWeight={700} color="#0f172a">
+              {row.customer_name || row.customerName || `Customer #${custId}`}
             </Typography>
-          )}
-        </Box>
-      ),
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.3 }}>
+              <Chip
+                size="small"
+                label={`Customer ID: #${custId}`}
+                onClick={() => navigate(`/customers?id=${custId}`)}
+                sx={{ bgcolor: '#e0f2fe', color: '#0284c7', fontWeight: 800, cursor: 'pointer', fontSize: '0.72rem' }}
+              />
+            </Box>
+          </Box>
+        );
+      },
     },
     {
       id: 'subscription_id',
-      label: 'Subscription ID',
+      label: 'Sub ID',
       render: (row) => `#${row.subscription_id}`,
     },
-
+    {
+      id: 'platform_source',
+      label: 'Origin Channel',
+      render: (row) => {
+        const isVelora = String(row.platform_source || '').toUpperCase().includes('VELORA') || String(row.invoice_number || '').includes('VEL');
+        return (
+          <Chip
+            size="small"
+            label={isVelora ? 'Velora Gateway' : 'Nexora Direct'}
+            sx={{
+              bgcolor: isVelora ? '#fff7ed' : '#e0f2fe',
+              color: isVelora ? '#e65100' : '#0284c7',
+              border: `1.5px solid ${isVelora ? '#f57c00' : '#0284c7'}`,
+              fontWeight: 800,
+              fontSize: '0.72rem',
+            }}
+          />
+        );
+      },
+    },
     {
       id: 'issue_date',
       label: 'Issue Date',
@@ -158,20 +185,28 @@ const InvoicesPage = () => {
       id: 'actions',
       label: 'Actions',
       align: 'right',
-      render: (row) => (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-          <Tooltip title="View Invoice Drawer Details">
-            <IconButton size="small" onClick={() => handleOpenDrawer(row)}>
-              <VisibilityIcon fontSize="small" sx={{ color: '#0284c7' }} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Download / Print Printable Invoice">
-            <IconButton size="small" onClick={() => window.open(invoiceService.downloadHtmlUrl(row.id), '_blank')}>
-              <DownloadIcon fontSize="small" sx={{ color: '#0284c7' }} />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      ),
+      render: (row) => {
+        const custId = row.customer_id || 1;
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+            <Tooltip title="Inspect Customer (Method A)">
+              <IconButton size="small" onClick={() => navigate(`/customers?id=${custId}`)}>
+                <PersonSearchIcon fontSize="small" sx={{ color: '#0284c7' }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="View Invoice Drawer Details">
+              <IconButton size="small" onClick={() => handleOpenDrawer(row)}>
+                <VisibilityIcon fontSize="small" sx={{ color: '#0284c7' }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Download / Print Printable Invoice">
+              <IconButton size="small" onClick={() => window.open(invoiceService.downloadHtmlUrl(row.id), '_blank')}>
+                <DownloadIcon fontSize="small" sx={{ color: '#0284c7' }} />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        );
+      },
     },
   ];
 
@@ -182,7 +217,7 @@ const InvoicesPage = () => {
           <Typography variant="h4" fontWeight={900} color="#0f172a" gutterBottom>
             Invoices & Billing Statements
           </Typography>
-          <Typography variant="body2" color="#64748b" fontWeight={600}>
+          <Typography variant="body2" color="#0284c7" fontWeight={600}>
             Monitor itemized customer invoices, taxes, payment statuses, and print/export receipts.
           </Typography>
         </Box>
@@ -190,7 +225,7 @@ const InvoicesPage = () => {
           variant="contained"
           startIcon={<AddTaskIcon />}
           onClick={handleGenerateInvoice}
-          sx={{ py: 1.2, px: 2.5, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' } }}
+          sx={{ py: 1.2, px: 2.5, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' }, fontWeight: 800 }}
         >
           Generate Itemized Invoice
         </Button>

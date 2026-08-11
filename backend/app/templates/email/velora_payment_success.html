@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Velora Fintech Receipt</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #0b0f19; margin: 0; padding: 20px; color: #f1f5f9; }
+    .container { max-width: 600px; margin: 0 auto; background: #111827; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #1f2937; }
+    .test-banner { background-color: #3b82f6; color: #ffffff; font-size: 12px; font-weight: bold; text-align: center; padding: 8px 12px; letter-spacing: 0.5px; }
+    .header { background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%); padding: 32px; text-align: center; color: #ffffff; }
+    .header h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+    .header p { margin: 6px 0 0 0; opacity: 0.9; font-size: 14px; color: #e0f2fe; }
+    .badge-success { display: inline-block; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #34d399; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 12px; }
+    .content { padding: 32px; }
+    .greeting { font-size: 16px; margin-bottom: 20px; color: #f8fafc; }
+    .receipt-box { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+    .receipt-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #374151; font-size: 14px; }
+    .receipt-row:last-child { border-bottom: none; font-weight: bold; font-size: 16px; color: #38bdf8; padding-top: 14px; }
+    .receipt-label { color: #9ca3af; }
+    .receipt-value { color: #f3f4f6; text-align: right; }
+    .btn-container { text-align: center; margin: 30px 0 10px 0; }
+    .btn { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 700; font-size: 14px; display: inline-block; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); }
+    .footer { background: #0f172a; padding: 22px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #1e293b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    {% if is_dev_mode %}
+    <div class="test-banner">
+      🧪 [DEV TEST MODE] Intended Recipient: {{ customer_name }} ({{ customer_email }})
+    </div>
+    {% endif %}
+    
+    <div class="header">
+      <h1>VELORA FINTECH</h1>
+      <p>Official Transaction Confirmation</p>
+      <span class="badge-success">✓ Payment Processed</span>
+    </div>
+
+    <div class="content">
+      <div class="greeting">
+        Hello <strong>{{ customer_name }}</strong>,
+      </div>
+      <p style="color: #94a3b8; line-height: 1.6;">Your payment has been successfully processed through Velora's secure billing portal. Details of your transaction are below:</p>
+
+      <div class="receipt-box">
+        <div class="receipt-row">
+          <span class="receipt-label">Merchant Name</span>
+          <span class="receipt-value">Velora Fintech Platform</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Invoice Reference</span>
+          <span class="receipt-value">{{ invoice_number }}</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Transaction ID</span>
+          <span class="receipt-value">{{ transaction_id }}</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Date & Time</span>
+          <span class="receipt-value">{{ payment_date }}</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Subscription Tier</span>
+          <span class="receipt-value">{{ plan_name }}</span>
+        </div>
+        <div class="receipt-row">
+          <span class="receipt-label">Total Charged</span>
+          <span class="receipt-value">${{ amount }} USD</span>
+        </div>
+      </div>
+
+      <div class="btn-container">
+        <a href="http://localhost/velora/customer/login" class="btn">Access Velora Portal</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      &copy; 2026 Velora Fintech Platform. Powered by Nexora Billing Architecture.<br>
+      Confidential Financial Transaction Receipt.
+    </div>
+  </div>
+</body>
+</html>

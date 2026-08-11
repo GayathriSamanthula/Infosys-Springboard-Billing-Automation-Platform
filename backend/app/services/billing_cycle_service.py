@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.models.billing_cycle import BillingCycle
 from app.schemas.billing_cycle import BillingCycleCreate
-from app.models.subscription import Subscription
+from app.models.subscription import Subscription, SubscriptionStatus
 from app.models.plan import Plan
 from app.models.customer import Customer
 from app.models.invoice import Invoice
@@ -35,7 +35,14 @@ def create_billing_cycle(db: Session, billing_cycle: BillingCycleCreate):
 
 def get_all_billing_cycles(db: Session):
     cycles = db.query(BillingCycle).order_by(BillingCycle.id.desc()).all()
-    return [_enrich_billing_cycle(db, c) for c in cycles]
+    seen_keys = set()
+    unique_cycles = []
+    for c in cycles:
+        key = (c.subscription_id, c.billing_start_date)
+        if key not in seen_keys:
+            seen_keys.add(key)
+            unique_cycles.append(c)
+    return [_enrich_billing_cycle(db, c) for c in unique_cycles]
 
 
 def get_billing_cycle(db: Session, billing_cycle_id: int):
@@ -70,9 +77,8 @@ def generate_due_invoices(db: Session):
     active_subscriptions = (
         db.query(Subscription)
         .filter(
-            Subscription.status == "ACTIVE",
             Subscription.is_deleted == False,
-            Subscription.next_billing_date <= today
+            Subscription.status.in_([SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL])
         )
         .all()
     )
@@ -83,8 +89,7 @@ def generate_due_invoices(db: Session):
         plan = (
             db.query(Plan)
             .filter(
-                Plan.id == subscription.plan_id,
-                Plan.is_archived == False
+                Plan.id == subscription.plan_id
             )
             .first()
         )
@@ -92,20 +97,27 @@ def generate_due_invoices(db: Session):
         if not plan:
             continue
 
-        generate_itemized_invoice(
-            db=db,
-            subscription_id=subscription.id,
-            proration_credit=0.0,
-            proration_debit=0.0,
-            tax_rate=0.18,
-            remarks=f"Itemized Recurring Billing Cycle Invoice for {plan.name}"
-        )
+        try:
+            generate_itemized_invoice(
+                db=db,
+                subscription_id=subscription.id,
+                proration_credit=0.0,
+                proration_debit=0.0,
+                tax_rate=0.18,
+                remarks=f"Itemized Recurring Billing Cycle Invoice for {plan.name}"
+            )
+            generated_invoices += 1
+        except Exception:
+            pass
 
-        generated_invoices += 1
-
-        if plan.billing_cycle.upper() == "MONTHLY":
+        cycle_upper = (plan.billing_cycle or "MONTHLY").upper()
+        if cycle_upper == "MONTHLY":
             next_date = today + timedelta(days=30)
-        elif plan.billing_cycle.upper() == "YEARLY":
+        elif cycle_upper == "QUARTERLY":
+            next_date = today + timedelta(days=90)
+        elif cycle_upper in ["SEMI_ANNUALLY", "SEMI_ANNUAL", "SEMI-ANNUALLY", "SEMI-ANNUAL"]:
+            next_date = today + timedelta(days=182)
+        elif cycle_upper in ["YEARLY", "ANNUAL"]:
             next_date = today + timedelta(days=365)
         else:
             next_date = today + timedelta(days=30)
@@ -113,22 +125,39 @@ def generate_due_invoices(db: Session):
         subscription.next_billing_date = next_date
         db.add(subscription)
 
-        # Automatically record Billing Cycle entry
-        db_cycle = BillingCycle(
-            subscription_id=subscription.id,
-            billing_start_date=today,
-            billing_end_date=next_date,
-            renewal_date=next_date,
-            next_billing_date=next_date,
-            cycle_status="PROCESSED",
-            is_processed=True
+        # Check if a billing cycle entry already exists for today to prevent duplicates
+        existing_cycle = (
+            db.query(BillingCycle)
+            .filter(
+                BillingCycle.subscription_id == subscription.id,
+                BillingCycle.billing_start_date == today
+            )
+            .first()
         )
-        db.add(db_cycle)
+
+        if existing_cycle:
+            existing_cycle.billing_end_date = next_date
+            existing_cycle.renewal_date = next_date
+            existing_cycle.next_billing_date = next_date
+            existing_cycle.cycle_status = "PROCESSED"
+            existing_cycle.is_processed = True
+            db.add(existing_cycle)
+        else:
+            db_cycle = BillingCycle(
+                subscription_id=subscription.id,
+                billing_start_date=today,
+                billing_end_date=next_date,
+                renewal_date=next_date,
+                next_billing_date=next_date,
+                cycle_status="PROCESSED",
+                is_processed=True
+            )
+            db.add(db_cycle)
 
     db.commit()
 
     return {
-        "message": "Billing cycle executed successfully.",
+        "message": f"Billing cycle engine executed successfully. Processed {processed_subscriptions} subscription cycles.",
         "processed_subscriptions": processed_subscriptions,
         "generated_invoices": generated_invoices
     }

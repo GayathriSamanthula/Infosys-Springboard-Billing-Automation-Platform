@@ -17,6 +17,15 @@ export const invoiceService = {
     return response.data;
   },
 
+  getByCustomer: async (customerId) => {
+    try {
+      const response = await api.get(ENDPOINTS.INVOICES_BY_CUSTOMER(customerId));
+      return Array.isArray(response.data) ? response.data : [];
+    } catch {
+      return [];
+    }
+  },
+
   getLineItems: async (id) => {
     const response = await api.get(`${ENDPOINTS.INVOICE_BY_ID(id)}/line-items`);
     return Array.isArray(response.data) ? response.data : [];
@@ -39,7 +48,15 @@ export const invoiceService = {
     return response.data;
   },
 
-  downloadHtmlUrl: (id) => {
-    return `http://127.0.0.1:8000/invoices/${id}/download`;
+  downloadHtmlUrl: (id, platform = 'NEXORA') => {
+    return `/api/invoices/${id}/download?platform=${platform}`;
+  },
+
+  downloadPdfUrl: (id, platform = 'NEXORA') => {
+    return `/api/invoices/${id}/pdf?platform=${platform}`;
+  },
+
+  previewPdfUrl: (id, platform = 'NEXORA') => {
+    return `/api/invoices/${id}/preview?platform=${platform}`;
   },
 };

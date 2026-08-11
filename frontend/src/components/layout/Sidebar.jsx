@@ -23,6 +23,7 @@ import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import HistoryIcon from '@mui/icons-material/History';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 import { NAV_ITEMS } from '../../constants/navigation';
 
@@ -37,6 +38,7 @@ const iconMap = {
   MoneyOff: MoneyOffIcon,
   Notifications: NotificationsIcon,
   History: HistoryIcon,
+  AccountBalanceWallet: AccountBalanceWalletIcon,
 };
 
 const Sidebar = ({ mobileOpen, onDrawerToggle, drawerWidth = 260 }) => {
@@ -44,7 +46,7 @@ const Sidebar = ({ mobileOpen, onDrawerToggle, drawerWidth = 260 }) => {
   const navigate = useNavigate();
 
   const drawerContent = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#ffffff', color: '#0f172a' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#ffffff', color: '#0f172a', borderRight: '1.5px solid #e0f2fe' }}>
       {/* Brand Header */}
       <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 1.5 }}>
         <Box
@@ -52,12 +54,12 @@ const Sidebar = ({ mobileOpen, onDrawerToggle, drawerWidth = 260 }) => {
             width: 40,
             height: 40,
             borderRadius: 2.5,
-            background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)',
+            background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#ffffff',
-            boxShadow: '0 6px 16px rgba(14, 165, 233, 0.3)',
+            boxShadow: '0 6px 16px rgba(2, 132, 199, 0.4)',
           }}
         >
           <AutoAwesomeIcon fontSize="small" />
@@ -68,21 +70,21 @@ const Sidebar = ({ mobileOpen, onDrawerToggle, drawerWidth = 260 }) => {
             fontWeight={900}
             letterSpacing="-0.02em"
             sx={{
-              color: '#0ea5e9',
+              color: '#0284c7',
               lineHeight: 1.1,
               fontSize: '1.25rem',
             }}
           >
             Nexora
           </Typography>
-          <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.7rem', fontWeight: 600 }}>
-            SaaS Billing Platform
+          <Typography variant="caption" sx={{ color: '#0369a1', fontSize: '0.7rem', fontWeight: 800 }}>
+            Admin Platform
           </Typography>
         </Box>
-        <Chip label="v2.0" size="small" sx={{ ml: 'auto', bgcolor: '#e0f2fe', color: '#0284c7', fontSize: '0.65rem', fontWeight: 700 }} />
+        <Chip label="Admin" size="small" sx={{ ml: 'auto', bgcolor: '#e0f2fe', color: '#0284c7', border: '1px solid #0284c7', fontSize: '0.65rem', fontWeight: 800 }} />
       </Box>
 
-      <Divider sx={{ borderColor: '#e2e8f0' }} />
+      <Divider sx={{ borderColor: '#e0f2fe' }} />
 
       <Box sx={{ px: 3, pt: 2, pb: 1 }}>
         <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -108,22 +110,22 @@ const Sidebar = ({ mobileOpen, onDrawerToggle, drawerWidth = 260 }) => {
                   px: 2,
                   bgcolor: isActive ? '#e0f2fe' : 'transparent',
                   color: isActive ? '#0284c7' : '#64748b',
-                  borderLeft: isActive ? '3.5px solid #0ea5e9' : '3.5px solid transparent',
+                  borderLeft: isActive ? '3.5px solid #0284c7' : '3.5px solid transparent',
                   '&:hover': {
                     backgroundColor: isActive ? '#e0f2fe' : '#f0f9ff',
                     color: '#0284c7',
-                    '& .MuiListItemIcon-root': { color: '#0ea5e9' },
+                    '& .MuiListItemIcon-root': { color: '#0284c7' },
                   },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 36, color: isActive ? '#0ea5e9' : '#64748b' }}>
+                <ListItemIcon sx={{ minWidth: 36, color: isActive ? '#0284c7' : '#64748b' }}>
                   <IconComponent fontSize="small" />
                 </ListItemIcon>
                 <ListItemText
                   primary={item.title}
                   primaryTypographyProps={{
                     fontSize: '0.875rem',
-                    fontWeight: isActive ? 700 : 500,
+                    fontWeight: isActive ? 800 : 500,
                   }}
                 />
               </ListItemButton>
@@ -143,7 +145,7 @@ const Sidebar = ({ mobileOpen, onDrawerToggle, drawerWidth = 260 }) => {
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', sm: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, border: 'none' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, border: 'none', bgcolor: '#ffffff' },
         }}
       >
         {drawerContent}
@@ -152,7 +154,7 @@ const Sidebar = ({ mobileOpen, onDrawerToggle, drawerWidth = 260 }) => {
         variant="permanent"
         sx={{
           display: { xs: 'none', sm: 'block' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRight: '1px solid #e2e8f0' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRight: '1px solid #e0f2fe', bgcolor: '#ffffff' },
         }}
         open
       >

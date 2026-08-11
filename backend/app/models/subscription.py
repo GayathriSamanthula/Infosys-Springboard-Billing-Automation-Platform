@@ -86,6 +86,12 @@ class Subscription(Base):
         default=False
     )
 
+    platform_source = Column(
+        String(50),
+        default="NEXORA_DIRECT",
+        nullable=False
+    )
+
     is_deleted = Column(
         Boolean,
         default=False

@@ -75,3 +75,4 @@ class Invoice(Base):
     subscription = relationship("Subscription", back_populates="invoices")
     line_items = relationship("InvoiceLineItem", back_populates="invoice", cascade="all, delete-orphan")
     refunds = relationship("Refund", back_populates="invoice", cascade="all, delete-orphan")
+    payments = relationship("Payment", back_populates="invoice", cascade="all, delete-orphan")

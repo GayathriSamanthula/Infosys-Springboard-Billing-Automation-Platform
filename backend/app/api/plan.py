@@ -36,11 +36,9 @@ def create_subscription_plan(
     response_model=list[PlanResponse]
 )
 def get_subscription_plans(
-    status: Optional[str] = Query(None, description="Filter by status"),
-    include_archived: bool = Query(False, description="Include archived plans"),
     db: Session = Depends(get_db)
 ):
-    return get_all_plans(db, status=status, include_archived=include_archived)
+    return get_all_plans(db)
 
 
 @router.get(

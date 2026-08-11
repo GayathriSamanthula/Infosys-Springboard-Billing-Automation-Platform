@@ -3,6 +3,7 @@ import {
   Box,
   Typography,
   Card,
+  Grid,
   Table,
   TableBody,
   TableCell,
@@ -15,10 +16,12 @@ import {
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { billingCycleService } from '../../services/billingCycleService';
 import { useNotification } from '../../hooks/useNotification';
 import { formatDate } from '../../utils/formatters';
-import EmptyState from '../../components/common/EmptyState';
 
 const BillingCyclesPage = () => {
   const [cycles, setCycles] = useState([]);
@@ -30,7 +33,11 @@ const BillingCyclesPage = () => {
     setLoading(true);
     try {
       const data = await billingCycleService.getAll();
-      setCycles(Array.isArray(data) ? data : []);
+      const rawList = Array.isArray(data) ? data : [];
+      const uniqueCycles = Array.from(
+        new Map(rawList.map((item) => [item.subscription_id || item.id, item])).values()
+      );
+      setCycles(uniqueCycles);
     } catch (err) {
       showNotification('Failed to fetch billing cycles', 'error');
     } finally {
@@ -57,85 +64,144 @@ const BillingCyclesPage = () => {
 
   return (
     <Box>
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+      {/* Page Header */}
+      <Box sx={{ mb: 3.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box>
-          <Typography variant="h4" fontWeight={900} color="#F9FAFB" gutterBottom>
-            Billing Cycles Engine
+          <Typography variant="h4" fontWeight={900} color="#0f172a" gutterBottom>
+            Nexora Billing Cycles Engine
           </Typography>
-          <Typography variant="body2" color="#9CA3AF">
+          <Typography variant="body2" color="#64748b" fontWeight={600}>
             Automated subscription cycle calculations, renewal schedules, and date maintenance
           </Typography>
         </Box>
         <Button
           variant="contained"
-          color="primary"
           startIcon={running ? <CircularProgress size={20} color="inherit" /> : <PlayArrowIcon />}
           onClick={handleRunEngine}
           disabled={running}
-          sx={{ py: 1.2, px: 3, fontWeight: 700, borderRadius: 2 }}
+          sx={{
+            py: 1.2,
+            px: 3,
+            fontWeight: 800,
+            borderRadius: 2.5,
+            bgcolor: '#0284c7',
+            color: '#FFFFFF',
+            boxShadow: '0 4px 14px rgba(2, 132, 199, 0.3)',
+            '&:hover': { bgcolor: '#0369a1' },
+          }}
         >
           {running ? 'Executing Engine...' : 'Run Billing Engine'}
         </Button>
       </Box>
 
-      <Card sx={{ borderRadius: 3, bgcolor: '#FFFFFF', border: '1px solid #E5E7EB', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05)' }}>
+      {/* Engine Overview Metrics */}
+      <Grid container spacing={2.5} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ p: 2.5, borderRadius: 3, bgcolor: '#FFFFFF', border: '1.5px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+              <AutorenewIcon sx={{ color: '#10b981' }} />
+              <Typography variant="caption" fontWeight={800} color="#64748b">MONTHLY ENGINE</Typography>
+            </Box>
+            <Typography variant="h4" fontWeight={900} color="#047857">30 Days</Typography>
+            <Typography variant="caption" color="#10b981" fontWeight={700}>Auto-Renewal (+30d)</Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ p: 2.5, borderRadius: 3, bgcolor: '#FFFFFF', border: '1.5px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+              <CalendarMonthIcon sx={{ color: '#0284c7' }} />
+              <Typography variant="caption" fontWeight={800} color="#64748b">QUARTERLY ENGINE</Typography>
+            </Box>
+            <Typography variant="h4" fontWeight={900} color="#0369a1">90 Days</Typography>
+            <Typography variant="caption" color="#0284c7" fontWeight={700}>Quarterly Cycle (+90d)</Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ p: 2.5, borderRadius: 3, bgcolor: '#FFFFFF', border: '1.5px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+              <EventRepeatIcon sx={{ color: '#f57c00' }} />
+              <Typography variant="caption" fontWeight={800} color="#64748b">SEMI-ANNUAL ENGINE</Typography>
+            </Box>
+            <Typography variant="h4" fontWeight={900} color="#e65100">182 Days</Typography>
+            <Typography variant="caption" color="#f57c00" fontWeight={700}>Semi-Annual Cycle (+182d)</Typography>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ p: 2.5, borderRadius: 3, bgcolor: '#FFFFFF', border: '1.5px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+              <CheckCircleOutlineIcon sx={{ color: '#6366f1' }} />
+              <Typography variant="caption" fontWeight={800} color="#64748b">YEARLY ENGINE</Typography>
+            </Box>
+            <Typography variant="h4" fontWeight={900} color="#4338ca">365 Days</Typography>
+            <Typography variant="caption" color="#6366f1" fontWeight={700}>Annual Cycle (+365d)</Typography>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Main Billing Cycles Table */}
+      <Card sx={{ borderRadius: 3.5, bgcolor: '#FFFFFF', border: '1.5px solid #cbd5e1', boxShadow: '0 6px 20px -2px rgba(0,0,0,0.05)' }}>
+        <Box sx={{ p: 2.5, borderBottom: '1.5px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+          <Typography variant="h6" fontWeight={900} color="#0f172a">
+            Live Synchronized Billing Cycles Table
+          </Typography>
+        </Box>
         <TableContainer>
           <Table>
             <TableHead sx={{ bgcolor: '#F8FAFC' }}>
               <TableRow>
-                <TableCell sx={{ fontWeight: 800, color: '#475569' }}>Cycle ID</TableCell>
-                <TableCell sx={{ fontWeight: 800, color: '#475569' }}>Customer</TableCell>
-                <TableCell sx={{ fontWeight: 800, color: '#475569' }}>Plan</TableCell>
-                <TableCell sx={{ fontWeight: 800, color: '#475569' }}>Start Date</TableCell>
-                <TableCell sx={{ fontWeight: 800, color: '#475569' }}>End Date</TableCell>
-                <TableCell sx={{ fontWeight: 800, color: '#475569' }}>Renewal Date</TableCell>
-                <TableCell sx={{ fontWeight: 800, color: '#475569' }}>Next Billing Date</TableCell>
-                <TableCell sx={{ fontWeight: 800, color: '#475569' }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: '#0369a1' }}>Cycle ID</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: '#0369a1' }}>Customer ID</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: '#0369a1' }}>Customer</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: '#0369a1' }}>Plan</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: '#0369a1' }}>Start Date</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: '#0369a1' }}>End Date</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: '#0369a1' }}>Renewal Date</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: '#0369a1' }}>Next Billing Date</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: '#0369a1' }}>Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
-                    <CircularProgress color="primary" />
+                  <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                    <CircularProgress sx={{ color: '#0284c7' }} />
                   </TableCell>
                 </TableRow>
-              ) : cycles.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
-                    <EmptyState
-                      icon={EventRepeatIcon}
-                      title="No billing cycles recorded yet."
-                      description="Click 'Run Billing Engine' above to process active subscriptions due for renewal."
-                    />
-                  </TableCell>
-                </TableRow>
-              ) : (
-                cycles.map((row) => (
-                  <TableRow key={row.id} hover>
-                    <TableCell sx={{ fontWeight: 700, color: '#1E293B' }}>#{row.id}</TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: '#0F172A' }}>
+              ) : cycles.length > 0 ? (
+                cycles.map((row, idx) => (
+                  <TableRow key={row.id || idx} hover sx={{ '&:hover': { bgcolor: '#f0f9ff' } }}>
+                    <TableCell sx={{ fontWeight: 800, fontFamily: 'monospace', color: '#0284c7' }}>#{row.id}</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontFamily: 'monospace', color: '#475569' }}>
+                      #{row.customer_id || row.user_id || 'N/A'}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 800, color: '#0F172A' }}>
                       {row.customer_name || `Sub #${row.subscription_id}`}
                     </TableCell>
-                    <TableCell sx={{ color: '#475569' }}>{row.plan_name || '-'}</TableCell>
-                    <TableCell sx={{ color: '#475569' }}>{formatDate(row.billing_start_date)}</TableCell>
-                    <TableCell sx={{ color: '#475569' }}>{formatDate(row.billing_end_date)}</TableCell>
-                    <TableCell sx={{ color: '#475569' }}>{formatDate(row.renewal_date)}</TableCell>
-                    <TableCell sx={{ color: '#475569' }}>{formatDate(row.next_billing_date)}</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: '#7e22ce' }}>{row.plan_name || 'Standard Plan'}</TableCell>
+                    <TableCell sx={{ color: '#475569', fontWeight: 600 }}>{formatDate(row.billing_start_date)}</TableCell>
+                    <TableCell sx={{ color: '#475569', fontWeight: 600 }}>{formatDate(row.billing_end_date)}</TableCell>
+                    <TableCell sx={{ color: '#047857', fontWeight: 700 }}>{formatDate(row.renewal_date)}</TableCell>
+                    <TableCell sx={{ color: '#0369a1', fontWeight: 700 }}>{formatDate(row.next_billing_date)}</TableCell>
                     <TableCell>
                       <Chip
                         label={row.cycle_status || 'PROCESSED'}
                         size="small"
                         sx={{
-                          bgcolor: '#DEF7EC',
-                          color: '#03543F',
-                          fontWeight: 700,
+                          bgcolor: '#dcfce7',
+                          color: '#15803d',
+                          fontWeight: 900,
                           fontSize: '0.75rem',
                         }}
                       />
                     </TableCell>
                   </TableRow>
                 ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={9} align="center" sx={{ py: 4, color: '#64748b', fontWeight: 700 }}>
+                    No active billing cycles recorded in the database.
+                  </TableCell>
+                </TableRow>
               )}
             </TableBody>
           </Table>

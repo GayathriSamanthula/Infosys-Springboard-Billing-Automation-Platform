@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Toolbar, Container } from '@mui/material';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import Sidebar from '../components/layout/Sidebar';
 import Breadcrumbs from '../components/layout/Breadcrumbs';
@@ -14,6 +14,23 @@ const getRouteBgImage = () => null;
 const MainLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuthOnBack = () => {
+      const token = localStorage.getItem('nexora_jwt_token') || localStorage.getItem('token') || localStorage.getItem('nexora_user') || localStorage.getItem('user');
+      if (!token) {
+        navigate('/login', { replace: true });
+      }
+    };
+    checkAuthOnBack();
+    window.addEventListener('popstate', checkAuthOnBack);
+    window.addEventListener('pageshow', checkAuthOnBack);
+    return () => {
+      window.removeEventListener('popstate', checkAuthOnBack);
+      window.removeEventListener('pageshow', checkAuthOnBack);
+    };
+  }, [navigate]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);

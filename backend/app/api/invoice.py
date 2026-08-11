@@ -10,6 +10,7 @@ from app.services.invoice_service import (
     create_invoice,
     generate_itemized_invoice,
     get_all_invoices,
+    get_invoices_by_customer,
     get_invoice_by_id,
     get_invoice_line_items,
     delete_invoice,
@@ -69,6 +70,11 @@ def read_all_invoices(
     return get_all_invoices(db)
 
 
+@router.get("/customer/{customer_id}", response_model=list[InvoiceResponse])
+def read_invoices_by_customer(customer_id: int, db: Session = Depends(get_db)):
+    return get_invoices_by_customer(db, customer_id)
+
+
 @router.get("/{invoice_id}", response_model=InvoiceResponse)
 def read_invoice(invoice_id: int, db: Session = Depends(get_db)):
     invoice = get_invoice_by_id(db, invoice_id)
@@ -80,12 +86,12 @@ def read_invoice(invoice_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{invoice_id}/download", response_class=HTMLResponse)
-def download_invoice_html(invoice_id: int, db: Session = Depends(get_db)):
+def download_invoice_html(invoice_id: int, platform: Optional[str] = None, db: Session = Depends(get_db)):
     invoice = get_invoice_by_id(db, invoice_id)
     if invoice is None:
         raise HTTPException(status_code=404, detail="Invoice not found")
 
-    html_content = generate_invoice_html(invoice)
+    html_content = generate_invoice_html(invoice, platform=platform)
     return HTMLResponse(content=html_content, status_code=200)
 
 

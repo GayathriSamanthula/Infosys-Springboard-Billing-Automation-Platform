@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, String, Date, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, Float, String, Date, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from app.database.database import Base
 
@@ -12,6 +12,12 @@ class Payment(Base):
         Integer,
         ForeignKey("subscriptions.id"),
         nullable=False
+    )
+
+    invoice_id = Column(
+        Integer,
+        ForeignKey("invoices.id"),
+        nullable=True
     )
 
     amount = Column(
@@ -31,7 +37,7 @@ class Payment(Base):
     )
 
     payment_date = Column(
-        Date,
+        DateTime,
         nullable=False
     )
 
@@ -55,3 +61,4 @@ class Payment(Base):
     )
 
     subscription = relationship("Subscription", back_populates="payments")
+    invoice = relationship("Invoice", back_populates="payments")

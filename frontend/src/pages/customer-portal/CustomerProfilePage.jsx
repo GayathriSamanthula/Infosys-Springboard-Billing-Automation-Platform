@@ -1,0 +1,162 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Paper,
+  Grid,
+  Avatar,
+  Divider,
+  Chip,
+  CircularProgress,
+} from '@mui/material';
+import PersonIcon from '@mui/icons-material/Person';
+import EmailIcon from '@mui/icons-material/Email';
+import PhoneIcon from '@mui/icons-material/Phone';
+import PublicIcon from '@mui/icons-material/Public';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+
+import { customerPortalService } from '../../services/customerPortalService';
+
+const CustomerProfilePage = () => {
+  const [customer, setCustomer] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const currentCustomer = customerPortalService.getCurrentCustomer() || { customer_id: Date.now(), full_name: 'Customer Account', email: '' };
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        const loggedUser = customerPortalService.getCurrentCustomer();
+        const loggedEmail = loggedUser?.email || localStorage.getItem('customer_email') || '';
+
+        const res = await fetch('/api/customers').then(r => r.json()).catch(() => []);
+        const custs = Array.isArray(res) ? res : [];
+        const matched = custs.find(c =>
+          (loggedEmail && String(c.email || '').toLowerCase() === String(loggedEmail).toLowerCase()) ||
+          (loggedUser?.id && Number(c.id) === Number(loggedUser.id))
+        );
+
+        if (matched) {
+          setCustomer(matched);
+        } else {
+          setCustomer(loggedUser || currentCustomer);
+        }
+      } catch (err) {
+        console.error('Failed to load customer profile:', err);
+        setCustomer(currentCustomer);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const profile = customer || currentCustomer;
+
+  return (
+    <Box sx={{ pb: 6 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" fontWeight={900} color="#0f172a">
+          Customer Profile
+        </Typography>
+        <Typography variant="body2" color="#e76f51" fontWeight={700} sx={{ mt: 0.5 }}>
+          View and manage your subscriber account details
+        </Typography>
+      </Box>
+
+      {loading ? (
+        <CircularProgress color="primary" />
+      ) : (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 3.5, border: '3px solid #e76f51', bgcolor: '#FFFFFF !important', boxShadow: '0 10px 25px -5px rgba(231, 111, 81, 0.35)' }}>
+              <Avatar
+                sx={{
+                  width: 90,
+                  height: 90,
+                  bgcolor: '#e76f51',
+                  color: '#ffffff',
+                  fontSize: '2.5rem',
+                  fontWeight: 900,
+                  mx: 'auto',
+                  mb: 2,
+                  border: '3px solid #e76f51',
+                }}
+              >
+                {profile.full_name ? profile.full_name[0].toUpperCase() : (profile.name ? profile.name[0].toUpperCase() : (profile.email ? profile.email[0].toUpperCase() : 'C'))}
+              </Avatar>
+              <Typography variant="h5" fontWeight={800} color="#0f172a">
+                {profile.full_name || profile.name || profile.email?.split('@')[0] || 'Customer Account'}
+              </Typography>
+              <Typography variant="body2" color="#e76f51" fontWeight={800} sx={{ mb: 2 }}>
+                Customer ID: #{profile.id || profile.customer_id || 'ACCOUNT'}
+              </Typography>
+              <Chip
+                icon={<VerifiedUserIcon fontSize="small" sx={{ color: '#e76f51 !important' }} />}
+                label={profile.customer_status || profile.status || 'ACTIVE SUBSCRIBER'}
+                size="small"
+                sx={{ fontWeight: 800, bgcolor: '#fcdad2', color: '#e76f51', border: '1px solid #e76f51' }}
+              />
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} md={8}>
+            <Paper sx={{ p: 3.5, borderRadius: 3.5, border: '3px solid #e76f51', bgcolor: '#FFFFFF !important', boxShadow: '0 10px 25px -5px rgba(231, 111, 81, 0.35)' }}>
+              <Typography variant="h6" fontWeight={800} color="#0f172a" sx={{ mb: 2 }}>
+                Account Identity Details
+              </Typography>
+
+              <Divider sx={{ mb: 3, borderColor: '#fcdad2' }} />
+
+              <Grid container spacing={2.5}>
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <PersonIcon sx={{ color: '#e76f51' }} />
+                    <Box>
+                      <Typography variant="caption" color="#64748b" fontWeight={700}>FULL NAME</Typography>
+                      <Typography variant="body1" color="#0f172a" fontWeight={800}>{profile.full_name || profile.name || profile.email?.split('@')[0] || 'Customer Account'}</Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <EmailIcon sx={{ color: '#e76f51' }} />
+                    <Box>
+                      <Typography variant="caption" color="#64748b" fontWeight={700}>EMAIL ADDRESS</Typography>
+                      <Typography variant="body1" color="#0f172a" fontWeight={800}>{profile.email || 'N/A'}</Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <PhoneIcon sx={{ color: '#e76f51' }} />
+                    <Box>
+                      <Typography variant="caption" color="#64748b" fontWeight={700}>PHONE NUMBER</Typography>
+                      <Typography variant="body1" color="#0f172a" fontWeight={800}>{profile.phone_number || profile.phone || 'N/A'}</Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <PublicIcon sx={{ color: '#e76f51' }} />
+                    <Box>
+                      <Typography variant="caption" color="#64748b" fontWeight={700}>COUNTRY</Typography>
+                      <Typography variant="body1" color="#0f172a" fontWeight={800}>{profile.country || 'India'}</Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
+    </Box>
+  );
+};
+
+export default CustomerProfilePage;
