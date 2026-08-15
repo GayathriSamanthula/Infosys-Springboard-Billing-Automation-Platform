@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 from fastapi import HTTPException
 from typing import Optional
+from datetime import date, timedelta
 
 from app.models.customer import Customer
 from app.models.subscription import Subscription
