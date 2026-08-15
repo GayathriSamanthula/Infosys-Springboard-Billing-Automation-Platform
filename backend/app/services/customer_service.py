@@ -370,13 +370,9 @@ def login_customer(db: Session, login_data: CustomerLogin):
     if customer is None:
         return None
 
-    # Clean Password Verification for Neon Cloud DB compatibility (with pre-migrated account support)
-    if login_data.password and customer.password:
-        if not verify_password(login_data.password, customer.password):
-            clean_pwd = (login_data.password or '').strip().lower()
-            email_prefix = (customer.email or '').split('@')[0].lower()
-            if clean_pwd not in ["password123", "password", email_prefix]:
-                return None
+    # Strict Password Verification against existing database records only (no fallbacks)
+    if not customer.password or not verify_password(login_data.password, customer.password):
+        return None
 
     token = create_access_token(
         {
