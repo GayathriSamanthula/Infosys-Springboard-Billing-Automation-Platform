@@ -370,11 +370,10 @@ def login_customer(db: Session, login_data: CustomerLogin):
     if customer is None:
         return None
 
-    # Guaranteed Auto-Healing Password Sync: Ensure ANY password passed synchronizes seamlessly
-    if login_data.password:
-        customer.password = hash_password(login_data.password)
-        db.commit()
-        db.refresh(customer)
+    # Clean Read-Only Password Verification for Neon Cloud DB compatibility
+    if login_data.password and customer.password:
+        if not verify_password(login_data.password, customer.password):
+            return None
 
     token = create_access_token(
         {
