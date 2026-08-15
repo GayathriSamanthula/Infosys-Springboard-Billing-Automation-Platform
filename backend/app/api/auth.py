@@ -117,15 +117,23 @@ def customer_login(
     """
     Authenticates a customer (role: CUSTOMER) and returns access token + customer profile.
     """
-    auth_result = login_customer(db, credentials)
+    try:
+        auth_result = login_customer(db, credentials)
 
-    if auth_result is None:
+        if auth_result is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="No customer account found with this email address. Please register an account first."
+            )
+
+        return auth_result
+    except HTTPException:
+        raise
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No customer account found with this email address. Please register an account first."
+            detail=f"Customer authentication notice: {str(exc)}"
         )
-
-    return auth_result
 
 
 @router.post(

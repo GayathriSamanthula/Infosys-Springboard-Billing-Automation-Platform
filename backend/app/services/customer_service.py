@@ -383,14 +383,17 @@ def login_customer(db: Session, login_data: CustomerLogin):
         }
     )
 
+    raw_src = getattr(customer, "platform_source", None) or "NEXORA_DIRECT"
+    platform_src = "VELORA_DIRECT" if "VELORA" in str(raw_src).upper() else "NEXORA_DIRECT"
+
     return {
         "access_token": token,
         "token_type": "bearer",
         "customer_id": customer.id,
-        "full_name": customer.full_name,
-        "email": customer.email,
+        "full_name": customer.full_name or (customer.email.split('@')[0] if customer.email else "Valued Customer"),
+        "email": customer.email or "",
         "role": "CUSTOMER",
-        "platform_source": getattr(customer, "platform_source", None) or "NEXORA_DIRECT"
+        "platform_source": platform_src
     }
 
 
