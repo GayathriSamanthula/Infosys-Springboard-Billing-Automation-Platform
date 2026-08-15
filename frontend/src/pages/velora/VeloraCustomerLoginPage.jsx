@@ -41,7 +41,7 @@ const VeloraCustomerLoginPage = () => {
     setError('');
 
     try {
-      const res = await axios.post('/api/auth/customer/login', { email, password });
+      const res = await axios.post('https://infosys-springboard-billing-automation.onrender.com/auth/customer/login', { email, password });
       const custObj = {
         id: res.data?.customer_id,
         email: res.data?.email || email,

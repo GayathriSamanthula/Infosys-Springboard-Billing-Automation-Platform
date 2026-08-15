@@ -5,7 +5,7 @@ export const customerPortalService = {
   // Login subscriber customer
   login: async (credentials) => {
     try {
-      const response = await axios.post('/api/auth/customer/login', credentials);
+      const response = await axios.post('https://infosys-springboard-billing-automation.onrender.com/auth/customer/login', credentials);
       if (response.data && response.data.access_token) {
         localStorage.setItem('customer_token', response.data.access_token);
         localStorage.setItem('customer_info', JSON.stringify(response.data));
