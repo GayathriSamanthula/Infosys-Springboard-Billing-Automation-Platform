@@ -6,6 +6,9 @@ POSTGRES_URL = os.getenv("DATABASE_URL", "postgresql://postgres:Gayatri1222@loca
 if POSTGRES_URL and POSTGRES_URL.startswith("postgres://"):
     POSTGRES_URL = POSTGRES_URL.replace("postgres://", "postgresql://", 1)
 
+if POSTGRES_URL and "c-3." in POSTGRES_URL and "-pooler" not in POSTGRES_URL:
+    POSTGRES_URL = POSTGRES_URL.replace(".c-3.", "-pooler.c-3.", 1)
+
 SQLITE_URL = "sqlite:///./billing_automation_platform.db"
 
 try:
