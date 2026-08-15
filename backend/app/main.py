@@ -57,23 +57,29 @@ app = FastAPI(
     version="1.0.0",
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 @app.middleware("http")
-async def add_no_cache_headers(request, call_next):
+async def add_cors_and_no_cache_headers(request, call_next):
     if request.method == "OPTIONS":
-        return await call_next(request)
+        from fastapi.responses import Response
+        res = Response(status_code=200)
+        res.headers["Access-Control-Allow-Origin"] = "*"
+        res.headers["Access-Control-Allow-Methods"] = "*"
+        res.headers["Access-Control-Allow-Headers"] = "*"
+        return res
 
-    response = await call_next(request)
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        from fastapi.responses import JSONResponse
+        response = JSONResponse(
+            status_code=500,
+            content={"detail": str(exc)}
+        )
+
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
     return response
 
 app.include_router(auth_router)
