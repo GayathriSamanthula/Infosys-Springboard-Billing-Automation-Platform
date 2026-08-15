@@ -59,7 +59,12 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "*",
+        "https://infosys-springboard-billing-automat.vercel.app",
+        "http://localhost:5173",
+        "http://localhost:80",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -67,6 +72,9 @@ app.add_middleware(
 
 @app.middleware("http")
 async def add_no_cache_headers(request, call_next):
+    if request.method == "OPTIONS":
+        return await call_next(request)
+
     response = await call_next(request)
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
