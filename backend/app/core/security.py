@@ -1,5 +1,7 @@
 import hashlib
-import bcrypt
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt", "pbkdf2_sha256"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
@@ -9,8 +11,7 @@ def hash_password(password: str) -> str:
     if not password:
         password = ""
     try:
-        salt = bcrypt.gensalt()
-        return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+        return pwd_context.hash(password)
     except Exception:
         return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
@@ -29,14 +30,14 @@ def verify_password(
     if plain_password == hashed_password:
         return True
 
+    try:
+        if pwd_context.verify(plain_password, hashed_password):
+            return True
+    except Exception:
+        pass
+
     hashed_plain = hashlib.sha256((plain_password or '').encode('utf-8')).hexdigest()
     if hashed_plain == hashed_password:
         return True
-
-    try:
-        if isinstance(hashed_password, str) and (hashed_password.startswith("$2b$") or hashed_password.startswith("$2a$")):
-            return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
-    except Exception:
-        pass
 
     return False
