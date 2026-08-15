@@ -116,21 +116,9 @@ def login_user(db: Session, login_data: UserLogin):
         prefix = raw_input.split('@')[0].lower()
         user = db.query(User).filter(func.lower(User.email).like(f"%{prefix}%")).first()
 
-    # 5. Guaranteed fallback: if user still not found, create new account for this exact email
+    # If user is not found, return None (triggers 401 Unauthorized)
     if user is None:
-        user = User(
-            username=raw_input.split('@')[0] if '@' in raw_input else raw_input,
-            email=email_clean if '@' in email_clean else f"{email_clean}@nexora.com",
-            password=hash_password(login_data.password or "Password123!"),
-            role="ADMIN"
-        )
-        try:
-            db.add(user)
-            db.commit()
-            db.refresh(user)
-        except Exception:
-            db.rollback()
-            user = db.query(User).filter(func.lower(User.email) == email_clean).first()
+        return None
 
     # Strict Password Verification
     if login_data.password and not verify_password(login_data.password, user.password):
@@ -150,3 +138,27 @@ def login_user(db: Session, login_data: UserLogin):
         "user_id": user.id,
         "role": user.role or "ADMIN"
     }
+
+
+def init_default_users(db: Session):
+    """Seed initial default admin accounts for Nexora and Velora."""
+    defaults = [
+        {"username": "Gayathri Samanthula", "email": "gayatri.samanthula@nexora.com", "password": "Gayatri@nexoraadmin", "working_id": "WID_NEX_001"},
+        {"username": "Nexora Admin", "email": "admin@nexora.com", "password": "password123", "working_id": "WID_NEX_002"},
+        {"username": "Velora Merchant Admin", "email": "admin@velora.com", "password": "password123", "working_id": "WID_VEL_001"},
+    ]
+    for d in defaults:
+        exists = db.query(User).filter(User.email == d["email"]).first()
+        if not exists:
+            u = User(
+                username=d["username"],
+                email=d["email"],
+                password=hash_password(d["password"]),
+                working_id=d["working_id"],
+                role="ADMIN"
+            )
+            db.add(u)
+        else:
+            exists.password = hash_password(d["password"])
+            db.add(exists)
+    db.commit()

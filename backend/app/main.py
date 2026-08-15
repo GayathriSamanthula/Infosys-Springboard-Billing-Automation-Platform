@@ -112,9 +112,11 @@ def startup_event():
         from app.services.billing_cycle_service import generate_due_invoices
         from app.services.retry_service import init_default_retry_configs
         from app.services.tax_service import init_default_tax_rules
+        from app.services.user_service import init_default_users
         from app.services.customer_service import init_default_customers
         from app.services.plan_service import init_default_plans
         db = SessionLocal()
+        init_default_users(db)
         init_default_customers(db)
         init_default_plans(db)
         generate_due_invoices(db)

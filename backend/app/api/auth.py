@@ -126,7 +126,15 @@ def customer_login(
                 detail="No customer account found with this email address. Please register an account first."
             )
 
-        return auth_result
+        return CustomerTokenResponse(
+            access_token=auth_result["access_token"],
+            token_type=auth_result.get("token_type", "bearer"),
+            customer_id=int(auth_result["customer_id"]),
+            full_name=str(auth_result["full_name"]),
+            email=str(auth_result["email"]),
+            role=str(auth_result.get("role", "CUSTOMER")),
+            platform_source=str(auth_result.get("platform_source", "NEXORA_DIRECT"))
+        )
     except HTTPException:
         raise
     except Exception as exc:
