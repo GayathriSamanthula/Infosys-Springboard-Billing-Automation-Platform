@@ -20,9 +20,11 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import FintechBackground from '../../components/common/FintechBackground';
+import { useNotification } from '../../hooks/useNotification';
 
 const VeloraCustomerLoginPage = () => {
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
