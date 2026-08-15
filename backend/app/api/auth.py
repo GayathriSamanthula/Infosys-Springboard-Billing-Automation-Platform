@@ -63,15 +63,23 @@ def admin_login(
     Authenticates a platform administrator (role: ADMIN).
     Customers are strictly prohibited from logging in through this endpoint.
     """
-    token = login_user(db, user)
+    try:
+        token = login_user(db, user)
 
-    if token is None:
+        if token is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid admin email or password."
+            )
+
+        return token
+    except HTTPException:
+        raise
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid admin email or password."
+            detail=f"Authentication failed: {str(exc)}"
         )
-
-    return token
 
 
 @router.post(

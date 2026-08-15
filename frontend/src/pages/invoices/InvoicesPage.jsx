@@ -30,8 +30,10 @@ import StatusBadge from '../../components/common/StatusBadge';
 import { invoiceService } from '../../services/invoiceService';
 import { useNotification } from '../../hooks/useNotification';
 import { formatDate, formatCurrency } from '../../utils/formatters';
+import { useTranslation } from 'react-i18next';
 
 const InvoicesPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { showNotification } = useNotification();
   const [invoices, setInvoices] = useState([]);
@@ -100,7 +102,7 @@ const InvoicesPage = () => {
   const columns = [
     {
       id: 'invoice_number',
-      label: 'Invoice #',
+      label: t('admin.invoices.col_invoice_no', 'Invoice #'),
       render: (row) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ReceiptIcon fontSize="small" sx={{ color: '#0284c7' }} />
@@ -112,7 +114,7 @@ const InvoicesPage = () => {
     },
     {
       id: 'customer_name',
-      label: 'Customer & Customer ID',
+      label: t('admin.invoices.col_customer', 'Customer & Customer ID'),
       render: (row) => {
         const custId = row.customer_id || (row.subscription_id ? row.subscription_id : 1);
         return (
@@ -123,7 +125,7 @@ const InvoicesPage = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.3 }}>
               <Chip
                 size="small"
-                label={`Customer ID: #${custId}`}
+                label={`${t('admin.invoices.customer_id_label', 'Customer ID')}: #${custId}`}
                 onClick={() => navigate(`/customers?id=${custId}`)}
                 sx={{ bgcolor: '#e0f2fe', color: '#0284c7', fontWeight: 800, cursor: 'pointer', fontSize: '0.72rem' }}
               />
@@ -134,18 +136,18 @@ const InvoicesPage = () => {
     },
     {
       id: 'subscription_id',
-      label: 'Sub ID',
+      label: t('admin.invoices.col_sub_id', 'Sub ID'),
       render: (row) => `#${row.subscription_id}`,
     },
     {
       id: 'platform_source',
-      label: 'Origin Channel',
+      label: t('admin.invoices.col_channel', 'Origin Channel'),
       render: (row) => {
         const isVelora = String(row.platform_source || '').toUpperCase().includes('VELORA') || String(row.invoice_number || '').includes('VEL');
         return (
           <Chip
             size="small"
-            label={isVelora ? 'Velora Gateway' : 'Nexora Direct'}
+            label={isVelora ? t('admin.subscriptions.velora_gateway', 'Velora Gateway') : t('admin.subscriptions.nexora_direct', 'Nexora Direct')}
             sx={{
               bgcolor: isVelora ? '#fff7ed' : '#e0f2fe',
               color: isVelora ? '#e65100' : '#0284c7',
@@ -159,22 +161,22 @@ const InvoicesPage = () => {
     },
     {
       id: 'issue_date',
-      label: 'Issue Date',
+      label: t('admin.invoices.col_issue_date', 'Issue Date'),
       render: (row) => formatDate(row.issue_date),
     },
     {
       id: 'due_date',
-      label: 'Due Date',
+      label: t('admin.invoices.col_due_date', 'Due Date'),
       render: (row) => formatDate(row.due_date),
     },
     {
       id: 'status',
-      label: 'Status',
+      label: t('admin.invoices.col_status', 'Status'),
       render: (row) => <StatusBadge status={row.status} />,
     },
     {
       id: 'amount',
-      label: 'Total Amount',
+      label: t('admin.invoices.col_amount', 'Total Amount'),
       render: (row) => (
         <Typography fontWeight={800} color="#0f172a">
           {formatCurrency(row.amount)}
@@ -183,23 +185,23 @@ const InvoicesPage = () => {
     },
     {
       id: 'actions',
-      label: 'Actions',
+      label: t('admin.invoices.col_actions', 'Actions'),
       align: 'right',
       render: (row) => {
         const custId = row.customer_id || 1;
         return (
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-            <Tooltip title="Inspect Customer (Method A)">
+            <Tooltip title={t('admin.invoices.tooltip_inspect', 'Inspect Customer (Method A)')}>
               <IconButton size="small" onClick={() => navigate(`/customers?id=${custId}`)}>
                 <PersonSearchIcon fontSize="small" sx={{ color: '#0284c7' }} />
               </IconButton>
             </Tooltip>
-            <Tooltip title="View Invoice Drawer Details">
+            <Tooltip title={t('admin.invoices.tooltip_view_drawer', 'View Invoice Drawer Details')}>
               <IconButton size="small" onClick={() => handleOpenDrawer(row)}>
                 <VisibilityIcon fontSize="small" sx={{ color: '#0284c7' }} />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Download / Print Printable Invoice">
+            <Tooltip title={t('admin.invoices.tooltip_download_print', 'Download / Print Printable Invoice')}>
               <IconButton size="small" onClick={() => window.open(invoiceService.downloadHtmlUrl(row.id), '_blank')}>
                 <DownloadIcon fontSize="small" sx={{ color: '#0284c7' }} />
               </IconButton>
@@ -215,10 +217,10 @@ const InvoicesPage = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h4" fontWeight={900} color="#0f172a" gutterBottom>
-            Invoices & Billing Statements
+            {t('nav.invoices', 'Invoices & Billing Statements')}
           </Typography>
           <Typography variant="body2" color="#0284c7" fontWeight={600}>
-            Monitor itemized customer invoices, taxes, payment statuses, and print/export receipts.
+            {t('admin.invoices.subtitle', 'Itemized tax invoice generation, payment statuses, and printable PDF compliance statements')}
           </Typography>
         </Box>
         <Button
@@ -227,7 +229,7 @@ const InvoicesPage = () => {
           onClick={handleGenerateInvoice}
           sx={{ py: 1.2, px: 2.5, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' }, fontWeight: 800 }}
         >
-          Generate Itemized Invoice
+          {t('admin.invoices.generate_button', 'Generate Itemized Invoice')}
         </Button>
       </Box>
 
@@ -235,17 +237,17 @@ const InvoicesPage = () => {
         columns={columns}
         data={invoices}
         loading={loading}
-        emptyTitle="No invoices found."
-        emptyDescription="There are currently no invoice records in your database."
+        emptyTitle={t('admin.invoices.empty_title', 'No invoices found.')}
+        emptyDescription={t('admin.invoices.empty_desc', 'There are currently no invoice records in your database.')}
         filterField="status"
         filterOptions={[
-          { label: 'Paid', value: 'paid' },
-          { label: 'Pending', value: 'pending' },
-          { label: 'Unpaid', value: 'unpaid' },
-          { label: 'Overdue', value: 'overdue' },
-          { label: 'Refunded', value: 'refunded' },
+          { label: t('status.paid', 'Paid'), value: 'paid' },
+          { label: t('status.pending', 'Pending'), value: 'pending' },
+          { label: t('status.unpaid', 'Unpaid'), value: 'unpaid' },
+          { label: t('status.overdue', 'Overdue'), value: 'overdue' },
+          { label: t('status.refunded', 'Refunded'), value: 'refunded' },
         ]}
-        filterLabel="Invoice Status"
+        filterLabel={t('admin.invoices.filter_label', 'Invoice Status')}
       />
 
       {/* Invoice Drawer */}
@@ -260,7 +262,7 @@ const InvoicesPage = () => {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Box>
                 <Typography variant="h6" fontWeight={800} color="#0f172a">
-                  Invoice Statement
+                  {t('admin.invoices.drawer_title', 'Invoice Statement')}
                 </Typography>
                 <Typography variant="caption" color="#64748b">
                   {selectedInvoice.invoice_number}
@@ -277,13 +279,13 @@ const InvoicesPage = () => {
               <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <Typography variant="caption" color="#64748b" display="block">
-                    Invoice Status
+                    {t('admin.invoices.drawer_status', 'Invoice Status')}
                   </Typography>
                   <StatusBadge status={selectedInvoice.status} />
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="caption" color="#64748b" display="block">
-                    Total Amount
+                    {t('admin.invoices.drawer_total_amount', 'Total Amount')}
                   </Typography>
                   <Typography variant="h6" fontWeight={800} color="#0284c7">
                     {formatCurrency(selectedInvoice.amount)}
@@ -291,7 +293,7 @@ const InvoicesPage = () => {
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="caption" color="#64748b" display="block">
-                    Issue Date
+                    {t('admin.invoices.drawer_issue_date', 'Issue Date')}
                   </Typography>
                   <Typography variant="body2" fontWeight={700}>
                     {formatDate(selectedInvoice.issue_date)}
@@ -299,7 +301,7 @@ const InvoicesPage = () => {
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="caption" color="#64748b" display="block">
-                    Due Date
+                    {t('admin.invoices.drawer_due_date', 'Due Date')}
                   </Typography>
                   <Typography variant="body2" fontWeight={700}>
                     {formatDate(selectedInvoice.due_date)}
@@ -308,7 +310,7 @@ const InvoicesPage = () => {
                 {selectedInvoice.remarks && (
                   <Grid item xs={12}>
                     <Typography variant="caption" color="#64748b" display="block">
-                      Billing Remarks / Transition Details
+                      {t('admin.invoices.drawer_remarks', 'Billing Remarks / Transition Details')}
                     </Typography>
                     <Typography variant="body2" fontWeight={700} color="#0f172a">
                       {selectedInvoice.remarks}
@@ -319,14 +321,14 @@ const InvoicesPage = () => {
             </Paper>
 
             <Typography variant="subtitle2" fontWeight={800} color="#0f172a" sx={{ mb: 1 }}>
-              Itemized Line Items
+              {t('admin.invoices.drawer_line_items_title', 'Itemized Line Items')}
             </Typography>
 
             <Table size="small" sx={{ mb: 3, border: '1px solid #e2e8f0', borderRadius: 1 }}>
               <TableHead sx={{ bgcolor: '#f1f5f9' }}>
                 <TableRow>
-                  <TableCell><Typography variant="caption" fontWeight={800}>Description</Typography></TableCell>
-                  <TableCell align="right"><Typography variant="caption" fontWeight={800}>Amount</Typography></TableCell>
+                  <TableCell><Typography variant="caption" fontWeight={800}>{t('admin.invoices.drawer_col_description', 'Description')}</Typography></TableCell>
+                  <TableCell align="right"><Typography variant="caption" fontWeight={800}>{t('admin.invoices.drawer_col_amount', 'Amount')}</Typography></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -341,7 +343,7 @@ const InvoicesPage = () => {
                   <TableRow>
                     <TableCell colSpan={2} align="center">
                       <Typography variant="caption" color="#64748b">
-                        Standard subscription billing charge
+                        {t('admin.invoices.drawer_default_item', 'Standard subscription billing charge')}
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -357,7 +359,7 @@ const InvoicesPage = () => {
                 onClick={handlePrint}
                 sx={{ borderRadius: 2 }}
               >
-                Print Invoice
+                {t('admin.invoices.btn_print', 'Print Invoice')}
               </Button>
               <Button
                 fullWidth
@@ -366,7 +368,7 @@ const InvoicesPage = () => {
                 onClick={handleDownload}
                 sx={{ borderRadius: 2, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' } }}
               >
-                Download PDF
+                {t('admin.invoices.btn_download_pdf', 'Download PDF')}
               </Button>
             </Box>
           </Box>

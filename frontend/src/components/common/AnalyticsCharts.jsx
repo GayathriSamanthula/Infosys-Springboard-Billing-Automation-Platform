@@ -12,6 +12,7 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import PaymentIcon from '@mui/icons-material/Payment';
 import PieChartIcon from '@mui/icons-material/PieChart';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import { useTranslation } from 'react-i18next';
 
 export const AnalyticsCharts = ({
   subscriptions = [],
@@ -21,6 +22,7 @@ export const AnalyticsCharts = ({
   themeColor = '#0284c7',
   secondaryColor = '#0369a1',
 }) => {
+  const { t } = useTranslation();
   const [timeframe, setTimeframe] = useState('monthly'); // 'daily' | 'monthly' | 'yearly'
 
   // Live Data Calculations
@@ -183,18 +185,18 @@ export const AnalyticsCharts = ({
               </Avatar>
               <Box>
                 <Typography variant="subtitle1" fontWeight={900} color="#0f172a">
-                  Revenue Performance Trend (Line Chart)
+                  {t('admin.charts.revenue_trend_title', 'Revenue Performance Trend (Line Chart)')}
                 </Typography>
                 <Typography variant="caption" color="#64748b" fontWeight={700}>
-                  Continuous time-series tracking over uniform intervals
+                  {t('admin.charts.revenue_trend_subtitle', 'Continuous time-series tracking over uniform intervals')}
                 </Typography>
               </Box>
             </Box>
 
             <ButtonGroup size="small" variant="outlined" sx={{ '& .MuiButton-root': { fontWeight: 800 } }}>
-              <Button onClick={() => setTimeframe('daily')} variant={timeframe === 'daily' ? 'contained' : 'outlined'} sx={{ bgcolor: timeframe === 'daily' ? themeColor : 'transparent' }}>Daily</Button>
-              <Button onClick={() => setTimeframe('monthly')} variant={timeframe === 'monthly' ? 'contained' : 'outlined'} sx={{ bgcolor: timeframe === 'monthly' ? themeColor : 'transparent' }}>Monthly</Button>
-              <Button onClick={() => setTimeframe('yearly')} variant={timeframe === 'yearly' ? 'contained' : 'outlined'} sx={{ bgcolor: timeframe === 'yearly' ? themeColor : 'transparent' }}>Yearly</Button>
+              <Button onClick={() => setTimeframe('daily')} variant={timeframe === 'daily' ? 'contained' : 'outlined'} sx={{ bgcolor: timeframe === 'daily' ? themeColor : 'transparent' }}>{t('admin.charts.daily', 'Daily')}</Button>
+              <Button onClick={() => setTimeframe('monthly')} variant={timeframe === 'monthly' ? 'contained' : 'outlined'} sx={{ bgcolor: timeframe === 'monthly' ? themeColor : 'transparent' }}>{t('admin.charts.monthly', 'Monthly')}</Button>
+              <Button onClick={() => setTimeframe('yearly')} variant={timeframe === 'yearly' ? 'contained' : 'outlined'} sx={{ bgcolor: timeframe === 'yearly' ? themeColor : 'transparent' }}>{t('admin.charts.yearly', 'Yearly')}</Button>
             </ButtonGroup>
           </Box>
           <Divider sx={{ mb: 2, borderColor: '#e0f2fe' }} />
@@ -247,10 +249,10 @@ export const AnalyticsCharts = ({
               </Avatar>
               <Box>
                 <Typography variant="subtitle1" fontWeight={900} color="#0f172a">
-                  Payment & Retry Rates (Nested Donut)
+                  {t('admin.charts.donut_title', 'Payment & Retry Rates (Nested Donut)')}
                 </Typography>
                 <Typography variant="caption" color="#64748b" fontWeight={700}>
-                  Outer: Payment Rates | Inner: Retry Rates
+                  {t('admin.charts.donut_subtitle', 'Outer: Payment Rates | Inner: Retry Rates')}
                 </Typography>
               </Box>
             </Box>

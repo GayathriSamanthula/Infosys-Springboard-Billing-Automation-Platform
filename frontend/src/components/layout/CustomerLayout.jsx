@@ -19,11 +19,15 @@ import { useNavigate } from 'react-router-dom';
 import FintechBackground from '../common/FintechBackground';
 import CustomerSidebar from './CustomerSidebar';
 import { customerPortalService } from '../../services/customerPortalService';
+import { CustomerLanguageScope } from '../../context/LanguageContext';
+import LanguageSwitcher from '../common/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 const SIDEBAR_WIDTH = 260;
 
-const CustomerLayout = ({ children }) => {
+const CustomerLayoutContent = ({ children }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const currentCustomer = customerPortalService.getCurrentCustomer() || { customer_id: Date.now(), full_name: 'Customer Account', email: '' };
 
@@ -76,47 +80,58 @@ const CustomerLayout = ({ children }) => {
                   <Avatar sx={{ bgcolor: '#e76f51', color: '#ffffff', fontWeight: 900 }}>N</Avatar>
                   <Box>
                     <Typography variant="h6" fontWeight={900} color="#0f172a" sx={{ lineHeight: 1.1 }}>
-                      Nexora Customer Portal
+                      Nexora {t('nav.customerPortal')}
                     </Typography>
                     <Typography variant="caption" color="#e76f51" fontWeight={800}>
-                      Self-Service Billing & Subscription Management
+                      {t('landing.customerSubtitle')}
                     </Typography>
                   </Box>
                 </Box>
 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar sx={{ bgcolor: '#e76f51', color: '#ffffff', width: 34, height: 34, fontWeight: 800, fontSize: '0.85rem' }}>
-                      {currentCustomer.full_name ? currentCustomer.full_name[0].toUpperCase() : 'C'}
-                    </Avatar>
-                    <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                      <Typography variant="subtitle2" fontWeight={800} color="#0f172a" sx={{ lineHeight: 1.1 }}>
-                        {currentCustomer.full_name || 'Customer Account'}
-                      </Typography>
-                      <Typography variant="caption" color="#e76f51" fontWeight={700}>
-                        {currentCustomer.email}
-                      </Typography>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <LanguageSwitcher />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Avatar sx={{ bgcolor: '#e76f51', color: '#ffffff', width: 34, height: 34, fontWeight: 800, fontSize: '0.85rem' }}>
+                        {currentCustomer.full_name ? currentCustomer.full_name[0].toUpperCase() : 'C'}
+                      </Avatar>
+                      <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                        <Typography variant="subtitle2" fontWeight={800} color="#0f172a" sx={{ lineHeight: 1.1 }}>
+                          {currentCustomer.full_name || 'Customer Account'}
+                        </Typography>
+                        <Typography variant="caption" color="#e76f51" fontWeight={700}>
+                          {currentCustomer.email}
+                        </Typography>
+                      </Box>
                     </Box>
+
+                    <Tooltip title="Sign Out">
+                      <IconButton size="small" onClick={handleLogout} sx={{ color: '#ef4444' }}>
+                        <LogoutIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
+                </Toolbar>
+              </Container>
+            </AppBar>
 
-                  <Tooltip title="Sign Out">
-                    <IconButton size="small" onClick={handleLogout} sx={{ color: '#ef4444' }}>
-                      <LogoutIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              </Toolbar>
+            {/* Main Customer Portal Content Container */}
+            <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
+              {children}
             </Container>
-          </AppBar>
-
-          {/* Main Customer Portal Content Container */}
-          <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
-            {children}
-          </Container>
+          </Box>
         </Box>
-      </Box>
-    </FintechBackground>
+      </FintechBackground>
+  );
+};
+
+const CustomerLayout = ({ children }) => {
+  return (
+    <CustomerLanguageScope>
+      <CustomerLayoutContent>{children}</CustomerLayoutContent>
+    </CustomerLanguageScope>
   );
 };
 
 export default CustomerLayout;
+

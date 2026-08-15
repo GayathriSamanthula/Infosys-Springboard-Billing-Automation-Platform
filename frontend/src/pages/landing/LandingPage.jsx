@@ -17,12 +17,22 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { useNavigate } from 'react-router-dom';
 import FintechBackground from '../../components/common/FintechBackground';
+import { CustomerLanguageScope } from '../../context/LanguageContext';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
+import PwaInstallButton from '../../components/common/PwaInstallButton';
+import { useTranslation } from 'react-i18next';
 
-const LandingPage = () => {
+const LandingPageContent = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <FintechBackground overlayOpacity={0.7} enableBubbles={true}>
+      {/* Top bar with Language Switcher & Install App Button */}
+      <Box sx={{ position: 'absolute', top: 20, right: 24, zIndex: 10, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <LanguageSwitcher color="default" />
+        <PwaInstallButton />
+      </Box>
       <Box
         sx={{
           minHeight: '100vh',
@@ -52,10 +62,10 @@ const LandingPage = () => {
               </Typography>
             </Box>
             <Typography variant="h6" color="#475569" fontWeight={600} sx={{ maxWidth: 600, mx: 'auto' }}>
-              Automated Subscription Billing & Financial Compliance Platform
+              {t('landing.heroSubtitle')}
             </Typography>
             <Chip
-              label="Unified Gateway Portal"
+              label={t('landing.gatewayTag')}
               size="small"
               sx={{ mt: 2, bgcolor: '#f0f9ff', color: '#0284c7', fontWeight: 800, border: '1.5px solid #0284c7' }}
             />
@@ -86,10 +96,10 @@ const LandingPage = () => {
                     </Avatar>
                     <Box>
                       <Typography variant="h5" fontWeight={900} color="#0f172a">
-                        Customer Portal
+                        {t('landing.customerLogin')}
                       </Typography>
                       <Typography variant="caption" color="#e76f51" fontWeight={800}>
-                        SELF-SERVICE & INVOICE MANAGEMENT
+                        {t('landing.customerSubtitle')}
                       </Typography>
                     </Box>
                   </Box>
@@ -97,15 +107,15 @@ const LandingPage = () => {
                   <Box sx={{ mb: 3, flex: 1, mt: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.5 }}>
                       <CheckCircleOutlineIcon sx={{ color: '#e76f51', fontSize: '1.2rem' }} />
-                      <Typography variant="body2" color="#334155" fontWeight={700}>View & Upgrade Subscription Plans</Typography>
+                      <Typography variant="body2" color="#334155" fontWeight={700}>{t('landing.customerBullet1')}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.5 }}>
                       <CheckCircleOutlineIcon sx={{ color: '#e76f51', fontSize: '1.2rem' }} />
-                      <Typography variant="body2" color="#334155" fontWeight={700}>Download GST / Tax Compliant Invoices</Typography>
+                      <Typography variant="body2" color="#334155" fontWeight={700}>{t('landing.customerBullet2')}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.5 }}>
                       <CheckCircleOutlineIcon sx={{ color: '#e76f51', fontSize: '1.2rem' }} />
-                      <Typography variant="body2" color="#334155" fontWeight={700}>Manage Payment Methods & Auto-Debit</Typography>
+                      <Typography variant="body2" color="#334155" fontWeight={700}>{t('landing.customerBullet3')}</Typography>
                     </Box>
                   </Box>
 
@@ -125,7 +135,7 @@ const LandingPage = () => {
                       boxShadow: '0 6px 20px rgba(231, 111, 81, 0.45)',
                     }}
                   >
-                    Enter Customer Portal
+                    {t('landing.customerLogin')}
                   </Button>
                 </CardContent>
               </Card>
@@ -154,10 +164,10 @@ const LandingPage = () => {
                     </Avatar>
                     <Box>
                       <Typography variant="h5" fontWeight={900} color="#0f172a">
-                        Admin Portal
+                        {t('landing.adminLogin')}
                       </Typography>
                       <Typography variant="caption" color="#0284c7" fontWeight={800}>
-                        PLATFORM OPERATIONS & ANALYTICS
+                        {t('landing.adminSubtitle')}
                       </Typography>
                     </Box>
                   </Box>
@@ -165,15 +175,15 @@ const LandingPage = () => {
                   <Box sx={{ mb: 3, flex: 1, mt: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.5 }}>
                       <CheckCircleOutlineIcon sx={{ color: '#0284c7', fontSize: '1.2rem' }} />
-                      <Typography variant="body2" color="#334155" fontWeight={700}>12 Interactive SVG Visual Analytics Charts</Typography>
+                      <Typography variant="body2" color="#334155" fontWeight={700}>{t('landing.adminBullet1')}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.5 }}>
                       <CheckCircleOutlineIcon sx={{ color: '#0284c7', fontSize: '1.2rem' }} />
-                      <Typography variant="body2" color="#334155" fontWeight={700}>Failed Payment Retry Queue & Dunning Tracking</Typography>
+                      <Typography variant="body2" color="#334155" fontWeight={700}>{t('landing.adminBullet2')}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, mb: 1.5 }}>
                       <CheckCircleOutlineIcon sx={{ color: '#0284c7', fontSize: '1.2rem' }} />
-                      <Typography variant="body2" color="#334155" fontWeight={700}>Automated Multi-State Tax Calculations & Audit Trail</Typography>
+                      <Typography variant="body2" color="#334155" fontWeight={700}>{t('landing.adminBullet3')}</Typography>
                     </Box>
                   </Box>
 
@@ -193,7 +203,7 @@ const LandingPage = () => {
                       boxShadow: '0 6px 20px rgba(2, 132, 199, 0.4)',
                     }}
                   >
-                    Enter Admin Portal
+                    {t('landing.adminLogin')}
                   </Button>
                 </CardContent>
               </Card>
@@ -202,6 +212,14 @@ const LandingPage = () => {
         </Container>
       </Box>
     </FintechBackground>
+  );
+};
+
+const LandingPage = () => {
+  return (
+    <CustomerLanguageScope>
+      <LandingPageContent />
+    </CustomerLanguageScope>
   );
 };
 

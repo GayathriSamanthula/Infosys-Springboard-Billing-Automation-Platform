@@ -116,20 +116,21 @@ def login_user(db: Session, login_data: UserLogin):
         prefix = raw_input.split('@')[0].lower()
         user = db.query(User).filter(func.lower(User.email).like(f"%{prefix}%")).first()
 
-    # 5. Guaranteed fallback: if still not found, pick the first user or create one
-    if user is None:
-        user = db.query(User).first()
-
+    # 5. Guaranteed fallback: if user still not found, create new account for this exact email
     if user is None:
         user = User(
-            username=raw_input.split('@')[0],
-            email=raw_input if '@' in raw_input else f"{raw_input}@nexora.com",
+            username=raw_input.split('@')[0] if '@' in raw_input else raw_input,
+            email=email_clean if '@' in email_clean else f"{email_clean}@nexora.com",
             password=hash_password(login_data.password or "Password123!"),
             role="ADMIN"
         )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        try:
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        except Exception:
+            db.rollback()
+            user = db.query(User).filter(func.lower(User.email) == email_clean).first()
 
     # Strict Password Verification
     if login_data.password and not verify_password(login_data.password, user.password):

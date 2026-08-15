@@ -9,6 +9,7 @@ from app.models.invoice_line_item import InvoiceLineItem, LineItemType
 from app.models.subscription import Subscription
 from app.models.plan import Plan
 from app.models.customer import Customer
+from app.models.payment import Payment
 from app.schemas.invoice import InvoiceCreate
 
 
@@ -36,7 +37,7 @@ def generate_itemized_invoice(
     proration_debit: float = 0.0,
     usage_charge: float = 0.0,
     discount_amount: float = 0.0,
-    tax_rate: float = 0.18,
+    tax_rate: Optional[float] = None,
     remarks: str = "Billing Cycle Invoice",
     previous_plan_name: Optional[str] = None,
     previous_plan_price: float = 0.0,
@@ -70,7 +71,19 @@ def generate_itemized_invoice(
     else:
         subtotal = max(0.0, round(plan.price + usage_charge - discount_amount, 2))
 
-    tax_amount = round(subtotal * tax_rate, 2)
+    # Dynamic Location Tax calculation from Tax Master
+    from app.services.tax_service import calculate_tax_for_customer
+    if tax_rate is None:
+        tax_res = calculate_tax_for_customer(db, customer_id=subscription.customer_id, subtotal=subtotal)
+        tax_rate = tax_res.tax_percentage / 100.0
+        tax_name = tax_res.tax_name
+        tax_pct = tax_res.tax_percentage
+        tax_amount = tax_res.tax_amount
+    else:
+        tax_pct = round(tax_rate * 100, 2)
+        tax_name = "GST" if tax_rate == 0.18 else "Tax"
+        tax_amount = round(subtotal * tax_rate, 2)
+
     final_amount = round(subtotal + tax_amount, 2)
 
     db_invoice = Invoice(
@@ -151,7 +164,7 @@ def generate_itemized_invoice(
     if tax_amount > 0:
         line_item_tax = InvoiceLineItem(
             invoice_id=db_invoice.id,
-            description=f"Tax ({int(tax_rate * 100)}% GST on subtotal ₹{subtotal:.2f})",
+            description=f"Tax ({tax_pct}% {tax_name} on subtotal ₹{subtotal:.2f})",
             item_type=LineItemType.TAX,
             quantity=1,
             unit_price=tax_amount,
@@ -182,6 +195,23 @@ def _enrich_invoice(db: Session, invoice: Invoice):
         if cust:
             invoice.customer_name = cust.full_name
             invoice.customer_email = cust.email
+
+    # Auto-reconcile invoice status if a successful payment transaction exists
+    if str(getattr(invoice, 'status', '')).upper() != 'PAID':
+        matching_pay = db.query(Payment).filter(
+            or_(Payment.invoice_id == invoice.id, Payment.subscription_id == invoice.subscription_id),
+            Payment.payment_status == 'SUCCESS',
+            Payment.is_deleted == False
+        ).first()
+        if matching_pay:
+            invoice.status = 'PAID'
+            if not invoice.payment_date and matching_pay.payment_date:
+                invoice.payment_date = matching_pay.payment_date
+            try:
+                db.commit()
+                db.refresh(invoice)
+            except Exception:
+                db.rollback()
 
     items = db.query(InvoiceLineItem).filter(InvoiceLineItem.invoice_id == invoice.id).all()
     invoice.line_items = items

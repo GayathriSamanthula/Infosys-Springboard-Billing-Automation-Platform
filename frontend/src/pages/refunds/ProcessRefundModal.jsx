@@ -4,8 +4,10 @@ import { useForm } from 'react-hook-form';
 import CustomModal from '../../components/common/CustomModal';
 import FormInput from '../../components/common/FormInput';
 import { invoiceService } from '../../services/invoiceService';
+import { useTranslation } from 'react-i18next';
 
 const ProcessRefundModal = ({ open, onClose, onSubmit }) => {
+  const { t } = useTranslation();
   const [invoices, setInvoices] = useState([]);
 
   const { control, handleSubmit, reset } = useForm({
@@ -19,7 +21,7 @@ const ProcessRefundModal = ({ open, onClose, onSubmit }) => {
     if (open) {
       reset({ invoice_id: '', reason: '' });
       invoiceService.getAll().then((list) => {
-        setInvoices(list);
+        setInvoices(Array.isArray(list) ? list : []);
       });
     }
   }, [open, reset]);
@@ -36,19 +38,25 @@ const ProcessRefundModal = ({ open, onClose, onSubmit }) => {
     <CustomModal
       open={open}
       onClose={onClose}
-      title="Process Customer Refund (Module 2)"
+      title={t('admin.refunds.modal_title', 'Process Customer Refund')}
       actions={
         <>
           <Button onClick={onClose} color="inherit">
-            Cancel
+            {t('admin.refunds.cancel', 'Cancel')}
           </Button>
           <Button onClick={handleSubmit(handleFormSubmit)} variant="contained" color="warning">
-            Process Refund
+            {t('admin.refunds.submit_refund', 'Process Refund')}
           </Button>
         </>
       }
     >
-      <FormInput name="invoice_id" control={control} label="Select Paid Invoice" select rules={{ required: 'Invoice is required' }}>
+      <FormInput
+        name="invoice_id"
+        control={control}
+        label={t('admin.refunds.select_invoice', 'Select Paid Invoice')}
+        select
+        rules={{ required: 'Invoice is required' }}
+      >
         {invoices.map((inv) => (
           <MenuItem key={inv.id} value={inv.id}>
             {inv.invoice_number} — #{inv.id} (Total: ₹{inv.amount})
@@ -59,7 +67,7 @@ const ProcessRefundModal = ({ open, onClose, onSubmit }) => {
       <FormInput
         name="reason"
         control={control}
-        label="Refund Reason / Refund Line Item Description"
+        label={t('admin.refunds.refund_reason_label', 'Refund Reason / Line Item Description')}
         multiline
         rows={2}
         rules={{ required: 'Reason is required' }}

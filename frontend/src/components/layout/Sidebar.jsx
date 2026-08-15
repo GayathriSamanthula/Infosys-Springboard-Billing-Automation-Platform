@@ -26,6 +26,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 import { NAV_ITEMS } from '../../constants/navigation';
+import { useTranslation } from 'react-i18next';
 
 const iconMap = {
   Dashboard: DashboardIcon,
@@ -41,9 +42,25 @@ const iconMap = {
   AccountBalanceWallet: AccountBalanceWalletIcon,
 };
 
+const navKeyMap = {
+  '/dashboard': 'nav.dashboard',
+  '/customers': 'nav.customers',
+  '/plans': 'nav.plans',
+  '/subscriptions': 'nav.subscriptions',
+  '/billing-cycles': 'nav.billingCycles',
+  '/invoices': 'nav.invoices',
+  '/payments': 'nav.payments',
+  '/refunds': 'nav.refunds',
+  '/tax-reports': 'nav.taxReports',
+  '/velora-integration': 'nav.veloraAdmin',
+  '/notifications': 'nav.notifications',
+  '/audit-logs': 'nav.auditLogs',
+};
+
 const Sidebar = ({ mobileOpen, onDrawerToggle, drawerWidth = 260 }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const drawerContent = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#ffffff', color: '#0f172a', borderRight: '1.5px solid #e0f2fe' }}>
@@ -122,7 +139,7 @@ const Sidebar = ({ mobileOpen, onDrawerToggle, drawerWidth = 260 }) => {
                   <IconComponent fontSize="small" />
                 </ListItemIcon>
                 <ListItemText
-                  primary={item.title}
+                  primary={t(navKeyMap[item.path] || item.title)}
                   primaryTypographyProps={{
                     fontSize: '0.875rem',
                     fontWeight: isActive ? 800 : 500,

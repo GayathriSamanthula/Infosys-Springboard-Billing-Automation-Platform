@@ -20,10 +20,14 @@ import { customerPortalService } from '../../services/customerPortalService';
 import { subscriptionService } from '../../services/subscriptionService';
 import { useNotification } from '../../hooks/useNotification';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import { useTranslation } from 'react-i18next';
+import StatusBadge from '../../components/common/StatusBadge';
 
 const CustomerSubscriptionsPage = () => {
+
   const navigate = useNavigate();
   const { showNotification } = useNotification();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [activeSub, setActiveSub] = useState(null);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
@@ -74,15 +78,15 @@ const CustomerSubscriptionsPage = () => {
     <Box sx={{ pb: 6 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" fontWeight={900} color="#000000">
-          My Active Subscriptions
+          {t('customerPortal.mySubscriptions')}
         </Typography>
         <Typography variant="body2" color="#64748b" fontWeight={700} sx={{ mt: 0.5 }}>
-          Manage your active subscription plan, view renewal dates, and review active feature entitlements.
+          {t('customerPortal.manageSubSubtext')}
         </Typography>
       </Box>
 
       {loading ? (
-        <Typography variant="body1" color="#e76f51">Loading Subscription Data...</Typography>
+        <Typography variant="body1" color="#e76f51">{t('common.loading')}</Typography>
       ) : !activeSub ? (
         <Paper
           sx={{
@@ -127,35 +131,44 @@ const CustomerSubscriptionsPage = () => {
                   <CardMembershipIcon sx={{ color: '#e76f51', fontSize: '2.2rem' }} />
                   <Box>
                     <Typography variant="h6" fontWeight={900} color="#0f172a">
-                      {activeSub?.plan_name || activeSub?.plan?.name || activeSub?.plan || 'Standard Subscription'}
+                      {(() => {
+                        const pName = activeSub?.plan_name || activeSub?.plan?.name || activeSub?.plan || 'Basic Plan';
+                        const n = String(pName).toLowerCase();
+                        let pKey = '1';
+                        if (n.includes('plus')) pKey = '3';
+                        else if (n.includes('pro')) pKey = '4';
+                        else if (n.includes('premium')) pKey = '2';
+                        else if (activeSub?.plan_id) pKey = String(activeSub.plan_id);
+                        return t(`plans.${pKey}.name`, pName);
+                      })()}
                     </Typography>
                     <Typography variant="caption" color="#e76f51" fontWeight={800}>
-                      Active Billing Tier • {activeSub?.billing_cycle || 'Monthly'}
+                      {t('customerPortal.activePlanTier')} • {t('customerPortal.monthlyCycle')}
                     </Typography>
                   </Box>
                 </Box>
-                <Chip label={String(activeSub?.status || 'ACTIVE').toUpperCase()} sx={{ bgcolor: '#dcfce7', color: '#15803d', fontWeight: 900 }} />
+                <StatusBadge status={activeSub?.status || 'ACTIVE'} />
               </Box>
 
               <Divider sx={{ my: 2, borderColor: '#fcdad2' }} />
 
               <Grid container spacing={2.5} sx={{ mb: 3 }}>
                 <Grid item xs={12} sm={4}>
-                  <Typography variant="caption" color="#64748b" fontWeight={700} display="block">RECURRING AMOUNT</Typography>
+                  <Typography variant="caption" color="#64748b" fontWeight={700} display="block">{t('customerPortal.recurringAmount', 'RECURRING AMOUNT')}</Typography>
                   <Typography variant="h6" fontWeight={900} color="#0f172a">
                     {formatCurrency(activeSub?.price || activeSub?.amount || activeSub?.plan?.price || 0)}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                  <Typography variant="caption" color="#64748b" fontWeight={700} display="block">NEXT RENEWAL DATE</Typography>
+                  <Typography variant="caption" color="#64748b" fontWeight={700} display="block">{t('customerPortal.nextRenewalDate', 'NEXT RENEWAL DATE')}</Typography>
                   <Typography variant="h6" fontWeight={900} color="#e76f51">
                     {activeSub?.next_billing_date ? formatDate(activeSub.next_billing_date) : (activeSub?.renewal_date ? formatDate(activeSub.renewal_date) : 'N/A')}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                  <Typography variant="caption" color="#64748b" fontWeight={700} display="block">AUTO-RENEWAL</Typography>
+                  <Typography variant="caption" color="#64748b" fontWeight={700} display="block">{t('customerPortal.autoRenewal', 'AUTO-RENEWAL')}</Typography>
                   <Typography variant="h6" fontWeight={900} color="#16a34a">
-                    Enabled
+                    {t('common.enabled', 'Enabled')}
                   </Typography>
                 </Grid>
               </Grid>
@@ -167,7 +180,7 @@ const CustomerSubscriptionsPage = () => {
                   onClick={() => navigate('/customer/plans')}
                   sx={{ bgcolor: '#e76f51', '&:hover': { bgcolor: '#d45d3f' }, fontWeight: 800, borderRadius: 2.5 }}
                 >
-                  Change or Upgrade Plan
+                  {t('customerPortal.updatePlan', 'Upgrade / Change Plan')}
                 </Button>
                 <Button
                   variant="outlined"
@@ -175,7 +188,7 @@ const CustomerSubscriptionsPage = () => {
                   onClick={() => setCancelModalOpen(true)}
                   sx={{ fontWeight: 800, borderRadius: 2.5, border: '2px solid #ef4444' }}
                 >
-                  Cancel & Request Refund
+                  {t('customerPortal.cancelSub', 'Cancel Subscription')}
                 </Button>
               </Box>
 
@@ -229,14 +242,14 @@ const CustomerSubscriptionsPage = () => {
               }}
             >
               <Typography variant="h6" fontWeight={900} color="#0f172a" sx={{ mb: 2 }}>
-                Included Plan Features
+                {t('customerPortal.includedFeatures', 'Included Plan Features')}
               </Typography>
               {[
-                'Automated Itemized Invoices',
-                'Instant Proration Credit',
-                'Multi-Currency Tax engine',
-                'Real-time Webhook Receipts',
-                '24/7 Priority SLA Support',
+                t('customerPortal.featInvoices', 'Automated Itemized Invoices'),
+                t('customerPortal.featProration', 'Instant Proration Credit'),
+                t('customerPortal.featTax', 'Multi-Currency Tax Engine'),
+                t('customerPortal.featWebhooks', 'Real-time Webhook Receipts'),
+                t('customerPortal.featSupport', '24/7 Priority SLA Support'),
               ].map((feat, idx) => (
                 <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
                   <CheckCircleIcon sx={{ color: '#e76f51', fontSize: '1.1rem' }} />
@@ -245,6 +258,8 @@ const CustomerSubscriptionsPage = () => {
               ))}
             </Paper>
           </Grid>
+
+
         </Grid>
       )}
     </Box>

@@ -95,6 +95,7 @@ const VELORA_NAV_ITEMS = [
 ];
 
 const VeloraAdminPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -434,7 +435,7 @@ const VeloraAdminPage = () => {
                   onClick={() => navigate('/velora')}
                   sx={{ color: '#e65100', '&:hover': { color: '#f57c00' }, textTransform: 'none', fontWeight: 800 }}
                 >
-                  Back to Velora Platform
+                  {t('auth.backToGateway', 'Back to Velora Platform')}
                 </Button>
                 <Divider orientation="vertical" flexItem sx={{ borderColor: '#cbd5e1' }} />
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -450,7 +451,7 @@ const VeloraAdminPage = () => {
                   </Avatar>
                   <Box>
                     <Typography variant="h6" fontWeight={900} color="#000000" lineHeight={1}>
-                      Velora Merchant Admin
+                      {t('admin.header.velora_title', 'Velora Merchant Admin')}
                     </Typography>
                     <Typography variant="caption" color="#e65100" fontWeight={800} letterSpacing="0.05em">
                       MERCHANT OPERATIONS PORTAL

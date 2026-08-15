@@ -54,4 +54,43 @@ def process_dunning_due_retries():
             "processed_result": res
         }
     finally:
+        db.close()
+
+
+@celery_app.task(name="billing.reconcile_unpaid_invoices")
+def reconcile_unpaid_invoices_task():
+    """
+    Background task that periodically reconciles UNPAID invoices against successful payment records.
+    Catches and fixes any missed or delayed webhook notifications automatically.
+    """
+    from app.models.invoice import Invoice
+    from app.models.payment import Payment
+    from sqlalchemy import or_
+    from datetime import date
+
+    db = SessionLocal()
+    try:
+        unpaid_invoices = db.query(Invoice).filter(Invoice.status != 'PAID', Invoice.is_deleted == False).all()
+        reconciled_count = 0
+        for inv in unpaid_invoices:
+            successful_payment = db.query(Payment).filter(
+                or_(Payment.invoice_id == inv.id, Payment.subscription_id == inv.subscription_id),
+                Payment.payment_status == 'SUCCESS',
+                Payment.is_deleted == False
+            ).first()
+
+            if successful_payment:
+                inv.status = 'PAID'
+                if not inv.payment_date and successful_payment.payment_date:
+                    inv.payment_date = successful_payment.payment_date
+                reconciled_count += 1
+
+        if reconciled_count > 0:
+            db.commit()
+
+        return {
+            "status": "success",
+            "reconciled_count": reconciled_count
+        }
+    finally:
         db.close()

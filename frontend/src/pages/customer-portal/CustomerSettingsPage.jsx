@@ -14,9 +14,11 @@ import {
 import LockIcon from '@mui/icons-material/Lock';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { useNotification } from '../../hooks/useNotification';
+import { useTranslation } from 'react-i18next';
 
 const CustomerSettingsPage = () => {
   const { showNotification } = useNotification();
+  const { t } = useTranslation();
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [emailAlerts, setEmailAlerts] = useState(true);
@@ -36,10 +38,10 @@ const CustomerSettingsPage = () => {
     <Box sx={{ pb: 6 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" fontWeight={900} color="#0f172a">
-          Account Settings
+          {t('nav.settings')}
         </Typography>
         <Typography variant="body2" color="#e76f51" fontWeight={700} sx={{ mt: 0.5 }}>
-          Manage your customer security, password, and notification preferences.
+          {t('customerPortal.manageSubSubtext')}
         </Typography>
       </Box>
 
@@ -51,7 +53,7 @@ const CustomerSettingsPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                 <LockIcon sx={{ color: '#e76f51' }} />
                 <Typography variant="h6" fontWeight={800} color="#0f172a">
-                  Change Password
+                  {t('auth.passwordLabel')}
                 </Typography>
               </Box>
 
@@ -60,7 +62,7 @@ const CustomerSettingsPage = () => {
               <form onSubmit={handlePasswordChange}>
                 <TextField
                   fullWidth
-                  label="Current Password"
+                  label={t('auth.passwordLabel')}
                   type="password"
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
@@ -71,7 +73,7 @@ const CustomerSettingsPage = () => {
                 />
                 <TextField
                   fullWidth
-                  label="New Password"
+                  label={t('auth.passwordLabel')}
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -92,7 +94,7 @@ const CustomerSettingsPage = () => {
                     boxShadow: '0 4px 15px rgba(2, 132, 199, 0.3)',
                   }}
                 >
-                  Update Password
+                  {t('common.save')}
                 </Button>
               </form>
             </CardContent>

@@ -19,6 +19,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import EmptyState from './EmptyState';
 import { TableSkeleton } from './LoadingSkeleton';
+import { useTranslation } from 'react-i18next';
 
 const DataTable = ({
   columns,
@@ -33,6 +34,7 @@ const DataTable = ({
   onAddClick,
   addLabel,
 }) => {
+  const { t } = useTranslation();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -99,7 +101,7 @@ const DataTable = ({
         <Box sx={{ display: 'flex', gap: 2, flex: 1, minWidth: 280, maxWidth: 500 }}>
           <TextField
             size="small"
-            placeholder={searchPlaceholder}
+            placeholder={t('admin.table.search_placeholder', searchPlaceholder)}
             value={searchTerm}
             onChange={handleSearchChange}
             fullWidth
@@ -123,7 +125,7 @@ const DataTable = ({
 
           {filterField && filterOptions.length > 0 && (
             <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel sx={{ color: '#4B5563' }}>{filterLabel}</InputLabel>
+              <InputLabel sx={{ color: '#4B5563' }}>{t('admin.table.filter_label', filterLabel)}</InputLabel>
               <Select
                 value={filterValue}
                 label={filterLabel}
@@ -136,10 +138,10 @@ const DataTable = ({
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#0284c7' },
                 }}
               >
-                <MenuItem value="ALL">All Statuses</MenuItem>
+                <MenuItem value="ALL">{t('admin.table.all_statuses', 'All Statuses')}</MenuItem>
                 {filterOptions.map((opt) => (
                   <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                    {t(`status.${String(opt.value).toLowerCase()}`, opt.label)}
                   </MenuItem>
                 ))}
               </Select>

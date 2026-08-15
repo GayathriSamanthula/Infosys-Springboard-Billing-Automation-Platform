@@ -17,11 +17,21 @@ import { useNavigate } from 'react-router-dom';
 import { planService } from '../../services/planService';
 import { customerPortalService } from '../../services/customerPortalService';
 import { formatCurrency } from '../../utils/formatters';
-
 import VeloraCheckoutModal from '../../components/velora/VeloraCheckoutModal';
+import { useTranslation } from 'react-i18next';
+
+const getPlanKey = (plan) => {
+  const n = String(plan?.name || '').toLowerCase();
+  if (n.includes('basic')) return '1';
+  if (n.includes('plus')) return '3';
+  if (n.includes('pro')) return '4';
+  if (n.includes('premium')) return '2';
+  return String(plan?.id || '1');
+};
 
 const CustomerPlansPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeSub, setActiveSub] = useState(null);
@@ -72,25 +82,35 @@ const CustomerPlansPage = () => {
     <Box sx={{ pb: 6 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" fontWeight={900} color="#000000">
-          Available Subscription Plans
+          {t('nav.plans')}
         </Typography>
         <Typography variant="body2" color="#64748b" fontWeight={700} sx={{ mt: 0.5 }}>
-          Explore subscription tiers, view active pricing, and upgrade or change your plan with automatic proration.
+          {t('customerPortal.manageSubSubtext')}
         </Typography>
       </Box>
 
       {loading ? (
-        <Typography variant="body1" color="#e76f51">Loading Available Plans...</Typography>
+        <Typography variant="body1" color="#e76f51">{t('common.loading')}</Typography>
       ) : (
         <Grid container spacing={3}>
           {plans.map((plan) => {
-            const isCurrentPlan = activeSub && (String(activeSub.plan_name || '').toLowerCase() === String(plan.name || '').toLowerCase() || Number(activeSub.plan_id) === Number(plan.id));
+            const pKey = getPlanKey(plan);
+            const activePKey = activeSub ? getPlanKey({ name: activeSub.plan_name || activeSub.plan?.name, id: activeSub.plan_id }) : null;
+            const isSubActive = activeSub && ['active', 'trial'].includes(String(activeSub.status || '').toLowerCase());
+            const isCurrentPlan = activeSub && (
+              String(activeSub.plan_name || '').toLowerCase() === String(plan.name || '').toLowerCase() ||
+              Number(activeSub.plan_id) === Number(plan.id) ||
+              (activePKey && activePKey === pKey)
+            );
 
-            const buttonText = isCurrentPlan
-              ? 'Current Active Tier'
-              : activeSub
-              ? 'Switch to this Plan'
-              : 'Subscribe to this Plan';
+            const buttonText = (isCurrentPlan && isSubActive)
+              ? t('customerPortal.activePlan', 'Current Active Plan')
+              : isCurrentPlan
+              ? t('customerPortal.reactivatePlan', 'Reactivate Plan')
+              : isSubActive
+              ? t('customerPortal.updatePlan', 'Change Plan')
+              : t('customerPortal.subscribeNow', 'Subscribe Now');
+
 
             return (
               <Grid item xs={12} md={3} key={plan.id}>
@@ -109,7 +129,7 @@ const CustomerPlansPage = () => {
                 >
                   {isCurrentPlan && (
                     <Chip
-                      label="CURRENT ACTIVE PLAN"
+                      label={t('customerPortal.currentActiveBadge')}
                       size="small"
                       sx={{
                         position: 'absolute',
@@ -125,19 +145,21 @@ const CustomerPlansPage = () => {
 
                   <CardContent sx={{ p: 3.5, flex: 1, display: 'flex', flexDirection: 'column' }}>
                     <Typography variant="h5" fontWeight={900} color="#e76f51" sx={{ mb: 1 }}>
-                      {plan.name}
+                      {t(`plans.${pKey}.name`, plan.name)}
                     </Typography>
 
                     <Typography variant="h3" fontWeight={900} color="#0f172a" sx={{ my: 1.5 }}>
                       {formatCurrency(plan.price)}
                       <Typography component="span" variant="body2" color="#64748b" sx={{ ml: 1, fontWeight: 700 }}>
-                        / {plan.billing_cycle ? plan.billing_cycle.toLowerCase() : 'month'}
+                        / {t('customerPortal.monthlyCycle')}
                       </Typography>
                     </Typography>
 
                     <Typography variant="body2" color="#475569" sx={{ mb: 3, flex: 1 }}>
-                      {plan.description || 'Complete subscription features with automated recurring billing and itemized PDF invoices.'}
+                      {t(`plans.${pKey}.desc`, plan.description)}
                     </Typography>
+
+
 
                     <Divider sx={{ my: 2, borderColor: '#fcdad2' }} />
 

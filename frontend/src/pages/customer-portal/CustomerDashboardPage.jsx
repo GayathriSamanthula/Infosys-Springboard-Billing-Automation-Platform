@@ -40,10 +40,12 @@ import { useNotification } from '../../hooks/useNotification';
 import { formatDate, formatCurrency } from '../../utils/formatters';
 import StatusBadge from '../../components/common/StatusBadge';
 import EmptyState from '../../components/common/EmptyState';
+import { useTranslation } from 'react-i18next';
 
 const CustomerDashboardPage = () => {
   const navigate = useNavigate();
   const { showNotification } = useNotification();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -212,7 +214,7 @@ const CustomerDashboardPage = () => {
               </Avatar>
               <Box>
                 <Typography variant="h4" fontWeight={900} color="#0f172a">
-                  Welcome back, {customer.full_name || 'Customer'}!
+                  {t('customerPortal.welcomeUser')}, {customer.full_name || 'Customer'}!
                 </Typography>
                 <Typography variant="body2" color="#e76f51" fontWeight={800}>
                   Customer ID: #{customer.id || customerId || 'N/A'} • {customer.email || 'N/A'}
@@ -220,7 +222,7 @@ const CustomerDashboardPage = () => {
               </Box>
             </Box>
             <Typography variant="body2" color="#334155" fontWeight={600} sx={{ mt: 1 }}>
-              Manage your active subscription plan, download tax invoices, and track payment receipts.
+              {t('customerPortal.manageSubSubtext')}
             </Typography>
           </Grid>
 
@@ -229,19 +231,32 @@ const CustomerDashboardPage = () => {
               <CardContent sx={{ p: '20px !important' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Typography variant="caption" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em', color: '#e76f51', fontWeight: 900 }}>
-                    ACTIVE PLAN TIER
+                    {t('customerPortal.activePlanTier')}
                   </Typography>
                   {activeSub && <StatusBadge status={activeSub.status} />}
                 </Box>
                 <Typography variant="h5" fontWeight={900} color="#e76f51">
-                  {activeSub ? (summary.active_plan_name || activeSub.plan_name || 'Active Plan') : 'No Active Plan'}
+                  {activeSub ? (
+                    (() => {
+                      const pName = activeSub.plan_name || summary.active_plan_name || 'Basic Plan';
+                      const n = String(pName).toLowerCase();
+                      let pKey = '1';
+                      if (n.includes('plus')) pKey = '3';
+                      else if (n.includes('pro')) pKey = '4';
+                      else if (n.includes('premium')) pKey = '2';
+                      else if (activeSub.plan_id) pKey = String(activeSub.plan_id);
+                      return t(`plans.${pKey}.name`, pName);
+                    })()
+                  ) : t('customerPortal.activePlan')}
                 </Typography>
+
+
                 <Typography variant="subtitle1" fontWeight={800} color="#0f172a" sx={{ my: 0.5 }}>
                   {activeSub ? `${formatCurrency(activeSub.price || activeSub.amount || 0)} / ${activeSub.billing_cycle || 'monthly'}` : 'No Active Subscription'}
                 </Typography>
                 {activeSub?.next_billing_date && (
                   <Typography variant="caption" color="#64748b" fontWeight={700} display="block">
-                    Next Renewal: {formatDate(activeSub.next_billing_date)}
+                    {t('customerPortal.nextRenewal')}: {formatDate(activeSub.next_billing_date)}
                   </Typography>
                 )}
                 {activeSub && (
@@ -253,7 +268,7 @@ const CustomerDashboardPage = () => {
                       onClick={() => navigate('/customer/plans')}
                       sx={{ bgcolor: '#e76f51', '&:hover': { bgcolor: '#d45d3f' }, textTransform: 'none', fontWeight: 900, color: '#ffffff' }}
                     >
-                      Change Plan
+                      {t('customerPortal.changePlan')}
                     </Button>
                     {(String(activeSub.status).toUpperCase() === 'ACTIVE' || String(activeSub.status).toUpperCase() === 'TRIAL') && (
                       <Button
@@ -263,7 +278,7 @@ const CustomerDashboardPage = () => {
                         onClick={handlePauseSub}
                         sx={{ borderColor: '#0284c7', color: '#0284c7', fontWeight: 900, textTransform: 'none', '&:hover': { bgcolor: '#e0f2fe' } }}
                       >
-                        Pause
+                        {t('customerPortal.pause')}
                       </Button>
                     )}
                     {String(activeSub.status).toUpperCase() === 'PAUSED' && (
@@ -274,7 +289,7 @@ const CustomerDashboardPage = () => {
                         onClick={handleResumeSub}
                         sx={{ bgcolor: '#10b981', color: '#ffffff', fontWeight: 900, textTransform: 'none', '&:hover': { bgcolor: '#059669' } }}
                       >
-                        Resume
+                        {t('customerPortal.resume')}
                       </Button>
                     )}
                     {String(activeSub.status).toUpperCase() !== 'CANCELLED' && (
@@ -286,7 +301,7 @@ const CustomerDashboardPage = () => {
                         onClick={() => setCancelDialogOpen(true)}
                         sx={{ fontWeight: 900, textTransform: 'none' }}
                       >
-                        Cancel Subscription
+                        {t('customerPortal.cancelSub')}
                       </Button>
                     )}
                   </Box>
@@ -305,7 +320,7 @@ const CustomerDashboardPage = () => {
               <ReceiptIcon />
             </Avatar>
             <Typography variant="h6" fontWeight={900} color="#0f172a">
-              Recent Billing Invoices
+              {t('customerPortal.recentInvoices')}
             </Typography>
           </Box>
           <Button
@@ -313,7 +328,7 @@ const CustomerDashboardPage = () => {
             onClick={() => navigate('/customer/invoices')}
             sx={{ fontWeight: 800, bgcolor: '#e76f51', '&:hover': { bgcolor: '#d45d3f' }, color: '#ffffff' }}
           >
-            View All Invoices
+            {t('customerPortal.viewAllInvoices')}
           </Button>
         </Box>
 
@@ -326,11 +341,11 @@ const CustomerDashboardPage = () => {
             <Table>
               <TableHead sx={{ bgcolor: '#fdf0ed' }}>
                 <TableRow sx={{ borderBottom: '2px solid #f8b4a5' }}>
-                  <TableCell sx={{ color: '#e76f51', fontWeight: 900 }}>INVOICE REF</TableCell>
-                  <TableCell sx={{ color: '#e76f51', fontWeight: 900 }}>ISSUE DATE</TableCell>
-                  <TableCell sx={{ color: '#e76f51', fontWeight: 900 }}>AMOUNT</TableCell>
-                  <TableCell sx={{ color: '#e76f51', fontWeight: 900 }}>STATUS</TableCell>
-                  <TableCell align="right" sx={{ color: '#e76f51', fontWeight: 900 }}>ACTIONS</TableCell>
+                  <TableCell sx={{ color: '#e76f51', fontWeight: 900 }}>{t('customerPortal.colRef')}</TableCell>
+                  <TableCell sx={{ color: '#e76f51', fontWeight: 900 }}>{t('customerPortal.colDate')}</TableCell>
+                  <TableCell sx={{ color: '#e76f51', fontWeight: 900 }}>{t('customerPortal.colAmount')}</TableCell>
+                  <TableCell sx={{ color: '#e76f51', fontWeight: 900 }}>{t('customerPortal.colStatus')}</TableCell>
+                  <TableCell align="right" sx={{ color: '#e76f51', fontWeight: 900 }}>{t('customerPortal.colActions')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

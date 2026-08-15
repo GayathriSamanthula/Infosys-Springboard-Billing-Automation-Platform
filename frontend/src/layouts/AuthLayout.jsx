@@ -3,9 +3,12 @@ import { Box, Container, Paper, Typography, Button } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Outlet, useNavigate } from 'react-router-dom';
+import { AdminLanguageScope } from '../context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const AuthLayout = () => {
+const AuthLayoutContent = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <Box
@@ -13,7 +16,7 @@ const AuthLayout = () => {
         position: 'relative',
         minHeight: '100vh',
         width: '100%',
-        backgroundColor: '#FFFFFF', // Pure White Background as requested
+        backgroundColor: '#FFFFFF',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -45,7 +48,7 @@ const AuthLayout = () => {
             onClick={() => navigate('/')}
             sx={{ color: '#0284c7', textTransform: 'none', fontWeight: 800, '&:hover': { color: '#0369a1' } }}
           >
-            Back to Nexora Gateway
+            {t('auth.backToGateway', 'Back to Nexora Gateway')}
           </Button>
         </Box>
         <Box sx={{ textAlign: 'center', mb: 3.5 }}>
@@ -70,14 +73,14 @@ const AuthLayout = () => {
             fontWeight={900}
             letterSpacing="-0.03em"
             sx={{
-              color: '#000000', // Solid Black Title
+              color: '#000000',
               mb: 0.5,
             }}
           >
             Nexora
           </Typography>
           <Typography variant="body2" sx={{ color: '#475569', fontWeight: 700, letterSpacing: '0.02em' }}>
-            Automated Subscription Billing & Compliance Platform
+            {t('auth.platformSubtitle', 'Automated Subscription Billing & Compliance Platform')}
           </Typography>
         </Box>
 
@@ -86,7 +89,7 @@ const AuthLayout = () => {
           sx={{
             p: 4,
             borderRadius: 4,
-            backgroundColor: '#FFFFFF', // Pure White Box Background
+            backgroundColor: '#FFFFFF',
             border: '2.5px solid #0284c7',
             boxShadow: '0 20px 40px -15px rgba(2, 132, 199, 0.25)',
           }}
@@ -95,6 +98,14 @@ const AuthLayout = () => {
         </Paper>
       </Container>
     </Box>
+  );
+};
+
+const AuthLayout = () => {
+  return (
+    <AdminLanguageScope>
+      <AuthLayoutContent />
+    </AdminLanguageScope>
   );
 };
 

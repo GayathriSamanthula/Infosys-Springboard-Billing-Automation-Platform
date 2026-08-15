@@ -30,8 +30,10 @@ import PaymentDetailsModal from './PaymentDetailsModal';
 import { paymentService } from '../../services/paymentService';
 import { useNotification } from '../../hooks/useNotification';
 import { formatDateTime, formatCurrency } from '../../utils/formatters';
+import { useTranslation } from 'react-i18next';
 
 const PaymentsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { showNotification } = useNotification();
   const [payments, setPayments] = useState([]);
@@ -108,7 +110,7 @@ const PaymentsPage = () => {
   const columns = [
     {
       id: 'transaction_id',
-      label: 'Transaction ID',
+      label: t('admin.payments.col_txn_id', 'Transaction ID'),
       render: (row) => (
         <Typography fontWeight={700} color="#0284c7">
           {row.transaction_id || `TXN-${row.id}`}
@@ -117,7 +119,7 @@ const PaymentsPage = () => {
     },
     {
       id: 'customer_name',
-      label: 'Customer & Customer ID',
+      label: t('admin.payments.col_customer', 'Customer & Customer ID'),
       render: (row) => {
         const custId = row.customer_id || (row.subscription_id ? row.subscription_id : 1);
         return (
@@ -128,7 +130,7 @@ const PaymentsPage = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.3 }}>
               <Chip
                 size="small"
-                label={`Customer ID: #${custId}`}
+                label={`${t('admin.payments.customer_id_label', 'Customer ID')}: #${custId}`}
                 onClick={() => navigate(`/customers?id=${custId}`)}
                 sx={{ bgcolor: '#e0f2fe', color: '#0284c7', fontWeight: 800, cursor: 'pointer', fontSize: '0.72rem' }}
               />
@@ -139,12 +141,12 @@ const PaymentsPage = () => {
     },
     {
       id: 'subscription_id',
-      label: 'Sub ID',
+      label: t('admin.payments.col_sub_id', 'Sub ID'),
       render: (row) => `#${row.subscription_id}`,
     },
     {
       id: 'invoice_number',
-      label: 'Linked Invoice',
+      label: t('admin.payments.col_invoice', 'Linked Invoice'),
       render: (row) => {
         const invNum = row.invoice_number || (row.invoice_id ? `INV-${row.invoice_id}` : null);
         const invId = row.invoice_id;
@@ -156,13 +158,13 @@ const PaymentsPage = () => {
             sx={{ bgcolor: '#f0fdf4', color: '#16a34a', fontWeight: 800, cursor: 'pointer', fontSize: '0.72rem' }}
           />
         ) : (
-          <Typography variant="caption" color="text.secondary">Auto-Linked</Typography>
+          <Typography variant="caption" color="text.secondary">{t('admin.payments.details_auto_linked', 'Auto-Linked via Sub FK')}</Typography>
         );
       },
     },
     {
       id: 'amount',
-      label: 'Amount',
+      label: t('admin.payments.col_amount', 'Amount'),
       render: (row) => (
         <Typography fontWeight={800} color="#0f172a">
           {formatCurrency(row.amount)}
@@ -171,33 +173,40 @@ const PaymentsPage = () => {
     },
     {
       id: 'payment_status',
-      label: 'Gateway Status',
+      label: t('admin.payments.col_status', 'Gateway Status'),
       render: (row) => <StatusBadge status={row.payment_status} />,
     },
     {
       id: 'payment_method',
-      label: 'Payment Method',
-      render: (row) => row.payment_method || 'Credit Card',
+      label: t('admin.payments.col_method', 'Payment Method'),
+      render: (row) => {
+        const method = row.payment_method || 'Credit Card';
+        if (method === 'Credit Card') return t('admin.payments.method_credit_card', 'Credit Card');
+        if (method.includes('Bank') || method.includes('ACH')) return t('admin.payments.method_bank_transfer', 'Bank Transfer (ACH)');
+        if (method.includes('Debit')) return t('admin.payments.method_debit_card', 'Debit Card');
+        if (method.includes('PayPal')) return t('admin.payments.method_paypal', 'PayPal / Digital Wallet');
+        return method;
+      },
     },
     {
       id: 'payment_date',
-      label: 'Timestamp',
+      label: t('admin.payments.col_timestamp', 'Timestamp'),
       render: (row) => formatDateTime(row.payment_date),
     },
     {
       id: 'actions',
-      label: 'Actions',
+      label: t('admin.payments.col_actions', 'Actions'),
       align: 'right',
       render: (row) => {
         const custId = row.customer_id || 1;
         return (
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-            <Tooltip title="Inspect Customer (Method A)">
+            <Tooltip title={t('admin.payments.inspect_customer', 'Inspect Customer (Method A)')}>
               <IconButton size="small" onClick={() => navigate(`/customers?id=${custId}`)}>
                 <PersonSearchIcon fontSize="small" sx={{ color: '#0284c7' }} />
               </IconButton>
             </Tooltip>
-            <Tooltip title="View Gateway Log">
+            <Tooltip title={t('admin.payments.view_log', 'View Gateway Log')}>
               <IconButton
                 size="small"
                 onClick={() => {
@@ -216,22 +225,21 @@ const PaymentsPage = () => {
 
   return (
     <Box>
-      {/* Header & Title */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
             <Typography variant="h4" fontWeight={900} color="#0f172a">
-              Payment Gateway & Transactions
+              {t('nav.payments', 'Payment Gateway & Transactions')}
             </Typography>
             <Chip
               icon={<CheckCircleIcon style={{ color: '#16a34a' }} />}
-              label="Mock Gateway Connected (100% Operational)"
+              label={t('admin.payments.gateway_status', 'Mock Gateway Connected (100% Operational)')}
               size="small"
               sx={{ bgcolor: '#dcfce7', color: '#15803d', fontWeight: 700, fontSize: '0.75rem' }}
             />
           </Box>
           <Typography variant="body2" color="#0284c7" fontWeight={600}>
-            Execute charges, review gateway transaction history, and inspect authorization logs.
+            {t('admin.payments.subtitle', 'Execute charges, review gateway transaction history, and inspect authorization logs.')}
           </Typography>
         </Box>
         <Button
@@ -240,7 +248,7 @@ const PaymentsPage = () => {
           onClick={() => setProcessOpen(true)}
           sx={{ py: 1.2, px: 2.5, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' }, fontWeight: 800 }}
         >
-          Process Payment
+          {t('admin.payments.process_button', 'Process Payment')}
         </Button>
       </Box>
 
@@ -254,7 +262,7 @@ const PaymentsPage = () => {
               </Box>
               <Box>
                 <Typography variant="caption" color="#64748b" fontWeight={700}>
-                  Total Settled Volume
+                  {t('admin.payments.card_volume', 'Total Settled Volume')}
                 </Typography>
                 <Typography variant="h5" fontWeight={900} color="#0f172a">
                   {formatCurrency(totalVolume)}
@@ -272,7 +280,7 @@ const PaymentsPage = () => {
               </Box>
               <Box>
                 <Typography variant="caption" color="#64748b" fontWeight={700}>
-                  Gateway Success Rate
+                  {t('admin.payments.card_success_rate', 'Gateway Success Rate')}
                 </Typography>
                 <Typography variant="h5" fontWeight={900} color="#0f172a">
                   {successRate}%
@@ -290,7 +298,7 @@ const PaymentsPage = () => {
               </Box>
               <Box>
                 <Typography variant="caption" color="#64748b" fontWeight={700}>
-                  Total Gateway Transactions
+                  {t('admin.payments.card_transactions', 'Total Gateway Transactions')}
                 </Typography>
                 <Typography variant="h5" fontWeight={900} color="#0f172a">
                   {payments.length}
@@ -306,30 +314,30 @@ const PaymentsPage = () => {
         columns={columns}
         data={payments}
         loading={loading}
-        emptyTitle="No payment transactions found."
-        emptyDescription="There are currently no payment records in your database."
+        emptyTitle={t('admin.payments.empty_title', 'No payment transactions found.')}
+        emptyDescription={t('admin.payments.empty_desc', 'There are currently no payment records in your database.')}
         filterField="payment_status"
         filterOptions={[
-          { label: 'Success', value: 'success' },
-          { label: 'Failed', value: 'failed' },
-          { label: 'Pending', value: 'pending' },
+          { label: t('status.success', 'Success'), value: 'success' },
+          { label: t('status.failed', 'Failed'), value: 'failed' },
+          { label: t('status.pending', 'Pending'), value: 'pending' },
         ]}
-        filterLabel="Payment Status"
+        filterLabel={t('admin.payments.filter_label', 'Payment Status')}
       />
 
       {/* Process Payment Form Modal */}
       <Dialog open={processOpen} onClose={() => setProcessOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800 }}>Process Payment Execution</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 800 }}>{t('admin.payments.modal_title', 'Process Payment Execution')}</DialogTitle>
         <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
           <TextField
-            label="Subscription ID"
+            label={t('admin.payments.modal_sub_id', 'Subscription ID')}
             fullWidth
             type="number"
             value={subId}
             onChange={(e) => setSubId(e.target.value)}
           />
           <TextField
-            label="Charge Amount ($)"
+            label={t('admin.payments.modal_amount', 'Charge Amount ($)')}
             fullWidth
             type="number"
             value={amount}
@@ -337,20 +345,20 @@ const PaymentsPage = () => {
           />
           <TextField
             select
-            label="Payment Method"
+            label={t('admin.payments.modal_method', 'Payment Method')}
             fullWidth
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value)}
           >
-            <MenuItem value="Credit Card">Credit Card</MenuItem>
-            <MenuItem value="Bank Transfer">Bank Transfer (ACH)</MenuItem>
-            <MenuItem value="Debit Card">Debit Card</MenuItem>
-            <MenuItem value="PayPal">PayPal / Digital Wallet</MenuItem>
+            <MenuItem value="Credit Card">{t('admin.payments.method_credit_card', 'Credit Card')}</MenuItem>
+            <MenuItem value="Bank Transfer">{t('admin.payments.method_bank_transfer', 'Bank Transfer (ACH)')}</MenuItem>
+            <MenuItem value="Debit Card">{t('admin.payments.method_debit_card', 'Debit Card')}</MenuItem>
+            <MenuItem value="PayPal">{t('admin.payments.method_paypal', 'PayPal / Digital Wallet')}</MenuItem>
           </TextField>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={() => setProcessOpen(false)} color="inherit">
-            Cancel
+            {t('admin.payments.modal_cancel', 'Cancel')}
           </Button>
           <Button
             variant="contained"
@@ -358,7 +366,7 @@ const PaymentsPage = () => {
             disabled={processing}
             sx={{ bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' } }}
           >
-            {processing ? 'Processing Charge...' : 'Execute Charge'}
+            {processing ? t('admin.payments.modal_processing', 'Processing Charge...') : t('admin.payments.modal_execute', 'Execute Charge')}
           </Button>
         </DialogActions>
       </Dialog>

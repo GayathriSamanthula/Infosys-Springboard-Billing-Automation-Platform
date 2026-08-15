@@ -1,6 +1,7 @@
 import React from 'react';
 import { Chip } from '@mui/material';
 import { formatStatus } from '../../utils/formatters';
+import { useTranslation } from 'react-i18next';
 
 const getStatusColor = (status) => {
   const s = String(status || '').toLowerCase();
@@ -31,10 +32,14 @@ const getStatusColor = (status) => {
 };
 
 const StatusBadge = ({ status, size = 'small' }) => {
+  const { t } = useTranslation();
   const styles = getStatusColor(status);
+  const sKey = String(status || '').toLowerCase().replace('past_due', 'overdue');
+  const translatedLabel = t(`status.${sKey}`, formatStatus(status));
+
   return (
     <Chip
-      label={formatStatus(status)}
+      label={translatedLabel}
       size={size}
       sx={{
         backgroundColor: styles.bg,
@@ -49,3 +54,4 @@ const StatusBadge = ({ status, size = 'small' }) => {
 };
 
 export default StatusBadge;
+

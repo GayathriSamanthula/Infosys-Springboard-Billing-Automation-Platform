@@ -16,9 +16,13 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import FintechBackground from '../../components/common/FintechBackground';
+import { CustomerLanguageScope } from '../../context/LanguageContext';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
-const VeloraCustomerRegisterPage = () => {
+const VeloraCustomerRegisterContent = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -58,10 +62,8 @@ const VeloraCustomerRegisterPage = () => {
 
       navigate('/velora/customer');
     } catch (err) {
-      console.error('Velora customer registration error:', err);
-      // If network offline or endpoint fallback needed
+      console.warn('Register error fallback active:', err);
       const fallbackCust = {
-        id: Date.now(),
         full_name: fullName,
         email: email,
         platform_source: 'VELORA_DIRECT',
@@ -84,26 +86,28 @@ const VeloraCustomerRegisterPage = () => {
     <FintechBackground overlayOpacity={0.88}>
       <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', py: 4 }}>
         <Container maxWidth="xs">
-          <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/velora')}
-            sx={{ color: '#4338ca', mb: 3, textTransform: 'none', fontWeight: 800, '&:hover': { color: '#6366f1' } }}
-          >
-            Back to Velora Platform
-          </Button>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/velora')}
+              sx={{ color: '#4338ca', textTransform: 'none', fontWeight: 800, '&:hover': { color: '#6366f1' } }}
+            >
+              {t('landing.backToGateway', 'Back to Platform')}
+            </Button>
+            <LanguageSwitcher />
+          </Box>
 
           <Paper
             elevation={0}
             sx={{
               p: 4,
               borderRadius: 4,
-              bgcolor: '#FFFFFF', // Pure White Box Background as requested
+              bgcolor: '#FFFFFF',
               border: '2px solid #6366f1',
               boxShadow: '0 25px 50px -12px rgba(99, 102, 241, 0.25)',
               textAlign: 'center',
             }}
           >
-            {/* Header Branding with Solid Black Font */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 2 }}>
               <Avatar
                 sx={{
@@ -120,16 +124,16 @@ const VeloraCustomerRegisterPage = () => {
                   Velora
                 </Typography>
                 <Typography variant="caption" sx={{ color: '#6366f1', fontWeight: 800, letterSpacing: '0.05em' }}>
-                  CUSTOMER PORTAL
+                  {t('nav.customerPortal', 'CUSTOMER PORTAL')}
                 </Typography>
               </Box>
             </Box>
 
             <Typography variant="h6" fontWeight={900} color="#0f172a" sx={{ mb: 0.5 }}>
-              Register Customer Account
+              {t('auth.customerRegistrationHeader', 'Register Customer Account')}
             </Typography>
             <Typography variant="body2" color="#64748b" sx={{ mb: 3, fontWeight: 500 }}>
-              Set up your Velora Customer Portal profile & billing credentials
+              {t('landing.customerSubtitle', 'Set up your Velora Customer Portal profile & billing credentials')}
             </Typography>
 
             {error && (
@@ -138,144 +142,127 @@ const VeloraCustomerRegisterPage = () => {
               </Alert>
             )}
 
-            <Box component="form" onSubmit={handleRegister}>
+            <form onSubmit={handleRegister}>
               <TextField
                 fullWidth
-                label="Full Name"
-                variant="outlined"
+                label={t('customerPortal.fullName', 'Full Name')}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                margin="normal"
                 required
                 sx={{
-                  mb: 2,
+                  '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
                   '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                  '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#6366f1' },
                 }}
               />
-
               <TextField
                 fullWidth
-                label="Email Address"
-                variant="outlined"
+                label={t('customerPortal.email', 'Email Address')}
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                margin="normal"
                 required
                 sx={{
-                  mb: 2,
+                  '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
                   '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                  '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#6366f1' },
                 }}
               />
-
               <TextField
                 fullWidth
-                label="Phone Number"
-                variant="outlined"
+                label={t('customerPortal.phone', 'Phone Number')}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+919876543210"
-                required
+                margin="normal"
                 sx={{
-                  mb: 2,
+                  '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
                   '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                  '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#6366f1' },
                 }}
               />
-
               <TextField
                 fullWidth
-                label="Create Password"
-                variant="outlined"
+                label={t('auth.passwordLabel', 'Password')}
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                margin="normal"
                 required
                 sx={{
-                  mb: 2,
+                  '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
                   '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                  '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#6366f1' },
                 }}
               />
-
               <TextField
                 fullWidth
-                label="Country"
-                variant="outlined"
+                label={t('customerPortal.country', 'Country')}
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
+                margin="normal"
                 sx={{
-                  mb: 2,
+                  '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
                   '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                  '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#6366f1' },
                 }}
               />
-
               <TextField
                 fullWidth
-                label="Billing Address (Optional)"
-                variant="outlined"
+                label={t('customerPortal.address', 'Billing Address')}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
+                margin="normal"
                 multiline
                 rows={2}
                 sx={{
-                  mb: 3,
+                  '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
                   '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                  '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#6366f1' },
                 }}
               />
 
               <Button
-                fullWidth
                 type="submit"
+                fullWidth
                 variant="contained"
-                size="large"
                 disabled={loading}
-                startIcon={<PersonOutlineIcon />}
                 sx={{
+                  mt: 3,
+                  mb: 2,
                   py: 1.5,
-                  borderRadius: 3,
+                  borderRadius: 2.5,
+                  background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
                   fontWeight: 800,
-                  textTransform: 'none',
                   fontSize: '1rem',
-                  background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-                  boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)',
-                  '&:hover': { background: 'linear-gradient(135deg, #4f46e5 0%, #9333ea 100%)' },
+                  textTransform: 'none',
+                  boxShadow: '0 10px 25px -5px rgba(99, 102, 241, 0.4)',
                 }}
               >
-                {loading ? 'Creating Account...' : 'Register Customer Account'}
+                {loading ? t('common.loading', 'Creating Account...') : t('auth.signUpButton', 'Create Account & Sign In')}
               </Button>
-            </Box>
+            </form>
 
-            <Divider sx={{ my: 3, borderColor: '#e2e8f0' }} />
+            <Divider sx={{ my: 2.5 }} />
 
             <Typography variant="body2" color="#64748b" fontWeight={600}>
-              Already registered?{' '}
+              {t('auth.alreadyRegistered', 'Already have an account?')}{' '}
               <MuiLink
                 component="button"
+                variant="body2"
                 onClick={() => navigate('/velora/customer/login')}
-                sx={{ color: '#6366f1', fontWeight: 800, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                sx={{ color: '#6366f1', fontWeight: 800, textDecoration: 'none' }}
               >
-                Sign In to Customer Portal
+                {t('common.login', 'Sign In')}
               </MuiLink>
             </Typography>
           </Paper>
         </Container>
       </Box>
     </FintechBackground>
+  );
+};
+
+const VeloraCustomerRegisterPage = () => {
+  return (
+    <CustomerLanguageScope>
+      <VeloraCustomerRegisterContent />
+    </CustomerLanguageScope>
   );
 };
 

@@ -38,6 +38,7 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { useTranslation } from 'react-i18next';
 
 import { MetricCardsSkeleton } from '../../components/common/LoadingSkeleton';
 import { AnalyticsCharts } from '../../components/common/AnalyticsCharts';
@@ -49,6 +50,7 @@ import { paymentService } from '../../services/paymentService';
 import { formatCurrency } from '../../utils/formatters';
 
 const DashboardPage = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [totalCustomersCount, setTotalCustomersCount] = useState(0);
   const [activeCustomersCount, setActiveCustomersCount] = useState(0);
@@ -252,16 +254,16 @@ const DashboardPage = () => {
       {/* HEADER SECTION */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight={900} color="#0f172a">
-          Nexora Admin Dashboard
+          {t('nav.dashboard')} - {t('admin.dashboard.title_suffix', 'Nexora Admin')}
         </Typography>
         <Typography variant="body2" color="#0284c7" fontWeight={700}>
-          Live Synchronized Subscription & Customer Performance Metrics
+          {t('admin.dashboard.subtitle', 'Live Synchronized Subscription & Customer Performance Metrics')}
         </Typography>
       </Box>
 
       {/* COMPACT SEPARATE INDIVIDUAL SUBSCRIPTION METRICS KPI CARDS - UNIFIED SKY BLUE THEME */}
       <Typography variant="subtitle2" fontWeight={900} color="#0284c7" sx={{ mb: 1.5, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-        👥 Subscription & Customer Metrics KPI Summary
+        👥 {t('dashboard.quickStats')}
       </Typography>
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {/* CARD 1: TOTAL CUSTOMERS */}
@@ -269,7 +271,7 @@ const DashboardPage = () => {
           <Card sx={{ p: 0.5, borderRadius: 2.5, bgcolor: '#FFFFFF', border: '1.5px solid #0284c7', boxShadow: '0 2px 10px rgba(2, 132, 199, 0.12)' }}>
             <CardContent sx={{ p: 1.2, '&:last-child': { pb: 1.2 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.72rem' }}>TOTAL CUSTOMERS</Typography>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.72rem' }}>{t('nav.customers').toUpperCase()}</Typography>
                 <Avatar sx={{ bgcolor: 'rgba(2, 132, 199, 0.12)', color: '#0284c7', width: 28, height: 28 }}>
                   <PeopleIcon sx={{ fontSize: '1rem' }} />
                 </Avatar>
@@ -284,7 +286,7 @@ const DashboardPage = () => {
           <Card sx={{ p: 0.5, borderRadius: 2.5, bgcolor: '#FFFFFF', border: '1.5px solid #0284c7', boxShadow: '0 2px 10px rgba(2, 132, 199, 0.12)' }}>
             <CardContent sx={{ p: 1.2, '&:last-child': { pb: 1.2 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.72rem' }}>ACTIVE CUSTOMERS</Typography>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.72rem' }}>{t('status.active')} {t('nav.customers').toUpperCase()}</Typography>
                 <Avatar sx={{ bgcolor: 'rgba(2, 132, 199, 0.12)', color: '#0284c7', width: 28, height: 28 }}>
                   <CheckCircleIcon sx={{ fontSize: '1rem' }} />
                 </Avatar>
@@ -299,7 +301,7 @@ const DashboardPage = () => {
           <Card sx={{ p: 0.5, borderRadius: 2.5, bgcolor: '#FFFFFF', border: '2px solid #0284c7', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.22)' }}>
             <CardContent sx={{ p: 1.2, '&:last-child': { pb: 1.2 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ color: '#0284c7', fontWeight: 900, fontSize: '0.72rem' }}>LIVE ACTIVE SUBSCRIPTIONS</Typography>
+                <Typography variant="caption" sx={{ color: '#0284c7', fontWeight: 900, fontSize: '0.72rem' }}>{t('dashboard.activeSubs').toUpperCase()}</Typography>
                 <Avatar sx={{ bgcolor: '#0284c7', color: '#ffffff', width: 28, height: 28, boxShadow: '0 2px 8px rgba(2, 132, 199, 0.4)' }}>
                   <AutorenewIcon sx={{ fontSize: '1rem' }} />
                 </Avatar>
@@ -312,7 +314,7 @@ const DashboardPage = () => {
 
       {/* COMPACT SEPARATE REVENUE METRICS KPI CARDS - UNIFIED SKY BLUE THEME */}
       <Typography variant="subtitle2" fontWeight={900} color="#0284c7" sx={{ mb: 1.5, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-        💼 Revenue Metrics KPI Summary
+        💼 {t('admin.dashboard.revenue_kpi_summary', 'Revenue Metrics KPI Summary')}
       </Typography>
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {/* CARD 1: MONTHLY REVENUE */}
@@ -320,7 +322,7 @@ const DashboardPage = () => {
           <Card sx={{ p: 0.5, borderRadius: 2.5, bgcolor: '#FFFFFF', border: '1.5px solid #0284c7', boxShadow: '0 2px 10px rgba(2, 132, 199, 0.12)' }}>
             <CardContent sx={{ p: 1.2, '&:last-child': { pb: 1.2 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.7rem' }}>MONTHLY REVENUE</Typography>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.7rem' }}>{t('admin.dashboard.monthly_revenue', 'MONTHLY REVENUE')}</Typography>
                 <Avatar sx={{ bgcolor: 'rgba(2, 132, 199, 0.12)', color: '#0284c7', width: 28, height: 28 }}>
                   <MonetizationOnIcon sx={{ fontSize: '1rem' }} />
                 </Avatar>
@@ -335,7 +337,7 @@ const DashboardPage = () => {
           <Card sx={{ p: 0.5, borderRadius: 2.5, bgcolor: '#FFFFFF', border: '1.5px solid #0284c7', boxShadow: '0 2px 10px rgba(2, 132, 199, 0.12)' }}>
             <CardContent sx={{ p: 1.2, '&:last-child': { pb: 1.2 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.7rem' }}>YEARLY REVENUE</Typography>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.7rem' }}>{t('admin.dashboard.yearly_revenue', 'YEARLY REVENUE')}</Typography>
                 <Avatar sx={{ bgcolor: 'rgba(2, 132, 199, 0.12)', color: '#0284c7', width: 28, height: 28 }}>
                   <TrendingUpIcon sx={{ fontSize: '1rem' }} />
                 </Avatar>
@@ -350,7 +352,7 @@ const DashboardPage = () => {
           <Card sx={{ p: 0.5, borderRadius: 2.5, bgcolor: '#FFFFFF', border: '1.5px solid #0284c7', boxShadow: '0 2px 10px rgba(2, 132, 199, 0.12)' }}>
             <CardContent sx={{ p: 1.2, '&:last-child': { pb: 1.2 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.7rem' }}>MRR</Typography>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.7rem' }}>{t('admin.dashboard.mrr', 'MRR')}</Typography>
                 <Avatar sx={{ bgcolor: 'rgba(2, 132, 199, 0.12)', color: '#0284c7', width: 28, height: 28 }}>
                   <AutorenewIcon sx={{ fontSize: '1rem' }} />
                 </Avatar>
@@ -365,7 +367,7 @@ const DashboardPage = () => {
           <Card sx={{ p: 0.5, borderRadius: 2.5, bgcolor: '#FFFFFF', border: '1.5px solid #0284c7', boxShadow: '0 2px 10px rgba(2, 132, 199, 0.12)' }}>
             <CardContent sx={{ p: 1.2, '&:last-child': { pb: 1.2 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.7rem' }}>ARR</Typography>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.7rem' }}>{t('admin.dashboard.arr', 'ARR')}</Typography>
                 <Avatar sx={{ bgcolor: 'rgba(2, 132, 199, 0.12)', color: '#0284c7', width: 28, height: 28 }}>
                   <CalendarMonthIcon sx={{ fontSize: '1rem' }} />
                 </Avatar>
@@ -380,7 +382,7 @@ const DashboardPage = () => {
           <Card sx={{ p: 0.5, borderRadius: 2.5, bgcolor: '#FFFFFF', border: '1.5px solid #0284c7', boxShadow: '0 2px 10px rgba(2, 132, 199, 0.12)' }}>
             <CardContent sx={{ p: 1.2, '&:last-child': { pb: 1.2 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.7rem' }}>CLV</Typography>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.7rem' }}>{t('admin.dashboard.clv', 'CLV')}</Typography>
                 <Avatar sx={{ bgcolor: 'rgba(2, 132, 199, 0.12)', color: '#0284c7', width: 28, height: 28 }}>
                   <AccountBalanceWalletIcon sx={{ fontSize: '1rem' }} />
                 </Avatar>
@@ -395,7 +397,7 @@ const DashboardPage = () => {
           <Card sx={{ p: 0.5, borderRadius: 2.5, bgcolor: '#FFFFFF', border: '1.5px solid #0284c7', boxShadow: '0 2px 10px rgba(2, 132, 199, 0.12)' }}>
             <CardContent sx={{ p: 1.2, '&:last-child': { pb: 1.2 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.7rem' }}>ARPU</Typography>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 800, fontSize: '0.7rem' }}>{t('admin.dashboard.arpu', 'ARPU')}</Typography>
                 <Avatar sx={{ bgcolor: 'rgba(2, 132, 199, 0.12)', color: '#0284c7', width: 28, height: 28 }}>
                   <ShowChartIcon sx={{ fontSize: '1rem' }} />
                 </Avatar>
@@ -405,8 +407,6 @@ const DashboardPage = () => {
           </Card>
         </Grid>
       </Grid>
-
-
 
       {/* VISUAL ANALYTICS CHARTS SUITE: REVENUE LINE CHART + NESTED DONUT CHART */}
       <AnalyticsCharts
@@ -435,10 +435,10 @@ const DashboardPage = () => {
             </Avatar>
             <Box>
               <Typography variant="h6" fontWeight={900} color="#0f172a">
-                Retry Queue Data Table
+                {t('admin.dashboard.retry_table_title', 'Retry Queue Data Table')}
               </Typography>
               <Typography variant="caption" color="#64748b" fontWeight={700}>
-                Live dunning schedule tracking & direct admin retry / cancellation actions
+                {t('admin.dashboard.retry_table_subtitle', 'Live dunning schedule tracking & direct admin retry / cancellation actions')}
               </Typography>
             </Box>
           </Box>
@@ -451,12 +451,12 @@ const DashboardPage = () => {
           <Table>
             <TableHead sx={{ bgcolor: '#f0f9ff' }}>
               <TableRow sx={{ borderBottom: '2px solid #bae6fd' }}>
-                <TableCell sx={{ color: '#0284c7', fontWeight: 900 }}>CUSTOMER ID / NAME</TableCell>
-                <TableCell sx={{ color: '#0284c7', fontWeight: 900 }}>INVOICE REFERENCE</TableCell>
-                <TableCell sx={{ color: '#0284c7', fontWeight: 900 }}>CURRENT RETRY ATTEMPT</TableCell>
-                <TableCell sx={{ color: '#0284c7', fontWeight: 900 }}>SCHEDULED NEXT RETRY DATE</TableCell>
-                <TableCell sx={{ color: '#0284c7', fontWeight: 900 }}>FAILURE REASON</TableCell>
-                <TableCell sx={{ color: '#0284c7', fontWeight: 900, textAlign: 'center' }}>ACTION</TableCell>
+                <TableCell sx={{ color: '#0284c7', fontWeight: 900 }}>{t('admin.dashboard.col_customer', 'CUSTOMER ID / NAME')}</TableCell>
+                <TableCell sx={{ color: '#0284c7', fontWeight: 900 }}>{t('admin.dashboard.col_invoice', 'INVOICE REFERENCE')}</TableCell>
+                <TableCell sx={{ color: '#0284c7', fontWeight: 900 }}>{t('admin.dashboard.col_attempt', 'CURRENT RETRY ATTEMPT')}</TableCell>
+                <TableCell sx={{ color: '#0284c7', fontWeight: 900 }}>{t('admin.dashboard.col_retry_date', 'SCHEDULED NEXT RETRY DATE')}</TableCell>
+                <TableCell sx={{ color: '#0284c7', fontWeight: 900 }}>{t('admin.dashboard.col_reason', 'FAILURE REASON')}</TableCell>
+                <TableCell sx={{ color: '#0284c7', fontWeight: 900, textAlign: 'center' }}>{t('admin.dashboard.col_action', 'ACTION')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -474,10 +474,10 @@ const DashboardPage = () => {
                     <TableCell sx={{ textAlign: 'center' }}>
                       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                         <Button size="small" variant="contained" onClick={() => handleManualRetry(row.retry_id || row.id)} sx={{ bgcolor: '#0284c7', fontWeight: 800, textTransform: 'none', px: 1.5 }}>
-                          Manual Retry
+                          {t('admin.dashboard.btn_manual_retry', 'Manual Retry')}
                         </Button>
                         <Button size="small" variant="outlined" color="error" onClick={() => handleCancelRetry(row.retry_id || row.id)} sx={{ bgcolor: '#0284c7', fontWeight: 800, textTransform: 'none', px: 1.5 }}>
-                          Cancel
+                          {t('admin.dashboard.btn_cancel', 'Cancel')}
                         </Button>
                       </Box>
                     </TableCell>
@@ -486,7 +486,7 @@ const DashboardPage = () => {
               ) : (
                 <TableRow>
                   <TableCell colSpan={6} align="center" sx={{ py: 4, color: '#64748b', fontWeight: 700 }}>
-                    No failed payment retries currently queued for Nexora.
+                    {t('admin.dashboard.no_retries', 'No failed payment retries currently queued for Nexora.')}
                   </TableCell>
                 </TableRow>
               )}
@@ -522,14 +522,14 @@ const DashboardPage = () => {
             </Avatar>
             <Box>
               <Typography variant="h6" fontWeight={900} color="#0f172a">
-                Tax Reports Data Table
+                {t('admin.dashboard.tax_table_title', 'Tax Reports Data Table')}
               </Typography>
               <Typography variant="caption" color="#64748b" fontWeight={700}>
-                Aggregate tax liabilities, rate breakdowns, and base amounts by jurisdiction
+                {t('admin.dashboard.tax_table_subtitle', 'Aggregate tax liabilities, rate breakdowns, and base amounts by jurisdiction')}
               </Typography>
             </Box>
           </Box>
-          <Chip label="Tax Summary" sx={{ bgcolor: '#dcfce7', color: '#047857', fontWeight: 800 }} />
+          <Chip label={t('admin.dashboard.tax_summary_chip', 'Tax Summary')} sx={{ bgcolor: '#dcfce7', color: '#047857', fontWeight: 800 }} />
         </Box>
 
         <Divider sx={{ my: 2, borderColor: '#d1fae5' }} />
@@ -538,11 +538,11 @@ const DashboardPage = () => {
           <Table>
             <TableHead sx={{ bgcolor: '#f0fdf4' }}>
               <TableRow sx={{ borderBottom: '2px solid #a7f3d0' }}>
-                <TableCell sx={{ color: '#047857', fontWeight: 900 }}>COUNTRY</TableCell>
-                <TableCell sx={{ color: '#047857', fontWeight: 900 }}>STATE / REGION</TableCell>
-                <TableCell sx={{ color: '#047857', fontWeight: 900 }}>TAX RATE (%)</TableCell>
-                <TableCell sx={{ color: '#047857', fontWeight: 900 }}>TOTAL BASE AMOUNT</TableCell>
-                <TableCell sx={{ color: '#047857', fontWeight: 900 }}>TOTAL TAX COLLECTED</TableCell>
+                <TableCell sx={{ color: '#047857', fontWeight: 900 }}>{t('admin.tax.col_country', 'COUNTRY')}</TableCell>
+                <TableCell sx={{ color: '#047857', fontWeight: 900 }}>{t('admin.tax.col_state', 'STATE / REGION')}</TableCell>
+                <TableCell sx={{ color: '#047857', fontWeight: 900 }}>{t('admin.tax.col_rate', 'TAX RATE (%)')}</TableCell>
+                <TableCell sx={{ color: '#047857', fontWeight: 900 }}>{t('admin.tax.col_base', 'TOTAL BASE AMOUNT')}</TableCell>
+                <TableCell sx={{ color: '#047857', fontWeight: 900 }}>{t('admin.tax.col_collected', 'TOTAL TAX COLLECTED')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

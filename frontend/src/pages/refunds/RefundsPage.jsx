@@ -20,8 +20,27 @@ import ProcessRefundModal from './ProcessRefundModal';
 import { refundService } from '../../services/refundService';
 import { useNotification } from '../../hooks/useNotification';
 import { formatDateTime, formatCurrency } from '../../utils/formatters';
+import { useTranslation } from 'react-i18next';
+
+const formatTranslatedReason = (reason, t) => {
+  if (!reason) return '';
+  const r = String(reason);
+
+  if (r.includes('cancellation and prorated refund')) {
+    return t('admin.refunds.reasons.cancellation_prorated', { defaultValue: r });
+  }
+  if (r.includes('unused service days')) {
+    return t('admin.refunds.reasons.unused_days', { defaultValue: r });
+  }
+  if (r.includes('Refund Credit')) {
+    return t('admin.refunds.reasons.credit_default', { defaultValue: r });
+  }
+
+  return r;
+};
 
 const RefundsPage = () => {
+  const { t } = useTranslation();
   const { showNotification } = useNotification();
   const [refunds, setRefunds] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +53,7 @@ const RefundsPage = () => {
     setLoading(true);
     try {
       const data = await refundService.getAll();
-      setRefunds(data);
+      setRefunds(Array.isArray(data) ? data : []);
     } catch {
       showNotification('Failed to fetch refunds list', 'error');
     } finally {
@@ -61,7 +80,7 @@ const RefundsPage = () => {
   const columns = [
     {
       id: 'id',
-      label: 'Refund ID',
+      label: t('admin.refunds.col_refund_id', 'Refund ID'),
       render: (row) => (
         <Typography fontWeight={700} color="#0284c7">
           #{row.id}
@@ -70,7 +89,7 @@ const RefundsPage = () => {
     },
     {
       id: 'invoice_number',
-      label: 'Invoice #',
+      label: t('admin.refunds.col_invoice', 'Invoice #'),
       render: (row) => (
         <Typography fontWeight={700} color="#0284c7">
           {row.invoice_number || `INV #${row.invoice_id}`}
@@ -79,7 +98,7 @@ const RefundsPage = () => {
     },
     {
       id: 'customer_name',
-      label: 'Customer',
+      label: t('admin.refunds.col_customer', 'Customer'),
       render: (row) => (
         <Box>
           <Typography fontWeight={700} color="#0f172a">
@@ -93,34 +112,41 @@ const RefundsPage = () => {
         </Box>
       ),
     },
-
     {
       id: 'amount',
-      label: 'Amount Refunded',
+      label: t('admin.refunds.col_amount', 'Amount Refunded'),
       render: (row) => (
         <Typography fontWeight={800} color="#16a34a">
           {formatCurrency(row.amount)}
         </Typography>
       ),
     },
-    { id: 'reason', label: 'Reason' },
+    {
+      id: 'reason',
+      label: t('admin.refunds.col_reason', 'Reason'),
+      render: (row) => (
+        <Typography variant="body2" color="#334155" fontWeight={600}>
+          {formatTranslatedReason(row.reason, t)}
+        </Typography>
+      ),
+    },
     {
       id: 'status',
-      label: 'Status',
+      label: t('admin.refunds.col_status', 'Status'),
       render: (row) => <StatusBadge status={row.status} />,
     },
     {
       id: 'created_at',
-      label: 'Refund Date',
+      label: t('admin.refunds.col_date', 'Refund Date'),
       render: (row) => formatDateTime(row.created_at),
     },
     {
       id: 'actions',
-      label: 'Actions',
+      label: t('admin.refunds.col_actions', 'Actions'),
       align: 'right',
       render: (row) => (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-          <Tooltip title="View Refund Details">
+          <Tooltip title={t('admin.refunds.tooltip_view_details', 'View Refund Details')}>
             <IconButton
               size="small"
               onClick={() => {
@@ -141,10 +167,10 @@ const RefundsPage = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h4" fontWeight={900} color="#0f172a" gutterBottom>
-            Customer Refund Adjustments
+            {t('nav.refunds', 'Customer Refund Adjustments')}
           </Typography>
           <Typography variant="body2" color="#64748b" fontWeight={600}>
-            Process partial or full customer refunds, recorded as negative line items against invoices.
+            {t('admin.refunds.subtitle', 'Process partial or full customer refunds, recorded as negative line items against invoices.')}
           </Typography>
         </Box>
         <Button
@@ -153,7 +179,7 @@ const RefundsPage = () => {
           onClick={() => setModalOpen(true)}
           sx={{ py: 1.2, px: 2.5, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' } }}
         >
-          Process Refund
+          {t('admin.refunds.process_button', 'Process Refund')}
         </Button>
       </Box>
 
@@ -161,15 +187,15 @@ const RefundsPage = () => {
         columns={columns}
         data={refunds}
         loading={loading}
-        emptyTitle="No refunds found."
-        emptyDescription="There are currently no refund records in your database."
+        emptyTitle={t('admin.refunds.empty_title', 'No refunds found.')}
+        emptyDescription={t('admin.refunds.empty_desc', 'There are currently no refund records in your database.')}
         filterField="status"
         filterOptions={[
-          { label: 'Completed', value: 'completed' },
-          { label: 'Pending', value: 'pending' },
-          { label: 'Failed', value: 'failed' },
+          { label: t('status.completed', 'Completed'), value: 'completed' },
+          { label: t('status.pending', 'Pending'), value: 'pending' },
+          { label: t('status.failed', 'Failed'), value: 'failed' },
         ]}
-        filterLabel="Refund Status"
+        filterLabel={t('admin.refunds.filter_label', 'Refund Status')}
       />
 
       <ProcessRefundModal
@@ -179,42 +205,56 @@ const RefundsPage = () => {
       />
 
       <Dialog open={detailsOpen} onClose={() => setDetailsOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800 }}>Refund Audit Record</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 800 }}>
+          {t('admin.refunds.drawer_title', 'Refund Audit Record')}
+        </DialogTitle>
         <DialogContent dividers>
           {selectedRefund && (
             <Grid container spacing={2}>
               <Grid item xs={6}>
-                <Typography variant="caption" color="#64748b">Refund ID</Typography>
+                <Typography variant="caption" color="#64748b">
+                  {t('admin.refunds.col_refund_id', 'Refund ID')}
+                </Typography>
                 <Typography variant="body1" fontWeight={700}>#{selectedRefund.id}</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="caption" color="#64748b">Status</Typography>
+                <Typography variant="caption" color="#64748b">
+                  {t('admin.refunds.col_status', 'Status')}
+                </Typography>
                 <Box sx={{ mt: 0.5 }}>
                   <StatusBadge status={selectedRefund.status} />
                 </Box>
               </Grid>
               <Grid item xs={12}>
-                <Typography variant="caption" color="#64748b">Customer ID</Typography>
+                <Typography variant="caption" color="#64748b">
+                  {t('admin.refunds.customer_id', 'Customer ID')}
+                </Typography>
                 <Typography variant="body1" fontWeight={600}>#{selectedRefund.customer_id}</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="caption" color="#64748b">Target Invoice ID</Typography>
+                <Typography variant="caption" color="#64748b">
+                  {t('admin.refunds.target_invoice_id', 'Target Invoice ID')}
+                </Typography>
                 <Typography variant="body1">#{selectedRefund.invoice_id}</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography variant="caption" color="#64748b">Amount</Typography>
+                <Typography variant="caption" color="#64748b">
+                  {t('admin.refunds.amount', 'Amount')}
+                </Typography>
                 <Typography variant="h6" fontWeight={800} color="#16a34a">{formatCurrency(selectedRefund.amount)}</Typography>
               </Grid>
               <Grid item xs={12}>
-                <Typography variant="caption" color="#64748b">Reason</Typography>
-                <Typography variant="body2">{selectedRefund.reason}</Typography>
+                <Typography variant="caption" color="#64748b">
+                  {t('admin.refunds.reason', 'Reason')}
+                </Typography>
+                <Typography variant="body2">{formatTranslatedReason(selectedRefund.reason, t)}</Typography>
               </Grid>
             </Grid>
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={() => setDetailsOpen(false)} variant="contained" sx={{ bgcolor: '#0284c7' }}>
-            Close
+            {t('admin.refunds.close', 'Close')}
           </Button>
         </DialogActions>
       </Dialog>

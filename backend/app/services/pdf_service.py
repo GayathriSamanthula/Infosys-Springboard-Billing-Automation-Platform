@@ -233,6 +233,8 @@ def generate_invoice_pdf_bytes(db: Session, invoice_id: int, platform: str = "NE
          Paragraph("<b>Amount</b>", style_bold)]
     ]
 
+    inv_amount = float(getattr(invoice, "amount", 0.0) or getattr(invoice, "total_amount", 0.0) or 0.0)
+
     if line_items:
         for item in line_items:
             table_data.append([
@@ -244,9 +246,9 @@ def generate_invoice_pdf_bytes(db: Session, invoice_id: int, platform: str = "NE
             ])
     else:
         # Fallback default itemized breakdown
-        inv_amount = float(getattr(invoice, "amount", 0.0) or getattr(invoice, "total_amount", 0.0) or 0.0)
         tax_val = float(getattr(invoice, "tax_amount", 0.0) or 0.0)
         subtotal_val = max(0.0, round(inv_amount - tax_val, 2))
+
         table_data.append([
             Paragraph(f"Subscription Fee - {plan.name if plan else 'Premium Plan'}", style_body),
             Paragraph("PLAN_FEE", style_body),

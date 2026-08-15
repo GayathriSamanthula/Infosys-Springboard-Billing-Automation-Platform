@@ -19,8 +19,10 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import StatusBadge from '../../components/common/StatusBadge';
 import { customerService } from '../../services/customerService';
 import { useNotification } from '../../hooks/useNotification';
+import { useTranslation } from 'react-i18next';
 
 const CustomersPage = () => {
+  const { t } = useTranslation();
   const { showNotification } = useNotification();
   const [searchParams] = useSearchParams();
   const [searchId, setSearchId] = useState('');
@@ -118,10 +120,10 @@ const CustomersPage = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h4" fontWeight={900} color="#0f172a" gutterBottom>
-            Customer Inspector Directory
+            {t('admin.customers.title', 'Customer Inspector Directory')}
           </Typography>
           <Typography variant="body2" color="#0284c7" fontWeight={700}>
-            Protected Privacy Access: Customer details are accessible strictly by entering a Customer ID
+            {t('admin.customers.subtitle', 'Protected Privacy Access: Customer details are accessible strictly by entering a Customer ID')}
           </Typography>
         </Box>
         <Button
@@ -132,7 +134,7 @@ const CustomersPage = () => {
           }}
           sx={{ py: 1.2, px: 2.5, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' }, fontWeight: 800 }}
         >
-          Add New Customer
+          {t('admin.customers.add_button', 'Add New Customer')}
         </Button>
       </Box>
 
@@ -150,17 +152,17 @@ const CustomersPage = () => {
         }}
       >
         <Typography variant="h6" fontWeight={900} color="#0f172a" sx={{ mb: 1 }}>
-          🔒 Enter Customer ID to Access Details
+          🔒 {t('admin.customers.card_title', 'Enter Customer ID to Access Details')}
         </Typography>
         <Typography variant="body2" color="#64748b" sx={{ mb: 3, fontWeight: 600 }}>
-          To protect customer privacy, no customer list is displayed without entering a Customer ID.
+          {t('admin.customers.card_subtitle', 'To protect customer privacy, no customer list is displayed without entering a Customer ID.')}
         </Typography>
 
         <Box component="form" onSubmit={handleLookup} sx={{ display: 'flex', gap: 2, alignItems: 'center', maxWidth: 600 }}>
           <TextField
             fullWidth
             size="small"
-            placeholder="Enter Customer ID (e.g. 10 or 1)"
+            placeholder={t('admin.customers.search_placeholder', 'Enter Customer ID (e.g. 10 or 1)')}
             value={searchId}
             onChange={(e) => setSearchId(e.target.value)}
             sx={{
@@ -175,7 +177,7 @@ const CustomersPage = () => {
             startIcon={<PersonSearchIcon />}
             sx={{ py: 1, px: 3, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' }, fontWeight: 800, textTransform: 'none', whitespace: 'nowrap' }}
           >
-            {loading ? 'Searching...' : 'Access Customer Data'}
+            {loading ? t('common.loading', 'Searching...') : t('admin.customers.lookup_button', 'Access Customer Data')}
           </Button>
         </Box>
 
@@ -196,10 +198,10 @@ const CustomersPage = () => {
         >
           <LockIcon sx={{ fontSize: '3.5rem', color: '#0284c7', mb: 1.5, opacity: 0.8 }} />
           <Typography variant="h5" fontWeight={900} color="#0f172a" sx={{ mb: 1 }}>
-            Customer Data Privacy Locked
+            {t('admin.customers.privacy_locked_title', 'Customer Data Privacy Locked')}
           </Typography>
           <Typography variant="body1" color="#64748b" sx={{ maxWidth: 520, mx: 'auto', fontWeight: 600 }}>
-            No customer profiles are displayed openly. Enter a Customer ID above to retrieve and inspect that specific customer's account, subscriptions, invoices, and billing history.
+            {t('admin.customers.privacy_locked_desc', "No customer profiles are displayed openly. Enter a Customer ID above to retrieve and inspect that specific customer's account, subscriptions, invoices, and billing history.")}
           </Typography>
         </Paper>
       )}

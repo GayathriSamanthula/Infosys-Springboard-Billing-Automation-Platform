@@ -16,8 +16,10 @@ import PublicIcon from '@mui/icons-material/Public';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 
 import { customerPortalService } from '../../services/customerPortalService';
+import { useTranslation } from 'react-i18next';
 
 const CustomerProfilePage = () => {
+  const { t } = useTranslation();
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -59,10 +61,10 @@ const CustomerProfilePage = () => {
     <Box sx={{ pb: 6 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" fontWeight={900} color="#0f172a">
-          Customer Profile
+          {t('customerPortal.myProfile')}
         </Typography>
         <Typography variant="body2" color="#e76f51" fontWeight={700} sx={{ mt: 0.5 }}>
-          View and manage your subscriber account details
+          {t('customerPortal.manageSubSubtext')}
         </Typography>
       </Box>
 
@@ -105,7 +107,7 @@ const CustomerProfilePage = () => {
           <Grid item xs={12} md={8}>
             <Paper sx={{ p: 3.5, borderRadius: 3.5, border: '3px solid #e76f51', bgcolor: '#FFFFFF !important', boxShadow: '0 10px 25px -5px rgba(231, 111, 81, 0.35)' }}>
               <Typography variant="h6" fontWeight={800} color="#0f172a" sx={{ mb: 2 }}>
-                Account Identity Details
+                {t('customerPortal.accountDetails')}
               </Typography>
 
               <Divider sx={{ mb: 3, borderColor: '#fcdad2' }} />
@@ -115,7 +117,7 @@ const CustomerProfilePage = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <PersonIcon sx={{ color: '#e76f51' }} />
                     <Box>
-                      <Typography variant="caption" color="#64748b" fontWeight={700}>FULL NAME</Typography>
+                      <Typography variant="caption" color="#64748b" fontWeight={700}>{t('customerPortal.fullName')}</Typography>
                       <Typography variant="body1" color="#0f172a" fontWeight={800}>{profile.full_name || profile.name || profile.email?.split('@')[0] || 'Customer Account'}</Typography>
                     </Box>
                   </Box>
@@ -125,7 +127,7 @@ const CustomerProfilePage = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <EmailIcon sx={{ color: '#e76f51' }} />
                     <Box>
-                      <Typography variant="caption" color="#64748b" fontWeight={700}>EMAIL ADDRESS</Typography>
+                      <Typography variant="caption" color="#64748b" fontWeight={700}>{t('customerPortal.email')}</Typography>
                       <Typography variant="body1" color="#0f172a" fontWeight={800}>{profile.email || 'N/A'}</Typography>
                     </Box>
                   </Box>
@@ -135,7 +137,7 @@ const CustomerProfilePage = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <PhoneIcon sx={{ color: '#e76f51' }} />
                     <Box>
-                      <Typography variant="caption" color="#64748b" fontWeight={700}>PHONE NUMBER</Typography>
+                      <Typography variant="caption" color="#64748b" fontWeight={700}>{t('customerPortal.phone')}</Typography>
                       <Typography variant="body1" color="#0f172a" fontWeight={800}>{profile.phone_number || profile.phone || 'N/A'}</Typography>
                     </Box>
                   </Box>
@@ -145,7 +147,7 @@ const CustomerProfilePage = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <PublicIcon sx={{ color: '#e76f51' }} />
                     <Box>
-                      <Typography variant="caption" color="#64748b" fontWeight={700}>COUNTRY</Typography>
+                      <Typography variant="caption" color="#64748b" fontWeight={700}>{t('customerPortal.country')}</Typography>
                       <Typography variant="body1" color="#0f172a" fontWeight={800}>{profile.country || 'India'}</Typography>
                     </Box>
                   </Box>
@@ -153,6 +155,7 @@ const CustomerProfilePage = () => {
               </Grid>
             </Paper>
           </Grid>
+
         </Grid>
       )}
     </Box>

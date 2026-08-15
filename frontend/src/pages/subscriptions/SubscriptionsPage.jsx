@@ -33,8 +33,10 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { subscriptionService } from '../../services/subscriptionService';
 import { useNotification } from '../../hooks/useNotification';
 import { formatDate, formatCurrency } from '../../utils/formatters';
+import { useTranslation } from 'react-i18next';
 
 const SubscriptionsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { showNotification } = useNotification();
   const [subscriptions, setSubscriptions] = useState([]);
@@ -102,10 +104,10 @@ const SubscriptionsPage = () => {
   };
 
   const columns = [
-    { id: 'id', label: 'Sub ID', render: (row) => `#${row.id}`, width: '90px' },
+    { id: 'id', label: t('admin.subscriptions.col_id', 'Sub ID'), render: (row) => `#${row.id}`, width: '90px' },
     {
       id: 'customer_name',
-      label: 'Customer & Customer ID',
+      label: t('admin.subscriptions.col_customer', 'Customer & Customer ID'),
       render: (row) => (
         <Box>
           <Typography fontWeight={700} color="#0f172a">
@@ -114,7 +116,7 @@ const SubscriptionsPage = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.3 }}>
             <Chip
               size="small"
-              label={`Customer ID: #${row.customer_id}`}
+              label={`${t('admin.subscriptions.customer_id_label', 'Customer ID')}: #${row.customer_id}`}
               onClick={() => navigate(`/customers?id=${row.customer_id}`)}
               sx={{ bgcolor: '#e0f2fe', color: '#0284c7', fontWeight: 800, cursor: 'pointer', fontSize: '0.72rem' }}
             />
@@ -124,30 +126,34 @@ const SubscriptionsPage = () => {
     },
     {
       id: 'plan_name',
-      label: 'Plan & Product',
-      render: (row) => (
-        <Box>
-          <Typography fontWeight={700} color="#0284c7">
-            {row.plan_name || row.planName || `Plan #${row.plan_id}`}
-          </Typography>
-          {row.product_name && (
-            <Typography variant="caption" color="#64748b" display="block">
-              {row.product_name}
+      label: t('admin.subscriptions.col_plan', 'Plan & Product'),
+      render: (row) => {
+        const rawPlanName = String(row.plan_name || row.planName || '');
+        const planKey = rawPlanName.toLowerCase().replace(/\s+/g, '_');
+        return (
+          <Box>
+            <Typography fontWeight={700} color="#0284c7">
+              {t(`plans.${planKey}`, rawPlanName || `Plan #${row.plan_id}`)}
             </Typography>
-          )}
-        </Box>
-      ),
+            {row.product_name && (
+              <Typography variant="caption" color="#64748b" display="block">
+                {row.product_name}
+              </Typography>
+            )}
+          </Box>
+        );
+      },
     },
 
     {
       id: 'platform_source',
-      label: 'Origin Channel',
+      label: t('admin.subscriptions.col_channel', 'Origin Channel'),
       render: (row) => {
         const isVelora = String(row.platform_source || '').toUpperCase().includes('VELORA');
         return (
           <Chip
             size="small"
-            label={isVelora ? 'Velora Gateway' : 'Nexora Direct'}
+            label={isVelora ? t('admin.subscriptions.velora_gateway', 'Velora Gateway') : t('admin.subscriptions.nexora_direct', 'Nexora Direct')}
             sx={{
               bgcolor: isVelora ? '#fff7ed' : '#e0f2fe',
               color: isVelora ? '#e65100' : '#0284c7',
@@ -159,16 +165,16 @@ const SubscriptionsPage = () => {
         );
       },
     },
-    { id: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
-    { id: 'start_date', label: 'Start Date', render: (row) => formatDate(row.start_date) },
-    { id: 'next_billing_date', label: 'Next Renewal', render: (row) => formatDate(row.next_billing_date || row.end_date) },
+    { id: 'status', label: t('admin.subscriptions.col_status', 'Status'), render: (row) => <StatusBadge status={row.status} /> },
+    { id: 'start_date', label: t('admin.subscriptions.col_start_date', 'Start Date'), render: (row) => formatDate(row.start_date) },
+    { id: 'next_billing_date', label: t('admin.subscriptions.col_next_renewal', 'Next Renewal'), render: (row) => formatDate(row.next_billing_date || row.end_date) },
     {
       id: 'actions',
-      label: 'Actions',
+      label: t('admin.subscriptions.col_actions', 'Actions'),
       align: 'right',
       render: (row) => (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-          <Tooltip title="Inspect Customer (Method A)">
+          <Tooltip title={t('admin.subscriptions.tooltip_inspect', 'Inspect Customer (Method A)')}>
             <IconButton
               size="small"
               onClick={() => navigate(`/customers?id=${row.customer_id}`)}
@@ -176,7 +182,7 @@ const SubscriptionsPage = () => {
               <PersonSearchIcon fontSize="small" sx={{ color: '#0284c7' }} />
             </IconButton>
           </Tooltip>
-          <Tooltip title="View Details">
+          <Tooltip title={t('admin.subscriptions.tooltip_details', 'View Details')}>
             <IconButton
               size="small"
               onClick={() => {
@@ -188,7 +194,7 @@ const SubscriptionsPage = () => {
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Change Plan (Module 2 Proration)">
+          <Tooltip title={t('admin.subscriptions.tooltip_change_plan', 'Change Plan (Module 2 Proration)')}>
             <IconButton
               size="small"
               onClick={() => navigate(`/subscriptions/change-plan/${row.id}`)}
@@ -198,7 +204,7 @@ const SubscriptionsPage = () => {
           </Tooltip>
 
           {(row.status?.toLowerCase() === 'active' || row.status?.toLowerCase() === 'trial') && (
-            <Tooltip title="Pause Subscription">
+            <Tooltip title={t('admin.subscriptions.tooltip_pause', 'Pause Subscription')}>
               <IconButton
                 size="small"
                 onClick={() => {
@@ -213,7 +219,7 @@ const SubscriptionsPage = () => {
           )}
 
           {String(row.status).toUpperCase() === 'PAUSED' && (
-            <Tooltip title="Resume Subscription">
+            <Tooltip title={t('admin.subscriptions.tooltip_resume', 'Resume Subscription')}>
               <IconButton
                 size="small"
                 onClick={() => {
@@ -228,7 +234,7 @@ const SubscriptionsPage = () => {
           )}
 
           {String(row.status).toUpperCase() !== 'CANCELLED' && (
-            <Tooltip title="Cancel Subscription">
+            <Tooltip title={t('admin.subscriptions.tooltip_cancel', 'Cancel Subscription')}>
               <IconButton
                 size="small"
                 onClick={() => {
@@ -251,10 +257,10 @@ const SubscriptionsPage = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h4" fontWeight={900} color="#0f172a" gutterBottom>
-            Subscriptions Engine
+            {t('nav.subscriptions', 'Subscriptions Engine')}
           </Typography>
           <Typography variant="body2" color="#0284c7" fontWeight={600}>
-            Manage subscriber billing lifecycles, plans, and renewals
+            {t('admin.subscriptions.subtitle', 'Manage subscriber billing lifecycles, plans, and renewals')}
           </Typography>
         </Box>
         <Button
@@ -263,7 +269,7 @@ const SubscriptionsPage = () => {
           onClick={() => setCreateOpen(true)}
           sx={{ py: 1.2, px: 2.5, bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' }, fontWeight: 800 }}
         >
-          Create Subscription
+          {t('admin.subscriptions.create_button', 'Create Subscription')}
         </Button>
       </Box>
 
@@ -274,7 +280,7 @@ const SubscriptionsPage = () => {
           <Card sx={{ p: 0.5, borderRadius: 2.5, bgcolor: '#FFFFFF', border: '2px solid #0284c7', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.22)' }}>
             <CardContent sx={{ p: 1.2, '&:last-child': { pb: 1.2 } }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                <Typography variant="caption" sx={{ color: '#0284c7', fontWeight: 900, fontSize: '0.72rem' }}>LIVE ACTIVE SUBSCRIBERS</Typography>
+                <Typography variant="caption" sx={{ color: '#0284c7', fontWeight: 900, fontSize: '0.72rem' }}>{t('admin.subscriptions.live_active', 'LIVE ACTIVE SUBSCRIBERS')}</Typography>
                 <Avatar sx={{ bgcolor: '#0284c7', color: '#ffffff', width: 28, height: 28, boxShadow: '0 2px 8px rgba(2, 132, 199, 0.4)' }}>
                   <AutorenewIcon sx={{ fontSize: '1rem' }} />
                 </Avatar>

@@ -26,8 +26,12 @@ import { useNotification } from '../../hooks/useNotification';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { EMAIL_REGEX } from '../../utils/validators';
+import { AdminLanguageScope } from '../../context/LanguageContext';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 const LoginPage = () => {
+  const { t } = useTranslation();
   const { login } = useAuth();
   const { showNotification } = useNotification();
   const navigate = useNavigate();
@@ -110,192 +114,199 @@ const LoginPage = () => {
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-      <Typography variant="h5" fontWeight={700} color="text.primary" align="center" gutterBottom>
-        Sign In to Portal
-      </Typography>
-      <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
-        Enter your credentials to access the platform.
-      </Typography>
-
-      <FormInput
-        name="email"
-        control={control}
-        label="Email Address"
-        rules={{
-          required: 'Email is required',
-          pattern: { value: EMAIL_REGEX, message: 'Enter a valid email address' },
-        }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <EmailOutlinedIcon sx={{ color: '#94a3b8' }} />
-            </InputAdornment>
-          ),
-        }}
-      />
-
-      <FormInput
-        name="password"
-        control={control}
-        label="Password"
-        type={showPassword ? 'text' : 'password'}
-        rules={{ required: 'Password is required' }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <LockOutlinedIcon sx={{ color: '#94a3b8' }} />
-            </InputAdornment>
-          ),
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                {showPassword ? <VisibilityOff /> : <Visibility />}
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-      />
-
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', my: 1.5 }}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              color="primary"
-              size="small"
-            />
-          }
-          label={<Typography variant="body2" color="text.secondary">Remember me</Typography>}
-        />
-        <Link
-          component="button"
-          type="button"
-          variant="body2"
-          onClick={() => setForgotOpen(true)}
-          sx={{ fontWeight: 600, color: 'primary.main', textDecoration: 'none' }}
-        >
-          Forgot password?
-        </Link>
-      </Box>
-
-      <Button
-        type="submit"
-        fullWidth
-        variant="contained"
-        size="large"
-        disabled={isSubmitting}
-        sx={{ py: 1.5, mt: 2, fontSize: '0.95rem', bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' } }}
-      >
-        {isSubmitting ? 'Authenticating...' : 'Sign In'}
-      </Button>
-
-      <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          Don't have an admin account?{' '}
-          <Link
-            component="button"
-            type="button"
-            variant="body2"
-            onClick={() => navigate('/register')}
-            sx={{ fontWeight: 800, color: '#0284c7', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-          >
-            Register Admin Account
-          </Link>
-        </Typography>
-      </Box>
-
-      <Dialog open={forgotOpen} onClose={() => setForgotOpen(false)} maxWidth="xs" fullWidth>
-        <Box component="form" onSubmit={handleResetSubmit}>
-          <DialogTitle sx={{ fontWeight: 800, color: '#0f172a' }}>Reset Admin Password</DialogTitle>
-          <DialogContent>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Enter your admin email address and your new password below.
-            </Typography>
-
-            {resetError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {resetError}
-              </Alert>
-            )}
-
-            <TextField
-              fullWidth
-              label="Admin Email Address"
-              type="email"
-              value={resetEmail}
-              onChange={(e) => setResetEmail(e.target.value)}
-              margin="normal"
-              required
-              sx={{
-                '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="New Password"
-              type={showResetNewPassword ? 'text' : 'password'}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              margin="normal"
-              required
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowResetNewPassword(!showResetNewPassword)} edge="end">
-                      {showResetNewPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="Confirm New Password"
-              type={showResetConfirmPassword ? 'text' : 'password'}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              margin="normal"
-              required
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowResetConfirmPassword(!showResetConfirmPassword)} edge="end">
-                      {showResetConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-              }}
-            />
-          </DialogContent>
-          <DialogActions sx={{ p: 2, gap: 1 }}>
-            <Button onClick={() => setForgotOpen(false)} variant="outlined" sx={{ color: '#64748b' }}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={resetSubmitting}
-              sx={{ bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' }, fontWeight: 800 }}
-            >
-              {resetSubmitting ? 'Updating...' : 'Reset Password'}
-            </Button>
-          </DialogActions>
+    <AdminLanguageScope>
+      <Box sx={{ position: 'relative' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <LanguageSwitcher />
         </Box>
-      </Dialog>
-    </Box>
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <Typography variant="h5" fontWeight={700} color="text.primary" align="center" gutterBottom>
+            {t('auth.adminSignInHeader', 'Sign In to Portal')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
+            {t('auth.adminSignInSub', 'Enter your credentials to access the platform.')}
+          </Typography>
+
+          <FormInput
+            name="email"
+            control={control}
+            label={t('auth.adminEmailLabel', 'Email Address')}
+            rules={{
+              required: 'Email is required',
+              pattern: { value: EMAIL_REGEX, message: 'Enter a valid email address' },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailOutlinedIcon sx={{ color: '#94a3b8' }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <FormInput
+            name="password"
+            control={control}
+            label={t('auth.passwordLabel', 'Password')}
+            type={showPassword ? 'text' : 'password'}
+            rules={{ required: 'Password is required' }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlinedIcon sx={{ color: '#94a3b8' }} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', my: 1.5 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  color="primary"
+                  size="small"
+                />
+              }
+              label={<Typography variant="body2" color="text.secondary">{t('auth.rememberMe', 'Remember me')}</Typography>}
+            />
+            <Link
+              component="button"
+              type="button"
+              variant="body2"
+              onClick={() => setForgotOpen(true)}
+              sx={{ fontWeight: 600, color: 'primary.main', textDecoration: 'none' }}
+            >
+              {t('auth.forgotPassword', 'Forgot password?')}
+            </Link>
+          </Box>
+
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            size="large"
+            disabled={isSubmitting}
+            sx={{ py: 1.5, mt: 2, fontSize: '0.95rem', bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' } }}
+          >
+            {isSubmitting ? t('auth.authenticating', 'Authenticating...') : t('auth.signInButton', 'Sign In')}
+          </Button>
+
+          <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              {t('auth.noAdminAccount', "Don't have an admin account?")}{' '}
+              <Link
+                component="button"
+                type="button"
+                variant="body2"
+                onClick={() => navigate('/register')}
+                sx={{ fontWeight: 800, color: '#0284c7', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+              >
+                {t('auth.registerAdminLink', 'Register Admin Account')}
+              </Link>
+            </Typography>
+          </Box>
+
+          <Dialog open={forgotOpen} onClose={() => setForgotOpen(false)} maxWidth="xs" fullWidth>
+            <Box component="form" onSubmit={handleResetSubmit}>
+              <DialogTitle sx={{ fontWeight: 800, color: '#0f172a' }}>{t('auth.resetAdminPassword', 'Reset Admin Password')}</DialogTitle>
+              <DialogContent>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  {t('auth.resetAdminSub', 'Enter your admin email address and your new password below.')}
+                </Typography>
+
+                {resetError && (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {resetError}
+                  </Alert>
+                )}
+
+                <TextField
+                  fullWidth
+                  label={t('auth.adminEmailLabel', 'Admin Email Address')}
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  margin="normal"
+                  required
+                  sx={{
+                    '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                  }}
+                />
+
+                <TextField
+                  fullWidth
+                  label={t('auth.newPasswordLabel', 'New Password')}
+                  type={showResetNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  margin="normal"
+                  required
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowResetNewPassword(!showResetNewPassword)} edge="end">
+                          {showResetNewPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                  }}
+                />
+
+                <TextField
+                  fullWidth
+                  label={t('auth.confirmPasswordLabel', 'Confirm New Password')}
+                  type={showResetConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  margin="normal"
+                  required
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowResetConfirmPassword(!showResetConfirmPassword)} edge="end">
+                          {showResetConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                  }}
+                />
+              </DialogContent>
+              <DialogActions sx={{ p: 2, gap: 1 }}>
+                <Button onClick={() => setForgotOpen(false)} variant="outlined" sx={{ color: '#64748b' }}>
+                  {t('common.cancel', 'Cancel')}
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={resetSubmitting}
+                  sx={{ bgcolor: '#0284c7', '&:hover': { bgcolor: '#0369a1' }, fontWeight: 800 }}
+                >
+                  {resetSubmitting ? t('auth.updating', 'Updating...') : t('auth.resetPasswordButton', 'Reset Password')}
+                </Button>
+              </DialogActions>
+            </Box>
+          </Dialog>
+        </Box>
+      </Box>
+    </AdminLanguageScope>
   );
 };
 

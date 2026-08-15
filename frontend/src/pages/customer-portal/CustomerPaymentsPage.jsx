@@ -16,8 +16,12 @@ import CreditCardIcon from '@mui/icons-material/CreditCard';
 import axios from 'axios';
 import { customerPortalService } from '../../services/customerPortalService';
 import { formatCurrency } from '../../utils/formatters';
+import { useTranslation } from 'react-i18next';
+
+import StatusBadge from '../../components/common/StatusBadge';
 
 const CustomerPaymentsPage = () => {
+  const { t } = useTranslation();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -69,10 +73,10 @@ const CustomerPaymentsPage = () => {
     <Box sx={{ pb: 6 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" fontWeight={900} color="#000000">
-          Payment Transaction History
+          {t('customerPortal.paymentMethods')}
         </Typography>
         <Typography variant="body2" color="#64748b" fontWeight={700} sx={{ mt: 0.5 }}>
-          View processed payment transactions, gateway confirmation references, and payment methods.
+          {t('customerPortal.manageSubSubtext')}
         </Typography>
       </Box>
 
@@ -87,7 +91,7 @@ const CustomerPaymentsPage = () => {
             }}
           >
             <Typography variant="caption" color="#e76f51" fontWeight={900} letterSpacing="0.05em">
-              TOTAL PAID VOLUME
+              {t('dashboard.totalRevenue')}
             </Typography>
             <Typography variant="h3" fontWeight={900} color="#0f172a" sx={{ mt: 1 }}>
               {formatCurrency(totalPaid)}
@@ -104,10 +108,10 @@ const CustomerPaymentsPage = () => {
             }}
           >
             <Typography variant="caption" color="#e76f51" fontWeight={900} letterSpacing="0.05em">
-              SUCCESSFUL TRANSACTIONS
+              {t('customerPortal.successfulTxns')}
             </Typography>
             <Typography variant="h3" fontWeight={900} color="#0f172a" sx={{ mt: 1 }}>
-              {payments.length} Transactions
+              {payments.length} {t('customerPortal.txnsCount')}
             </Typography>
           </Paper>
         </Grid>
@@ -125,18 +129,18 @@ const CustomerPaymentsPage = () => {
           <Table>
             <TableHead sx={{ bgcolor: '#fdf0ed' }}>
               <TableRow>
-                <TableCell sx={{ fontWeight: 900, color: '#e76f51' }}>TRANSACTION ID</TableCell>
-                <TableCell sx={{ fontWeight: 900, color: '#e76f51' }}>AMOUNT</TableCell>
-                <TableCell sx={{ fontWeight: 900, color: '#e76f51' }}>PAYMENT METHOD</TableCell>
-                <TableCell sx={{ fontWeight: 900, color: '#e76f51' }}>STATUS</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 900, color: '#e76f51' }}>DATE</TableCell>
+                <TableCell sx={{ fontWeight: 900, color: '#e76f51' }}>{t('customerPortal.colTxnId')}</TableCell>
+                <TableCell sx={{ fontWeight: 900, color: '#e76f51' }}>{t('customerPortal.colAmount')}</TableCell>
+                <TableCell sx={{ fontWeight: 900, color: '#e76f51' }}>{t('customerPortal.colMethod')}</TableCell>
+                <TableCell sx={{ fontWeight: 900, color: '#e76f51' }}>{t('customerPortal.colStatus')}</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 900, color: '#e76f51' }}>{t('customerPortal.colDate')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={5} align="center" sx={{ py: 4, color: '#e76f51', fontWeight: 800 }}>
-                    Loading Payment History...
+                    {t('common.loading')}
                   </TableCell>
                 </TableRow>
               ) : payments.length === 0 ? (
@@ -158,12 +162,9 @@ const CustomerPaymentsPage = () => {
                       {p.payment_method || 'Credit Card / UPI'}
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={String(p.status || p.payment_status || 'SUCCESS').toUpperCase()}
-                        size="small"
-                        sx={{ bgcolor: '#dcfce7', color: '#15803d', fontWeight: 900 }}
-                      />
+                      <StatusBadge status={p.status || p.payment_status || 'SUCCESS'} />
                     </TableCell>
+
                     <TableCell align="right" sx={{ color: '#64748b', fontWeight: 600 }}>
                       {p.created_at || p.payment_date || '2026-07-26'}
                     </TableCell>

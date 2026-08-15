@@ -26,7 +26,9 @@ def init_default_tax_rules(db: Session):
         {"country": "India", "state": "ALL", "tax_name": "GST", "tax_percentage": 18.0},
         {"country": "UAE", "state": "ALL", "tax_name": "VAT", "tax_percentage": 5.0},
         {"country": "USA", "state": "California", "tax_name": "Sales Tax", "tax_percentage": 8.25},
-        {"country": "DEFAULT", "state": "ALL", "tax_name": "Zero Tax Rate", "tax_percentage": 0.0},
+        {"country": "US", "state": "ALL", "tax_name": "Sales Tax", "tax_percentage": 8.25},
+        {"country": "International", "state": "ALL", "tax_name": "International Tax", "tax_percentage": 15.0},
+        {"country": "DEFAULT", "state": "ALL", "tax_name": "International Tax", "tax_percentage": 15.0},
     ]
 
     for item in defaults:
@@ -44,6 +46,9 @@ def init_default_tax_rules(db: Session):
                 is_active=True
             )
             db.add(rule)
+        else:
+            existing.tax_percentage = item["tax_percentage"]
+            existing.tax_name = item["tax_name"]
     db.commit()
 
 
@@ -100,24 +105,31 @@ def calculate_tax_for_customer(db: Session, customer_id: int, subtotal: float) -
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
 
     customer_name = customer.full_name if customer else "Guest Customer"
-    country = customer.country if customer and customer.country else "DEFAULT"
+    country = customer.country if customer and customer.country else "International"
     state = "ALL"
 
-    # Search for specific country + state match first
-    tax_rule = db.query(TaxMaster).filter(
-        TaxMaster.country.ilike(country),
-        TaxMaster.is_active == True
-    ).first()
+    # Search for specific country match first
+    tax_rule = None
+    if country:
+        country_clean = country.strip().upper()
+        if country_clean in ["US", "USA", "UNITED STATES"]:
+            tax_rule = db.query(TaxMaster).filter(TaxMaster.country.in_(["US", "USA"]), TaxMaster.is_active == True).first()
+        elif country_clean in ["UAE", "UNITED ARAB EMIRATES"]:
+            tax_rule = db.query(TaxMaster).filter(TaxMaster.country == "UAE", TaxMaster.is_active == True).first()
+        elif country_clean in ["INDIA", "IND"]:
+            tax_rule = db.query(TaxMaster).filter(TaxMaster.country == "India", TaxMaster.is_active == True).first()
+        elif country_clean in ["INTERNATIONAL"]:
+            tax_rule = db.query(TaxMaster).filter(TaxMaster.country == "International", TaxMaster.is_active == True).first()
 
-    # Fallback to DEFAULT tax rule if country not found
+    # Fallback to International / DEFAULT tax rule if country not explicitly matched
     if not tax_rule:
         tax_rule = db.query(TaxMaster).filter(
-            TaxMaster.country == "DEFAULT",
+            TaxMaster.country.in_(["International", "DEFAULT"]),
             TaxMaster.is_active == True
         ).first()
 
-    tax_name = tax_rule.tax_name if tax_rule else "GST"
-    tax_percentage = tax_rule.tax_percentage if tax_rule else 18.0
+    tax_name = tax_rule.tax_name if tax_rule else "International Tax"
+    tax_percentage = tax_rule.tax_percentage if tax_rule else 15.0
 
     tax_amount = round(subtotal * (tax_percentage / 100.0), 2)
     grand_total = round(subtotal + tax_amount, 2)
@@ -135,6 +147,21 @@ def calculate_tax_for_customer(db: Session, customer_id: int, subtotal: float) -
     )
 
 
+def normalize_country_name(raw_country: Optional[str]) -> str:
+    if not raw_country or not raw_country.strip():
+        return "International"
+    cleaned = raw_country.strip().upper()
+    if cleaned in ["US", "USA", "UNITED STATES"]:
+        return "USA"
+    elif cleaned in ["UAE", "UNITED ARAB EMIRATES"]:
+        return "UAE"
+    elif cleaned in ["INDIA", "IND"]:
+        return "India"
+    elif cleaned in ["INTERNATIONAL", "DEFAULT"]:
+        return "International"
+    return raw_country.strip().title()
+
+
 def generate_tax_reports(db: Session, period: str = "monthly", country_filter: Optional[str] = None) -> TaxReportResponse:
     """
     Generates admin tax collection reports aggregated by country, state, and subscription plan.
@@ -143,7 +170,23 @@ def generate_tax_reports(db: Session, period: str = "monthly", country_filter: O
     invoices_query = db.query(Invoice).filter(Invoice.is_deleted == False)
 
     if country_filter:
-        invoices_query = invoices_query.join(Subscription).join(Customer).filter(Customer.country.ilike(country_filter))
+        c_filter_norm = normalize_country_name(country_filter).upper()
+        if c_filter_norm == "USA":
+            invoices_query = invoices_query.join(Subscription).join(Customer).filter(
+                func.upper(func.trim(Customer.country)).in_(["US", "USA", "UNITED STATES"])
+            )
+        elif c_filter_norm == "UAE":
+            invoices_query = invoices_query.join(Subscription).join(Customer).filter(
+                func.upper(func.trim(Customer.country)).in_(["UAE", "UNITED ARAB EMIRATES"])
+            )
+        elif c_filter_norm == "INDIA":
+            invoices_query = invoices_query.join(Subscription).join(Customer).filter(
+                func.upper(func.trim(Customer.country)).in_(["INDIA", "IND"])
+            )
+        else:
+            invoices_query = invoices_query.join(Subscription).join(Customer).filter(
+                Customer.country.ilike(f"%{country_filter}%")
+            )
 
     invoices = invoices_query.all()
     total_tax = sum(inv.tax_amount or 0.0 for inv in invoices)
@@ -156,9 +199,14 @@ def generate_tax_reports(db: Session, period: str = "monthly", country_filter: O
     payment_method_map: Dict[str, float] = {}
 
     for inv in invoices:
-        cust = db.query(Customer).join(Subscription).filter(Subscription.id == inv.subscription_id).first() if inv.subscription_id else None
-        cntry = cust.country if cust and cust.country else "DEFAULT"
-        state = getattr(cust, 'state', None) or getattr(cust, 'country', 'ALL') if cust else "ALL"
+        cust = None
+        if inv.subscription_id:
+            sub = db.query(Subscription).filter(Subscription.id == inv.subscription_id).first()
+            if sub:
+                cust = db.query(Customer).filter(Customer.id == sub.customer_id).first()
+
+        cntry = normalize_country_name(cust.country if cust else None)
+        state = getattr(cust, 'state', None) or cntry
         cname = cust.full_name if cust and cust.full_name else "Guest Customer"
         tax_val = inv.tax_amount or 0.0
 

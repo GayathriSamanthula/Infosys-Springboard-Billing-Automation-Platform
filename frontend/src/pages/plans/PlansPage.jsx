@@ -11,8 +11,10 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { planService } from '../../services/planService';
 import { useNotification } from '../../hooks/useNotification';
 import { formatCurrency } from '../../utils/formatters';
+import { useTranslation } from 'react-i18next';
 
 const PlansPage = () => {
+  const { t } = useTranslation();
   const { showNotification } = useNotification();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,16 +89,20 @@ const PlansPage = () => {
   const columns = [
     {
       id: 'name',
-      label: 'Plan Name',
-      render: (row) => (
-        <Typography fontWeight={900} color="#0284c7">
-          {row.name}
-        </Typography>
-      ),
+      label: t('admin.plans.col_name', 'Plan Name'),
+      render: (row) => {
+        const rawName = String(row.name || '');
+        const planKey = rawName.toLowerCase().replace(/\s+/g, '_');
+        return (
+          <Typography fontWeight={900} color="#0284c7">
+            {t(`plans.${planKey}`, rawName)}
+          </Typography>
+        );
+      },
     },
     {
       id: 'price',
-      label: 'Price',
+      label: t('admin.plans.col_price', 'Price'),
       render: (row) => (
         <Typography fontWeight={900} color="#0f172a">
           {formatCurrency(row.price)}
@@ -105,11 +111,11 @@ const PlansPage = () => {
     },
     {
       id: 'actions',
-      label: 'Actions',
+      label: t('admin.plans.col_actions', 'Actions'),
       align: 'right',
       render: (row) => (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-          <Tooltip title="Update Plan">
+          <Tooltip title={t('admin.plans.tooltip_edit', 'Update Plan')}>
             <IconButton
               size="small"
               onClick={() => {
@@ -121,7 +127,7 @@ const PlansPage = () => {
             </IconButton>
           </Tooltip>
           {!row.is_archived && row.status !== 'ARCHIVED' && (
-            <Tooltip title="Archive Plan">
+            <Tooltip title={t('admin.plans.tooltip_archive', 'Archive Plan')}>
               <IconButton
                 size="small"
                 onClick={() => {
@@ -143,10 +149,10 @@ const PlansPage = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h4" fontWeight={900} color="#000000" gutterBottom>
-            Subscription Plans
+            {t('nav.plans', 'Subscription Plans')}
           </Typography>
           <Typography variant="body2" color="#64748b" fontWeight={700}>
-            Configure pricing tiers, billing cycles (monthly/annual), and trial period entitlements
+            {t('admin.plans.subtitle', 'Configure pricing tiers, billing cycles (monthly/annual), and trial period entitlements')}
           </Typography>
         </Box>
         <Button
@@ -158,7 +164,7 @@ const PlansPage = () => {
           }}
           sx={{ py: 1.2, px: 2.5 }}
         >
-          Create Plan
+          {t('admin.plans.create_button', 'Create Plan')}
         </Button>
       </Box>
 

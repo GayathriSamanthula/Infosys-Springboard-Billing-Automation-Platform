@@ -22,20 +22,22 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 import { customerPortalService } from '../../services/customerPortalService';
+import { useTranslation } from 'react-i18next';
 
 export const CUSTOMER_NAV_ITEMS = [
-  { title: 'Customer Dashboard', path: '/customer/dashboard', icon: DashboardIcon },
-  { title: 'Available Plans', path: '/customer/plans', icon: LocalOfferIcon },
-  { title: 'Subscriptions', path: '/customer/subscriptions', icon: CardMembershipIcon },
-  { title: 'My Invoices', path: '/customer/invoices', icon: ReceiptIcon },
-  { title: 'Payment History', path: '/customer/payments', icon: CreditCardIcon },
-  { title: 'My Profile', path: '/customer/profile', icon: PersonIcon },
-  { title: 'Settings', path: '/customer/settings', icon: SettingsIcon },
+  { title: 'Customer Dashboard', path: '/customer/dashboard', icon: DashboardIcon, key: 'nav.dashboard' },
+  { title: 'Available Plans', path: '/customer/plans', icon: LocalOfferIcon, key: 'nav.plans' },
+  { title: 'Subscriptions', path: '/customer/subscriptions', icon: CardMembershipIcon, key: 'nav.subscriptions' },
+  { title: 'My Invoices', path: '/customer/invoices', icon: ReceiptIcon, key: 'nav.invoices' },
+  { title: 'Payment History', path: '/customer/payments', icon: CreditCardIcon, key: 'nav.payments' },
+  { title: 'My Profile', path: '/customer/profile', icon: PersonIcon, key: 'nav.profile' },
+  { title: 'Settings', path: '/customer/settings', icon: SettingsIcon, key: 'nav.settings' },
 ];
 
 const CustomerSidebar = ({ mobileOpen, onDrawerToggle, drawerWidth = 260, activePlanName: propPlanName }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [livePlanName, setLivePlanName] = React.useState(propPlanName || '');
 
   const currentCust = customerPortalService.getCurrentCustomer() || {};
@@ -94,19 +96,32 @@ const CustomerSidebar = ({ mobileOpen, onDrawerToggle, drawerWidth = 260, active
             Nexora
           </Typography>
           <Typography variant="caption" sx={{ color: '#d45d3f', fontSize: '0.7rem', fontWeight: 800 }}>
-            Customer Portal • Active
+            {t('nav.customerPortal')} • {t('status.active')}
           </Typography>
         </Box>
-        <Chip label={displayPlanName} size="small" sx={{ ml: 'auto', bgcolor: '#fcdad2', color: '#e76f51', border: '1px solid #e76f51', fontSize: '0.65rem', fontWeight: 900 }} />
+        <Chip
+          label={(() => {
+            const n = String(displayPlanName || '').toLowerCase();
+            let pKey = '1';
+            if (n.includes('plus')) pKey = '3';
+            else if (n.includes('pro')) pKey = '4';
+            else if (n.includes('premium')) pKey = '2';
+            return t(`plans.${pKey}.name`, displayPlanName);
+          })()}
+          size="small"
+          sx={{ ml: 'auto', bgcolor: '#fcdad2', color: '#e76f51', border: '1px solid #e76f51', fontSize: '0.65rem', fontWeight: 900 }}
+        />
+
       </Box>
 
       <Divider sx={{ borderColor: '#fcdad2' }} />
 
       <Box sx={{ px: 3, pt: 2, pb: 1 }}>
         <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-          Customer Navigation
+          {t('nav.customerPortal')}
         </Typography>
       </Box>
+
 
       <List sx={{ px: 1.5, flex: 1 }}>
         {CUSTOMER_NAV_ITEMS.map((item, idx) => {
@@ -138,7 +153,7 @@ const CustomerSidebar = ({ mobileOpen, onDrawerToggle, drawerWidth = 260, active
                   <IconComponent fontSize="small" />
                 </ListItemIcon>
                 <ListItemText
-                  primary={item.title}
+                  primary={t(item.key || item.title)}
                   primaryTypographyProps={{
                     fontSize: '0.875rem',
                     fontWeight: isActive ? 800 : 500,

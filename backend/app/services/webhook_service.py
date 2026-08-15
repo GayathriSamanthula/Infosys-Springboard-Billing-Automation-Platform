@@ -25,12 +25,31 @@ def process_payment_webhook(db: Session, payload: PaymentWebhookPayload) -> Webh
     Handles incoming webhook notifications from Payment Gateway.
     Updates Invoice status, Subscription lifecycle status, and generates compliance Audit Logs.
     """
-    invoice = db.query(Invoice).filter(Invoice.id == payload.invoice_id).first()
+    invoice = None
+    if payload.invoice_id:
+        invoice = db.query(Invoice).filter(Invoice.id == payload.invoice_id).first()
+
+    # Fallback 1: Lookup latest invoice for customer if invoice_id fails or is missing
+    if not invoice and getattr(payload, 'customer_id', None):
+        subs = db.query(Subscription).filter(Subscription.customer_id == payload.customer_id).all()
+        sub_ids = [s.id for s in subs]
+        if sub_ids:
+            invoice = db.query(Invoice).filter(
+                Invoice.subscription_id.in_(sub_ids),
+                Invoice.is_deleted == False
+            ).order_by(Invoice.id.desc()).first()
+
+    # Fallback 2: Lookup via transaction_id in Payment table
+    if not invoice and getattr(payload, 'transaction_id', None):
+        existing_p = db.query(Payment).filter(Payment.transaction_id == payload.transaction_id).first()
+        if existing_p and existing_p.invoice_id:
+            invoice = db.query(Invoice).filter(Invoice.id == existing_p.invoice_id).first()
+
     if not invoice:
         return WebhookResponse(
             success=False,
             message=f"Invoice #{payload.invoice_id} not found.",
-            invoice_id=payload.invoice_id,
+            invoice_id=payload.invoice_id or 0,
             invoice_status="UNKNOWN",
             subscription_status="UNKNOWN",
         )

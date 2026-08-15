@@ -22,10 +22,14 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useNavigate } from 'react-router-dom';
 import { customerPortalService } from '../../services/customerPortalService';
 import { useNotification } from '../../hooks/useNotification';
+import { CustomerLanguageScope } from '../../context/LanguageContext';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
-const CustomerLoginPage = () => {
+const CustomerLoginPageContent = () => {
   const navigate = useNavigate();
   const { showNotification } = useNotification();
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -65,17 +69,23 @@ const CustomerLoginPage = () => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: '#f8fafc', // Neutral Page Background
+        bgcolor: '#f8fafc',
         p: 2,
+        position: 'relative',
       }}
     >
+      {/* Top Header Bar with Language Switcher */}
+      <Box sx={{ position: 'absolute', top: 20, right: 24, zIndex: 10 }}>
+        <LanguageSwitcher />
+      </Box>
+
       <Box sx={{ maxWidth: 440, width: '100%', mb: 2 }}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/')}
           sx={{ color: '#e76f51', textTransform: 'none', fontWeight: 800, '&:hover': { color: '#d45d3f' } }}
         >
-          Back to Nexora Gateway
+          {t('auth.backToGateway')}
         </Button>
       </Box>
 
@@ -85,13 +95,13 @@ const CustomerLoginPage = () => {
           maxWidth: 440,
           width: '100%',
           borderRadius: 4,
-          bgcolor: '#ffffff !important', // Clean White Box Content
-          border: '3px solid #e76f51', // #e76f51 Box Border
+          bgcolor: '#ffffff !important',
+          border: '3px solid #e76f51',
           boxShadow: '0 20px 40px -15px rgba(231, 111, 81, 0.35)',
           overflow: 'hidden',
         }}
       >
-        {/* Header with #e76f51 Background and Custom Logo Symbol */}
+        {/* Header with #e76f51 Background */}
         <Box sx={{ p: 4, textAlign: 'center', bgcolor: '#e76f51', color: '#ffffff' }}>
           <Box
             component="img"
@@ -113,7 +123,7 @@ const CustomerLoginPage = () => {
             Nexora
           </Typography>
           <Typography variant="caption" color="#ffffff" fontWeight={800} letterSpacing="0.05em" display="block" sx={{ mt: 0.5, opacity: 0.95 }}>
-            CUSTOMER PORTAL
+            {t('nav.customerPortal').toUpperCase()}
           </Typography>
         </Box>
 
@@ -123,7 +133,7 @@ const CustomerLoginPage = () => {
           <form onSubmit={handleLogin}>
             <TextField
               fullWidth
-              label="Email Address"
+              label={t('auth.emailLabel')}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -138,7 +148,7 @@ const CustomerLoginPage = () => {
             />
             <TextField
               fullWidth
-              label="Password"
+              label={t('auth.passwordLabel')}
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -184,7 +194,7 @@ const CustomerLoginPage = () => {
                 boxShadow: '0 4px 15px rgba(231, 111, 81, 0.4)',
               }}
             >
-              {loading ? 'Authenticating Customer...' : 'Sign In to Customer Portal'}
+              {loading ? 'Authenticating...' : t('auth.customerSignInHeader')}
             </Button>
           </form>
 
@@ -192,20 +202,28 @@ const CustomerLoginPage = () => {
 
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="body2" color="#64748b" fontWeight={600}>
-              Don't have a customer account yet?{' '}
+              {t('auth.noCustomerAccount')}{' '}
               <Link
                 component="button"
                 variant="body2"
                 onClick={() => navigate('/customer/register')}
                 sx={{ fontWeight: 800, color: '#e76f51', textDecoration: 'none', '&:hover': { textDecoration: 'underline', color: '#d45d3f' } }}
               >
-                Create Account
+                {t('auth.createAccount')}
               </Link>
             </Typography>
           </Box>
         </CardContent>
       </Card>
     </Box>
+  );
+};
+
+const CustomerLoginPage = () => {
+  return (
+    <CustomerLanguageScope>
+      <CustomerLoginPageContent />
+    </CustomerLanguageScope>
   );
 };
 

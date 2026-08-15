@@ -38,9 +38,21 @@ def get_velora_synced_plans(db: Session) -> List[Any]:
     return get_all_plans(db)
 
 def get_velora_synced_customers(db: Session) -> List[Any]:
-    """Returns strictly Velora-originating customer profiles."""
+    """Returns strictly Velora-originating customer profiles with their live assigned plan."""
     customers = get_all_customers(db)
-    return [c for c in customers if str(getattr(c, 'platform_source', '')).upper() in ['VELORA_DIRECT', 'VELORA']]
+    velora_customers = [c for c in customers if str(getattr(c, 'platform_source', '')).upper() in ['VELORA_DIRECT', 'VELORA']]
+    for c in velora_customers:
+        sub = db.query(Subscription).filter(Subscription.customer_id == c.id).order_by(Subscription.id.desc()).first()
+        if sub:
+            plan = db.query(Plan).filter(Plan.id == sub.plan_id).first()
+            if plan:
+                c.plan = plan.name
+                c.plan_name = plan.name
+            else:
+                c.plan = "Basic Plan"
+        else:
+            c.plan = "Basic Plan"
+    return velora_customers
 
 def get_velora_synced_subscriptions(db: Session) -> List[Any]:
     """Returns strictly Velora-originating customer subscriptions (e.g. Sruthi pandey)."""

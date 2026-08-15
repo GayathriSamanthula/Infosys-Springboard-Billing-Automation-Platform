@@ -16,10 +16,14 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import { customerPortalService } from '../../services/customerPortalService';
 import { useNotification } from '../../hooks/useNotification';
+import { CustomerLanguageScope } from '../../context/LanguageContext';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
-const CustomerRegisterPage = () => {
+const CustomerRegisterPageContent = () => {
   const navigate = useNavigate();
   const { showNotification } = useNotification();
+  const { t } = useTranslation();
 
   const [formData, setFormData] = useState({
     full_name: '',
@@ -70,18 +74,19 @@ const CustomerRegisterPage = () => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: '#fdf0ed', // Soft Sky Blue Tinted Background Canvas
+        bgcolor: '#fdf0ed',
         p: 2,
       }}
     >
-      <Box sx={{ maxWidth: 460, width: '100%', mb: 2 }}>
+      <Box sx={{ maxWidth: 460, width: '100%', mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/customer/login')}
           sx={{ color: '#e76f51', textTransform: 'none', fontWeight: 800, '&:hover': { color: '#d45d3f' } }}
         >
-          Back to Customer Sign In
+          {t('auth.backToSignIn', 'Back to Customer Sign In')}
         </Button>
+        <LanguageSwitcher />
       </Box>
 
       <Card
@@ -91,12 +96,11 @@ const CustomerRegisterPage = () => {
           width: '100%',
           borderRadius: 4,
           bgcolor: '#FFFFFF !important',
-          border: '3px solid #e76f51', // Sky Blue Accent Border
+          border: '3px solid #e76f51',
           boxShadow: '0 20px 40px -15px rgba(231, 111, 81, 0.45)',
           overflow: 'hidden',
         }}
       >
-        {/* Header with #e76f51 Background and Custom Logo Symbol */}
         <Box sx={{ p: 4, textAlign: 'center', bgcolor: '#e76f51', color: '#ffffff' }}>
           <Box
             component="img"
@@ -118,7 +122,7 @@ const CustomerRegisterPage = () => {
             Nexora
           </Typography>
           <Typography variant="caption" color="#ffffff" fontWeight={800} letterSpacing="0.05em" display="block" sx={{ mt: 0.5, opacity: 0.95 }}>
-            CUSTOMER ACCOUNT REGISTRATION
+            {t('auth.customerRegistrationHeader', 'CUSTOMER ACCOUNT REGISTRATION')}
           </Typography>
         </Box>
 
@@ -128,7 +132,7 @@ const CustomerRegisterPage = () => {
           <form onSubmit={handleRegister}>
             <TextField
               fullWidth
-              label="Full Name"
+              label={t('customerPortal.fullName', 'FULL NAME')}
               name="full_name"
               value={formData.full_name}
               onChange={handleChange}
@@ -143,7 +147,7 @@ const CustomerRegisterPage = () => {
             />
             <TextField
               fullWidth
-              label="Email Address"
+              label={t('customerPortal.email', 'EMAIL ADDRESS')}
               name="email"
               type="email"
               value={formData.email}
@@ -159,7 +163,7 @@ const CustomerRegisterPage = () => {
             />
             <TextField
               fullWidth
-              label="Phone Number"
+              label={t('customerPortal.phone', 'PHONE NUMBER')}
               name="phone_number"
               value={formData.phone_number}
               onChange={handleChange}
@@ -173,7 +177,7 @@ const CustomerRegisterPage = () => {
             />
             <TextField
               fullWidth
-              label="Password"
+              label={t('auth.passwordLabel', 'Password')}
               name="password"
               type="password"
               value={formData.password}
@@ -189,7 +193,7 @@ const CustomerRegisterPage = () => {
             />
             <TextField
               fullWidth
-              label="Country"
+              label={t('customerPortal.country', 'COUNTRY')}
               name="country"
               value={formData.country}
               onChange={handleChange}
@@ -203,7 +207,7 @@ const CustomerRegisterPage = () => {
             />
             <TextField
               fullWidth
-              label="Billing Address (Optional)"
+              label={t('customerPortal.address', 'Billing Address (Optional)')}
               name="address"
               value={formData.address}
               onChange={handleChange}
@@ -236,7 +240,7 @@ const CustomerRegisterPage = () => {
                 boxShadow: '0 4px 15px rgba(231, 111, 81, 0.45)',
               }}
             >
-              {loading ? 'Creating Account...' : 'Register Customer Account'}
+              {loading ? t('common.loading', 'Loading...') : t('auth.signUpButton', 'Register Customer Account')}
             </Button>
           </form>
 
@@ -244,20 +248,28 @@ const CustomerRegisterPage = () => {
 
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="body2" color="#64748b" fontWeight={600}>
-              Already registered?{' '}
+              {t('auth.alreadyRegistered', 'Already registered?')}{' '}
               <Link
                 component="button"
                 variant="body2"
                 onClick={() => navigate('/customer/login')}
                 sx={{ fontWeight: 800, color: '#e76f51', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
               >
-                Sign In
+                {t('common.login', 'Sign In')}
               </Link>
             </Typography>
           </Box>
         </CardContent>
       </Card>
     </Box>
+  );
+};
+
+const CustomerRegisterPage = () => {
+  return (
+    <CustomerLanguageScope>
+      <CustomerRegisterPageContent />
+    </CustomerLanguageScope>
   );
 };
 

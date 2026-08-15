@@ -31,8 +31,10 @@ import axios from 'axios';
 
 import { formatCurrency } from '../../utils/formatters';
 import { useNotification } from '../../hooks/useNotification';
+import { useTranslation } from 'react-i18next';
 
 const TaxReportsPage = () => {
+  const { t } = useTranslation();
   const { showNotification } = useNotification();
   const [period, setPeriod] = useState('monthly');
   const [countryFilter, setCountryFilter] = useState('ALL');
@@ -97,10 +99,10 @@ const TaxReportsPage = () => {
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
           <Typography variant="h4" fontWeight={900} color="#0f172a" gutterBottom>
-            Admin Tax Compliance & Reporting Portal
+            {t('nav.taxReports', 'Tax Reports & Analytics')}
           </Typography>
           <Typography variant="body2" color="#047857" fontWeight={700}>
-            Automated regional tax collection metrics, GST/VAT breakdowns, and audit export tools.
+            {t('admin.tax.subtitle', 'Automated regional tax collection metrics, GST/VAT breakdowns, and audit export tools.')}
           </Typography>
         </Box>
 
@@ -119,7 +121,7 @@ const TaxReportsPage = () => {
             boxShadow: '0 4px 14px rgba(4, 120, 87, 0.3)',
           }}
         >
-          Export Tax Report (CSV)
+          {t('admin.tax.export_button', 'Export Tax Report (CSV)')}
         </Button>
       </Box>
 
@@ -128,31 +130,35 @@ const TaxReportsPage = () => {
         <Grid container spacing={3} alignItems="center">
           <Grid item xs={12} sm={5} md={4}>
             <FormControl fullWidth size="small">
-              <InputLabel sx={{ fontWeight: 700, color: '#047857' }}>Report Aggregation Period</InputLabel>
+              <InputLabel sx={{ fontWeight: 700, color: '#047857' }}>
+                {t('admin.tax.period_label', 'Report Aggregation Period')}
+              </InputLabel>
               <Select
                 value={period}
-                label="Report Aggregation Period"
+                label={t('admin.tax.period_label', 'Report Aggregation Period')}
                 onChange={(e) => setPeriod(e.target.value)}
                 sx={{ borderRadius: 2, fontWeight: 800 }}
               >
-                <MenuItem value="daily">Daily Tax Collection</MenuItem>
-                <MenuItem value="weekly">Weekly Tax Collection</MenuItem>
-                <MenuItem value="monthly">Monthly Tax Collection</MenuItem>
-                <MenuItem value="yearly">Yearly Tax Collection</MenuItem>
+                <MenuItem value="daily">{t('admin.tax.period_daily', 'Daily Tax Collection')}</MenuItem>
+                <MenuItem value="weekly">{t('admin.tax.period_weekly', 'Weekly Tax Collection')}</MenuItem>
+                <MenuItem value="monthly">{t('admin.tax.period_monthly', 'Monthly Tax Collection')}</MenuItem>
+                <MenuItem value="yearly">{t('admin.tax.period_yearly', 'Yearly Tax Collection')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
 
           <Grid item xs={12} sm={5} md={4}>
             <FormControl fullWidth size="small">
-              <InputLabel sx={{ fontWeight: 700, color: '#047857' }}>Country / Tax Jurisdiction</InputLabel>
+              <InputLabel sx={{ fontWeight: 700, color: '#047857' }}>
+                {t('admin.tax.jurisdiction_label', 'Country / Tax Jurisdiction')}
+              </InputLabel>
               <Select
                 value={countryFilter}
-                label="Country / Tax Jurisdiction"
+                label={t('admin.tax.jurisdiction_label', 'Country / Tax Jurisdiction')}
                 onChange={(e) => setCountryFilter(e.target.value)}
                 sx={{ borderRadius: 2, fontWeight: 800 }}
               >
-                <MenuItem value="ALL">All Countries / Tax Rules</MenuItem>
+                <MenuItem value="ALL">{t('admin.tax.all_countries', 'All Countries / Tax Rules')}</MenuItem>
                 <MenuItem value="India">India (GST 18%)</MenuItem>
                 <MenuItem value="UAE">UAE (VAT 5%)</MenuItem>
                 <MenuItem value="USA">USA California (Sales Tax 8.25%)</MenuItem>
@@ -163,7 +169,7 @@ const TaxReportsPage = () => {
           <Grid item xs={12} sm={2} md={4} sx={{ textAlign: 'right' }}>
             <Chip
               icon={<FilterAltIcon fontSize="small" />}
-              label={`Filter Active: ${period.toUpperCase()}`}
+              label={`${t('admin.tax.filter_active', 'Filter Active')}: ${period.toUpperCase()}`}
               color="success"
               sx={{ fontWeight: 800, px: 1 }}
             />
@@ -177,7 +183,7 @@ const TaxReportsPage = () => {
           <Paper sx={{ p: 3, borderRadius: 3.5, border: '2px solid #047857', bgcolor: '#FFFFFF' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Typography variant="caption" color="#64748b" fontWeight={800}>
-                TOTAL TAX COLLECTED ({period.toUpperCase()})
+                {t('admin.tax.total_collected', 'TOTAL TAX COLLECTED')} ({period.toUpperCase()})
               </Typography>
               <Avatar sx={{ bgcolor: 'rgba(4, 120, 87, 0.12)', color: '#047857', width: 40, height: 40 }}>
                 <AccountBalanceIcon fontSize="small" />
@@ -187,7 +193,7 @@ const TaxReportsPage = () => {
               {formatCurrency(reportData.total_tax_collected || 950.34)}
             </Typography>
             <Typography variant="caption" color="#16a34a" fontWeight={800}>
-              100% Tax Compliance Audited
+              {t('admin.tax.audit_compliance', '100% Tax Compliance Audited')}
             </Typography>
           </Paper>
         </Grid>
@@ -196,17 +202,17 @@ const TaxReportsPage = () => {
           <Paper sx={{ p: 3, borderRadius: 3.5, border: '2px solid #047857', bgcolor: '#FFFFFF' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Typography variant="caption" color="#64748b" fontWeight={800}>
-                TOTAL TAXED INVOICES ISSUED
+                {t('admin.tax.total_taxed_invoices', 'TOTAL TAXED INVOICES ISSUED')}
               </Typography>
               <Avatar sx={{ bgcolor: '#e0f2fe', color: '#0369a1', width: 40, height: 40 }}>
                 <ReceiptLongIcon fontSize="small" />
               </Avatar>
             </Box>
             <Typography variant="h4" fontWeight={900} color="#0369a1">
-              {reportData.total_invoices_taxed || 6} Statements
+              {reportData.total_invoices_taxed || 6} {t('admin.tax.statements', 'Statements')}
             </Typography>
             <Typography variant="caption" color="#0369a1" fontWeight={800}>
-              Itemized Line Items
+              {t('admin.tax.itemized_lines', 'Itemized Line Items')}
             </Typography>
           </Paper>
         </Grid>
@@ -215,17 +221,17 @@ const TaxReportsPage = () => {
           <Paper sx={{ p: 3, borderRadius: 3.5, border: '2px solid #047857', bgcolor: '#FFFFFF' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Typography variant="caption" color="#64748b" fontWeight={800}>
-                ACTIVE TAX MASTER JURISDICTIONS
+                {t('admin.tax.active_jurisdictions', 'ACTIVE TAX MASTER JURISDICTIONS')}
               </Typography>
               <Avatar sx={{ bgcolor: '#f3e8ff', color: '#6d28d9', width: 40, height: 40 }}>
                 <PublicIcon fontSize="small" />
               </Avatar>
             </Box>
             <Typography variant="h4" fontWeight={900} color="#6d28d9">
-              3 Regions
+              {t('admin.tax.regions_count', '3 Regions')}
             </Typography>
             <Typography variant="caption" color="#6d28d9" fontWeight={800}>
-              India GST • UAE VAT • USA Sales Tax
+              {t('admin.tax.regions_list', 'India GST • UAE VAT • USA Sales Tax')}
             </Typography>
           </Paper>
         </Grid>
@@ -242,10 +248,10 @@ const TaxReportsPage = () => {
               </Avatar>
               <Box>
                 <Typography variant="h6" fontWeight={900} color="#0f172a">
-                  Country & Regional Tax Collection
+                  {t('admin.tax.country_table_title', 'Country & Regional Tax Collection')}
                 </Typography>
                 <Typography variant="caption" color="#64748b" fontWeight={700}>
-                  Tax collected by country jurisdiction and rate percentage
+                  {t('admin.tax.country_table_subtitle', 'Tax collected by country jurisdiction and rate percentage')}
                 </Typography>
               </Box>
             </Box>
@@ -256,10 +262,10 @@ const TaxReportsPage = () => {
               <Table>
                 <TableHead sx={{ bgcolor: '#f8fafc' }}>
                   <TableRow sx={{ borderBottom: '2px solid #e2e8f0' }}>
-                    <TableCell sx={{ color: '#047857', fontWeight: 800 }}>COUNTRY</TableCell>
-                    <TableCell sx={{ color: '#047857', fontWeight: 800 }}>TAX NAME</TableCell>
-                    <TableCell sx={{ color: '#047857', fontWeight: 800 }}>RATE (%)</TableCell>
-                    <TableCell align="right" sx={{ color: '#047857', fontWeight: 800 }}>TAX COLLECTED</TableCell>
+                    <TableCell sx={{ color: '#047857', fontWeight: 800 }}>{t('admin.tax.col_country', 'COUNTRY')}</TableCell>
+                    <TableCell sx={{ color: '#047857', fontWeight: 800 }}>{t('admin.tax.col_tax_name', 'TAX NAME')}</TableCell>
+                    <TableCell sx={{ color: '#047857', fontWeight: 800 }}>{t('admin.tax.col_rate', 'RATE (%)')}</TableCell>
+                    <TableCell align="right" sx={{ color: '#047857', fontWeight: 800 }}>{t('admin.tax.col_tax_collected', 'TAX COLLECTED')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -296,10 +302,10 @@ const TaxReportsPage = () => {
               </Avatar>
               <Box>
                 <Typography variant="h6" fontWeight={900} color="#0f172a">
-                  Tax by Subscription Tier
+                  {t('admin.tax.tier_table_title', 'Tax by Subscription Tier')}
                 </Typography>
                 <Typography variant="caption" color="#64748b" fontWeight={700}>
-                  Tax contribution per plan tier
+                  {t('admin.tax.tier_table_subtitle', 'Tax contribution per plan tier')}
                 </Typography>
               </Box>
             </Box>
@@ -310,8 +316,8 @@ const TaxReportsPage = () => {
               <Table>
                 <TableHead sx={{ bgcolor: '#f8fafc' }}>
                   <TableRow sx={{ borderBottom: '2px solid #e2e8f0' }}>
-                    <TableCell sx={{ color: '#047857', fontWeight: 800 }}>PLAN TIER</TableCell>
-                    <TableCell align="right" sx={{ color: '#047857', fontWeight: 800 }}>TAX AMOUNT</TableCell>
+                    <TableCell sx={{ color: '#047857', fontWeight: 800 }}>{t('admin.tax.col_plan_tier', 'PLAN TIER')}</TableCell>
+                    <TableCell align="right" sx={{ color: '#047857', fontWeight: 800 }}>{t('admin.tax.col_tax_amount', 'TAX AMOUNT')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -339,15 +345,15 @@ const TaxReportsPage = () => {
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, borderRadius: 4, bgcolor: '#FFFFFF', border: '2px solid #0284c7', height: '100%' }}>
             <Typography variant="h6" fontWeight={900} color="#0f172a" gutterBottom>
-              State / Regional Jurisdiction Tax
+              {t('admin.tax.state_table_title', 'State / Regional Jurisdiction Tax')}
             </Typography>
             <Divider sx={{ my: 1.5 }} />
             <TableContainer>
               <Table size="small">
                 <TableHead sx={{ bgcolor: '#f0f9ff' }}>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 800, color: '#0284c7' }}>STATE / REGION</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 800, color: '#0284c7' }}>TAX COLLECTED</TableCell>
+                    <TableCell sx={{ fontWeight: 800, color: '#0284c7' }}>{t('admin.tax.col_state', 'STATE / REGION')}</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 800, color: '#0284c7' }}>{t('admin.tax.col_tax_collected', 'TAX COLLECTED')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -375,15 +381,15 @@ const TaxReportsPage = () => {
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, borderRadius: 4, bgcolor: '#FFFFFF', border: '2px solid #7c3aed', height: '100%' }}>
             <Typography variant="h6" fontWeight={900} color="#0f172a" gutterBottom>
-              Tax Contributed by Customer
+              {t('admin.tax.customer_table_title', 'Tax Contributed by Customer')}
             </Typography>
             <Divider sx={{ my: 1.5 }} />
             <TableContainer>
               <Table size="small">
                 <TableHead sx={{ bgcolor: '#f5f3ff' }}>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 800, color: '#7c3aed' }}>CUSTOMER NAME</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 800, color: '#7c3aed' }}>TAX PAID</TableCell>
+                    <TableCell sx={{ fontWeight: 800, color: '#7c3aed' }}>{t('admin.tax.col_customer_name', 'CUSTOMER NAME')}</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 800, color: '#7c3aed' }}>{t('admin.tax.col_tax_paid', 'TAX PAID')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -411,15 +417,15 @@ const TaxReportsPage = () => {
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, borderRadius: 4, bgcolor: '#FFFFFF', border: '2px solid #059669', height: '100%' }}>
             <Typography variant="h6" fontWeight={900} color="#0f172a" gutterBottom>
-              Tax by Payment Method Channel
+              {t('admin.tax.method_table_title', 'Tax by Payment Method Channel')}
             </Typography>
             <Divider sx={{ my: 1.5 }} />
             <TableContainer>
               <Table size="small">
                 <TableHead sx={{ bgcolor: '#ecfdf5' }}>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 800, color: '#059669' }}>PAYMENT METHOD</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 800, color: '#059669' }}>TAX COLLECTED</TableCell>
+                    <TableCell sx={{ fontWeight: 800, color: '#059669' }}>{t('admin.payments.col_method', 'PAYMENT METHOD')}</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 800, color: '#059669' }}>{t('admin.tax.col_tax_collected', 'TAX COLLECTED')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
