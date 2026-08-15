@@ -339,10 +339,12 @@ def login_customer(db: Session, login_data: CustomerLogin):
     raw_input = (login_data.email or '').strip()
     email_clean = raw_input.lower()
 
+    not_deleted_condition = or_(Customer.is_deleted == False, Customer.is_deleted.is_(None))
+
     # 1. Try exact email match
     customer = (
         db.query(Customer)
-        .filter(func.lower(Customer.email) == email_clean, Customer.is_deleted == False)
+        .filter(func.lower(Customer.email) == email_clean, not_deleted_condition)
         .first()
     )
 
@@ -355,7 +357,7 @@ def login_customer(db: Session, login_data: CustomerLogin):
                     Customer.email.ilike(f"%{raw_input}%"),
                     Customer.full_name.ilike(f"%{raw_input}%")
                 ),
-                Customer.is_deleted == False
+                not_deleted_condition
             )
             .first()
         )
@@ -364,7 +366,7 @@ def login_customer(db: Session, login_data: CustomerLogin):
     if customer is None and raw_input.isdigit():
         customer = (
             db.query(Customer)
-            .filter(Customer.id == int(raw_input), Customer.is_deleted == False)
+            .filter(Customer.id == int(raw_input), not_deleted_condition)
             .first()
         )
 

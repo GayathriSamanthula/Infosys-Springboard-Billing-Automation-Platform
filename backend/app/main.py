@@ -59,13 +59,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "*",
-        "https://infosys-springboard-billing-automat.vercel.app",
-        "http://localhost:5173",
-        "http://localhost:80",
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
