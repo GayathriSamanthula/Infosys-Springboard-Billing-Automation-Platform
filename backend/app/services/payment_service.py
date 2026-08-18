@@ -14,6 +14,8 @@ from app.schemas.webhook import PaymentWebhookPayload
 from app.services.payment_gateway_service import PaymentGatewayService
 from app.services.invoice_service import mark_invoice_as_paid
 from app.services.webhook_service import send_payment_webhook, process_payment_webhook
+from app.services.notification_service import create_notification
+from app.schemas.notification import NotificationCreate
 
 
 def _enrich_payment(db: Session, payment: Payment):
@@ -64,6 +66,25 @@ def create_payment(db: Session, payment: PaymentCreate):
             mark_invoice_as_paid(db, subscription_id=db_payment.subscription_id)
         except Exception as inv_err:
             print(f"Automatic invoice status update notice: {inv_err}")
+
+    # Trigger notification & email dispatch
+    try:
+        sub = db.query(Subscription).filter(Subscription.id == db_payment.subscription_id).first() if db_payment.subscription_id else None
+        cust_id = sub.customer_id if sub else getattr(db_payment, "customer_id", 1)
+        if cust_id:
+            create_notification(
+                db,
+                NotificationCreate(
+                    customer_id=cust_id,
+                    notification_type="PAYMENT_SUCCESSFUL" if str(db_payment.payment_status).upper() in ["SUCCESS", "PAID"] else "PAYMENT_FAILED",
+                    message=f"Payment of ${db_payment.amount or '0.00'} was processed with status '{db_payment.payment_status}'.",
+                    sent_date=date.today(),
+                    status="SENT",
+                    delivery_channel="EMAIL"
+                )
+            )
+    except Exception as notif_err:
+        print(f"Payment notification error: {notif_err}")
 
     return _enrich_payment(db, db_payment)
 

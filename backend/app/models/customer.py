@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.orm import relationship
 from app.database.database import Base
 
@@ -15,6 +15,9 @@ class Customer(Base):
     password = Column(String(255), nullable=True)
     customer_status = Column(String(20), default="ACTIVE", nullable=False)
     platform_source = Column(String(50), default="NEXORA_DIRECT", nullable=False)
+    is_verified = Column(Boolean, default=False)
+    verification_otp = Column(String(10), nullable=True)
+    otp_expires_at = Column(DateTime, nullable=True)
     is_deleted = Column(Boolean, default=False)
 
     subscriptions = relationship("Subscription", back_populates="customer", cascade="all, delete-orphan")

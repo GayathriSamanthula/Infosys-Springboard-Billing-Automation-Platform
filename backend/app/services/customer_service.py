@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 from fastapi import HTTPException
 from typing import Optional
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta
 
 from app.models.customer import Customer
 from app.models.subscription import Subscription
@@ -371,11 +371,11 @@ def login_customer(db: Session, login_data: CustomerLogin):
         )
 
     if customer is None:
-        return None
+        raise ValueError("No customer account found with this email address. Please register an account first.")
 
-    # Strict Password Verification against existing database records only (no fallbacks)
+    # Strict Password Verification against existing database records only
     if not customer.password or not verify_password(login_data.password, customer.password):
-        return None
+        raise ValueError("Invalid password. Please check your password and try again.")
 
     token = create_access_token(
         {
@@ -547,7 +547,48 @@ def init_default_customers(db: Session):
         print(f"Sruthi pandey seed notice: {e}")
 
 
+import random
+import re
+from app.services.notification_service import send_smart_email
+
+
+def validate_country_phone_number(phone_number: str, country: str = "India"):
+    if not phone_number or not str(phone_number).strip():
+        raise ValueError("Phone number is required.")
+    
+    clean_phone = re.sub(r"[^\d+]", "", str(phone_number).strip())
+    digits_only = re.sub(r"\D", "", clean_phone)
+    
+    # 1. Block Dummy Repeated / Sequential Digits
+    if len(set(digits_only)) == 1 or digits_only in ["1234567890", "0123456789", "9876543210", "123456789"]:
+        raise ValueError("Please enter a valid, original phone number (dummy repeated/sequential numbers like 1234567890 or 0000000000 are not allowed).")
+    
+    is_india = ("INDIA" in str(country or "India").upper()) or clean_phone.startswith("+91") or (not clean_phone.startswith("+") and len(digits_only) == 10)
+    
+    if is_india:
+        # India Rule: Must be 10 digits starting with 6, 7, 8, or 9 (with optional +91)
+        india_digits = digits_only[2:] if clean_phone.startswith("+91") else digits_only
+        
+        if len(india_digits) != 10 or india_digits[0] not in ["6", "7", "8", "9"]:
+            raise ValueError("For India, phone number must be a valid 10-digit mobile number starting with 6, 7, 8, or 9 (with optional +91 country code).")
+    else:
+        # International Rule: Must start with '+' valid country code and contain 10-15 digits
+        if not clean_phone.startswith("+"):
+            raise ValueError("For international numbers outside India, please include a valid country code starting with '+' (e.g. +1 for US, +44 for UK, +971 for UAE).")
+        if len(digits_only) < 10 or len(digits_only) > 15:
+            raise ValueError("Please enter a valid international phone number with a recognized country code.")
+
+
 def register_customer(db: Session, reg_data: CustomerRegister):
+    # Country-Specific Phone Validation Rule
+    validate_country_phone_number(reg_data.phone_number, reg_data.country or "India")
+
+    # Block Disposable / Fake Domains
+    disposable_domains = ["example.com", "test.com", "dummy.com", "mailinator.com", "tempmail.com", "dispostable.com", "email.com", "yopmail.com", "guerrillamail.com"]
+    email_domain = reg_data.email.split("@")[-1].lower() if "@" in reg_data.email else ""
+    if email_domain in disposable_domains:
+        raise ValueError("Please register using a valid personal or business email address (e.g. Gmail, Outlook, Yahoo, or your custom domain).")
+
     existing_email = (
         db.query(Customer)
         .filter(Customer.email == reg_data.email, Customer.is_deleted == False)
@@ -570,6 +611,10 @@ def register_customer(db: Session, reg_data: CustomerRegister):
     else:
         platform_src = "NEXORA_DIRECT"
 
+    # Generate 6-Digit OTP with 10-Minute Expiration Validity
+    otp_code = f"{random.randint(100000, 999999)}"
+    otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+
     new_customer = Customer(
         full_name=reg_data.username,
         email=reg_data.email,
@@ -577,8 +622,11 @@ def register_customer(db: Session, reg_data: CustomerRegister):
         password=hash_password(reg_data.password),
         country=reg_data.country or "",
         address=reg_data.address or "",
-        customer_status="ACTIVE",
-        platform_source=platform_src
+        customer_status="PENDING_VERIFICATION",
+        platform_source=platform_src,
+        is_verified=False,
+        verification_otp=otp_code,
+        otp_expires_at=otp_expiry
     )
 
     db.add(new_customer)
@@ -591,14 +639,84 @@ def register_customer(db: Session, reg_data: CustomerRegister):
             event="Customer Registered",
             performed_by="Customer Self-Service",
             customer_id=new_customer.id,
-            description=f"Subscriber '{new_customer.full_name}' registered an account on platform '{new_customer.platform_source}'."
+            description=f"Subscriber '{new_customer.full_name}' registered on platform '{new_customer.platform_source}' (Pending OTP Verification)."
+        )
+    )
+
+    # Dispatch Branded HTML OTP Email (Valid for 10 minutes)
+    try:
+        platform_brand = "VELORA" if "VELORA" in platform_src else "NEXORA"
+        brand_title = "Velora Fintech" if "VELORA" in platform_src else "Nexora Billing"
+        send_smart_email(
+            to_email=new_customer.email,
+            customer_name=new_customer.full_name,
+            subject=f"{brand_title} Account Security Verification Code: {otp_code}",
+            template_name="subscription_lifecycle.html",
+            context={
+                "platform_title": brand_title,
+                "status": "PENDING_OTP_VERIFICATION",
+                "event_description": f"Your 6-Digit Account Security Verification OTP Code is: {otp_code} (Valid for 10 minutes).",
+                "effective_date": str(date.today()),
+                "message": f"Your 6-digit Account Security Verification OTP is: {otp_code}. This verification code is valid for 10 minutes.",
+                "otp_code": otp_code,
+                "plan_name": f"{brand_title} Registration Activation",
+                "invoice_number": f"VERIFY-{new_customer.id}",
+                "transaction_id": f"OTP-{otp_code}",
+                "payment_date": str(date.today()),
+                "payment_method": "Security OTP",
+                "amount": "0.00"
+            },
+            platform=platform_brand
+        )
+    except Exception as email_err:
+        print(f"OTP email dispatch notice: {email_err}")
+
+    return {
+        "status": "REQUIRES_OTP",
+        "message": "Verification OTP sent to your email address (Valid for 10 minutes).",
+        "email": new_customer.email,
+        "customer_id": new_customer.id,
+        "platform_source": new_customer.platform_source
+    }
+
+
+def verify_customer_otp(db: Session, email: str, otp_code: str):
+    customer = (
+        db.query(Customer)
+        .filter(Customer.email == email, Customer.is_deleted == False)
+        .first()
+    )
+    if not customer:
+        raise ValueError("No customer account found with this email address.")
+
+    if not customer.verification_otp or customer.verification_otp != str(otp_code).strip():
+        raise ValueError("Invalid verification code. Please check your email inbox and try again.")
+
+    if customer.otp_expires_at and datetime.utcnow() > customer.otp_expires_at:
+        raise ValueError("Verification code has expired (10 minutes limit). Please click Resend Code to receive a new OTP.")
+
+    customer.is_verified = True
+    customer.customer_status = "ACTIVE"
+    customer.verification_otp = None
+    customer.otp_expires_at = None
+
+    db.commit()
+    db.refresh(customer)
+
+    create_audit_log(
+        db,
+        AuditLogCreate(
+            event="Customer Verified",
+            performed_by="Customer Self-Service OTP",
+            customer_id=customer.id,
+            description=f"Subscriber '{customer.full_name}' successfully verified email via 10-minute OTP."
         )
     )
 
     token = create_access_token(
         {
-            "sub": new_customer.email,
-            "customer_id": new_customer.id,
+            "sub": customer.email,
+            "customer_id": customer.id,
             "role": "CUSTOMER"
         }
     )
@@ -606,9 +724,9 @@ def register_customer(db: Session, reg_data: CustomerRegister):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "customer_id": new_customer.id,
-        "full_name": new_customer.full_name,
-        "email": new_customer.email,
+        "customer_id": customer.id,
+        "full_name": customer.full_name,
+        "email": customer.email,
         "role": "CUSTOMER",
-        "platform_source": new_customer.platform_source
+        "platform_source": customer.platform_source
     }

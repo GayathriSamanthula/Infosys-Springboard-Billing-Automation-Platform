@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import FintechBackground from '../../components/common/FintechBackground';
 import { useNotification } from '../../hooks/useNotification';
+import { customerPortalService } from '../../services/customerPortalService';
 
 const VeloraCustomerLoginPage = () => {
   const navigate = useNavigate();
@@ -41,18 +42,21 @@ const VeloraCustomerLoginPage = () => {
     setError('');
 
     try {
-      const res = await axios.post('https://infosys-springboard-billing-automation.onrender.com/auth/customer/login', { email, password });
+      const res = await customerPortalService.login({ email, password });
       const custObj = {
-        id: res.data?.customer_id,
-        email: res.data?.email || email,
-        full_name: res.data?.full_name || email.split('@')[0],
-        platform_source: res.data?.platform_source || 'VELORA_DIRECT',
-        access_token: res.data?.access_token,
+        id: res?.customer_id,
+        email: res?.email || email,
+        full_name: res?.full_name || email.split('@')[0],
+        platform_source: res?.platform_source || 'VELORA_DIRECT',
+        access_token: res?.access_token,
       };
-      localStorage.setItem('customer_token', res.data?.access_token || '');
+      if (res?.access_token) {
+        localStorage.setItem('customer_token', res.access_token);
+      }
       localStorage.setItem('customer_user', JSON.stringify(custObj));
       localStorage.setItem('customer_info', JSON.stringify(custObj));
       localStorage.setItem('customer_email', email);
+      showNotification(`Welcome back, ${custObj.full_name}!`, 'success');
       navigate('/velora/customer');
     } catch (err) {
       console.warn('Velora API Login error:', err);

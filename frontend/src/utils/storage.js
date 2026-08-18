@@ -19,12 +19,7 @@ export const storage = {
         return JSON.parse(user);
       } catch (e) {}
     }
-    return {
-      id: 1,
-      name: 'Gayatri Samanthula',
-      role: 'System Administrator',
-      email: 'gayatri.samanthula@nexora.com',
-    };
+    return null;
   },
   setUser: (user) => {
     localStorage.setItem(USER_KEY, JSON.stringify(user));

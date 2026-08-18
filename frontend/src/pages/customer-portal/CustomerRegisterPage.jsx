@@ -10,7 +10,11 @@ import {
   Alert,
   Link,
   Divider,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
@@ -25,6 +29,7 @@ const CustomerRegisterPageContent = () => {
   const { showNotification } = useNotification();
   const { t } = useTranslation();
 
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -36,6 +41,10 @@ const CustomerRegisterPageContent = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -56,11 +65,37 @@ const CustomerRegisterPageContent = () => {
         address: formData.address || '',
         platform_source: 'NEXORA_DIRECT',
       };
-      await customerPortalService.register(payload);
-      showNotification('Customer account created successfully! Please sign in.', 'success');
-      navigate('/customer/login');
+      const res = await customerPortalService.register(payload);
+      if (res && res.status === 'REQUIRES_OTP') {
+        setRegisteredEmail(formData.email);
+        setOtpStep(true);
+        showNotification('Security OTP sent to your email inbox (Valid for 10 minutes).', 'info');
+      } else {
+        showNotification('Customer account created successfully! Please sign in.', 'success');
+        navigate('/customer/login');
+      }
     } catch (err) {
-      setError(err?.response?.data?.detail || 'Registration failed. Email or phone number might already exist.');
+      setError(err?.response?.data?.detail || 'Registration failed. Email or phone number might already exist or domain is invalid.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    if (!otpCode.trim() || otpCode.trim().length !== 6) {
+      setError('Please enter the valid 6-digit OTP code sent to your email inbox.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+
+    try {
+      await customerPortalService.verifyOTP(registeredEmail, otpCode.trim());
+      showNotification('Account verified successfully! Welcome to Nexora Customer Portal.', 'success');
+      navigate('/customer/dashboard');
+    } catch (err) {
+      setError(err?.response?.data?.detail || 'Invalid or expired OTP code. Please check your email inbox.');
     } finally {
       setLoading(false);
     }
@@ -129,120 +164,183 @@ const CustomerRegisterPageContent = () => {
         <CardContent sx={{ p: 4 }}>
           {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
 
-          <form onSubmit={handleRegister}>
-            <TextField
-              fullWidth
-              label={t('customerPortal.fullName', 'FULL NAME')}
-              name="full_name"
-              value={formData.full_name}
-              onChange={handleChange}
-              margin="normal"
-              required
-              sx={{
-                '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51' },
-              }}
-            />
-            <TextField
-              fullWidth
-              label={t('customerPortal.email', 'EMAIL ADDRESS')}
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              margin="normal"
-              required
-              sx={{
-                '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51' },
-              }}
-            />
-            <TextField
-              fullWidth
-              label={t('customerPortal.phone', 'PHONE NUMBER')}
-              name="phone_number"
-              value={formData.phone_number}
-              onChange={handleChange}
-              margin="normal"
-              sx={{
-                '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51' },
-              }}
-            />
-            <TextField
-              fullWidth
-              label={t('auth.passwordLabel', 'Password')}
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              margin="normal"
-              required
-              sx={{
-                '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51' },
-              }}
-            />
-            <TextField
-              fullWidth
-              label={t('customerPortal.country', 'COUNTRY')}
-              name="country"
-              value={formData.country}
-              onChange={handleChange}
-              margin="normal"
-              sx={{
-                '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51' },
-              }}
-            />
-            <TextField
-              fullWidth
-              label={t('customerPortal.address', 'Billing Address (Optional)')}
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              margin="normal"
-              multiline
-              rows={2}
-              sx={{
-                '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51' },
-              }}
-            />
+          {otpStep ? (
+            <form onSubmit={handleVerifyOTP}>
+              <Alert severity="info" sx={{ mb: 3, borderRadius: 2, fontWeight: 700 }}>
+                🔒 Security OTP sent to <strong>{registeredEmail}</strong>.<br />
+                Code is valid for <strong>10 minutes</strong>.
+              </Alert>
 
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              disabled={loading}
-              sx={{
-                mt: 3,
-                mb: 2,
-                py: 1.4,
-                bgcolor: '#e76f51',
-                '&:hover': { bgcolor: '#d45d3f' },
-                fontWeight: 900,
-                fontSize: '1rem',
-                textTransform: 'none',
-                color: '#ffffff',
-                boxShadow: '0 4px 15px rgba(231, 111, 81, 0.45)',
-              }}
-            >
-              {loading ? t('common.loading', 'Loading...') : t('auth.signUpButton', 'Register Customer Account')}
-            </Button>
-          </form>
+              <TextField
+                fullWidth
+                label="ENTER 6-DIGIT VERIFICATION OTP"
+                name="otpCode"
+                placeholder="e.g. 584920"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value)}
+                margin="normal"
+                required
+                inputProps={{ maxLength: 6, style: { textAlign: 'center', fontSize: '1.4rem', letterSpacing: '0.3em', fontWeight: 900 } }}
+                sx={{
+                  '& .MuiInputBase-input': { color: '#0f172a' },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51', borderWidth: 2 },
+                }}
+              />
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={loading}
+                sx={{
+                  mt: 3,
+                  mb: 2,
+                  py: 1.4,
+                  bgcolor: '#e76f51',
+                  '&:hover': { bgcolor: '#d45d3f' },
+                  fontWeight: 900,
+                  fontSize: '1rem',
+                  textTransform: 'none',
+                  color: '#ffffff',
+                  boxShadow: '0 4px 15px rgba(231, 111, 81, 0.45)',
+                }}
+              >
+                {loading ? 'Verifying OTP...' : 'Verify OTP & Activate Account'}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleRegister}>
+              <TextField
+                fullWidth
+                label={t('customerPortal.fullName', 'FULL NAME')}
+                name="full_name"
+                value={formData.full_name}
+                onChange={handleChange}
+                margin="normal"
+                required
+                sx={{
+                  '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                  '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51' },
+                }}
+              />
+              <TextField
+                fullWidth
+                label={t('customerPortal.email', 'EMAIL ADDRESS')}
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                margin="normal"
+                required
+                sx={{
+                  '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                  '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51' },
+                }}
+              />
+              <TextField
+                fullWidth
+                label={t('customerPortal.phone', 'PHONE NUMBER')}
+                name="phone_number"
+                value={formData.phone_number}
+                onChange={handleChange}
+                margin="normal"
+                required
+                helperText="Include country code"
+                sx={{
+                  '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                  '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
+                  '& .MuiFormHelperText-root': { color: '#e76f51', fontWeight: 600 },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51' },
+                }}
+              />
+              <TextField
+                fullWidth
+                label={t('auth.passwordLabel', 'Password')}
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={handleChange}
+                margin="normal"
+                required
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                        sx={{ color: '#e76f51' }}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                  '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51' },
+                }}
+              />
+              <TextField
+                fullWidth
+                label={t('customerPortal.country', 'COUNTRY')}
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+                margin="normal"
+                sx={{
+                  '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                  '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51' },
+                }}
+              />
+              <TextField
+                fullWidth
+                label={t('customerPortal.address', 'Billing Address (Optional)')}
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                margin="normal"
+                multiline
+                rows={2}
+                sx={{
+                  '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                  '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                  '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#e76f51' },
+                }}
+              />
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={loading}
+                sx={{
+                  mt: 3,
+                  mb: 2,
+                  py: 1.4,
+                  bgcolor: '#e76f51',
+                  '&:hover': { bgcolor: '#d45d3f' },
+                  fontWeight: 900,
+                  fontSize: '1rem',
+                  textTransform: 'none',
+                  color: '#ffffff',
+                  boxShadow: '0 4px 15px rgba(231, 111, 81, 0.45)',
+                }}
+              >
+                {loading ? t('common.loading', 'Loading...') : t('auth.signUpButton', 'Register Customer Account')}
+              </Button>
+            </form>
+          )}
 
           <Divider sx={{ my: 2, borderColor: '#e2e8f0' }} />
 

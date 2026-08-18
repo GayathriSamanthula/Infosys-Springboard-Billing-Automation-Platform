@@ -5,7 +5,7 @@ export const customerPortalService = {
   // Login subscriber customer
   login: async (credentials) => {
     try {
-      const response = await axios.post('https://infosys-springboard-billing-automation.onrender.com/auth/customer/login', credentials);
+      const response = await api.post('/auth/customer/login', credentials);
       if (response.data && response.data.access_token) {
         localStorage.setItem('customer_token', response.data.access_token);
         localStorage.setItem('customer_info', JSON.stringify(response.data));
@@ -27,24 +27,29 @@ export const customerPortalService = {
         localStorage.setItem('customer_token', response.data.access_token);
         localStorage.setItem('customer_info', JSON.stringify(response.data));
         localStorage.setItem('customer_user', JSON.stringify(response.data));
+        localStorage.setItem('customer_email', data.email);
       }
       return response.data;
     } catch (err) {
-      console.warn('Customer registration fallback:', err);
-      const email = data.email || 'customer@example.com';
-      const fallbackData = {
-        access_token: 'customer_session_token_' + Date.now(),
-        customer_id: Date.now(),
-        full_name: data.full_name || email.split('@')[0],
-        name: data.full_name || email.split('@')[0],
-        email: email,
-        role: 'CUSTOMER',
-      };
-      localStorage.setItem('customer_token', fallbackData.access_token);
-      localStorage.setItem('customer_info', JSON.stringify(fallbackData));
-      localStorage.setItem('customer_user', JSON.stringify(fallbackData));
-      localStorage.setItem('customer_email', email);
-      return fallbackData;
+      console.error('Customer registration failed:', err);
+      throw err;
+    }
+  },
+
+  // Verify 10-Minute Security OTP
+  verifyOTP: async (email, otp_code) => {
+    try {
+      const response = await api.post('/auth/customer/verify-otp', { email, otp_code });
+      if (response.data && response.data.access_token) {
+        localStorage.setItem('customer_token', response.data.access_token);
+        localStorage.setItem('customer_info', JSON.stringify(response.data));
+        localStorage.setItem('customer_user', JSON.stringify(response.data));
+        localStorage.setItem('customer_email', response.data.email);
+      }
+      return response.data;
+    } catch (err) {
+      console.error('OTP verification failed:', err);
+      throw err;
     }
   },
 
