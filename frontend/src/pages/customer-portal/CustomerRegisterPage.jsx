@@ -66,14 +66,10 @@ const CustomerRegisterPageContent = () => {
         platform_source: 'NEXORA_DIRECT',
       };
       const res = await customerPortalService.register(payload);
-      if (res && res.status === 'REQUIRES_OTP') {
-        setRegisteredEmail(formData.email);
-        setOtpStep(true);
-        showNotification('Security OTP sent to your email inbox (Valid for 10 minutes).', 'info');
-      } else {
-        showNotification('Customer account created successfully! Please sign in.', 'success');
-        navigate('/customer/login');
-      }
+      // Mandatory 6-Digit Security OTP Verification (No auto-login bypass)
+      setRegisteredEmail(formData.email);
+      setOtpStep(true);
+      showNotification('Security OTP sent to your email inbox (Valid for 10 minutes).', 'info');
     } catch (err) {
       setError(err?.response?.data?.detail || 'Registration failed. Email or phone number might already exist or domain is invalid.');
     } finally {
