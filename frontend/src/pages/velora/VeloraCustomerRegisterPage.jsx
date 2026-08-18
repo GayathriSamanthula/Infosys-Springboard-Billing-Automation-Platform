@@ -58,21 +58,9 @@ const VeloraCustomerRegisterContent = () => {
       };
 
       const res = await axios.post('/api/auth/customer/register', payload);
-      if (res.data && res.data.status === 'REQUIRES_OTP') {
-        setRegisteredEmail(email);
-        setOtpStep(true);
-      } else {
-        const custData = {
-          id: res.data?.customer_id,
-          full_name: res.data?.full_name || fullName,
-          email: res.data?.email || email,
-          platform_source: res.data?.platform_source || 'VELORA_DIRECT',
-        };
-        localStorage.setItem('customer_user', JSON.stringify(custData));
-        localStorage.setItem('customer_info', JSON.stringify(custData));
-        localStorage.setItem('customer_email', email);
-        navigate('/velora/customer');
-      }
+      // Mandatory 6-Digit Security OTP Verification (No auto-login bypass)
+      setRegisteredEmail(email);
+      setOtpStep(true);
     } catch (err) {
       if (err?.response?.data?.detail) {
         setError(err.response.data.detail);

@@ -231,7 +231,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         throw new Error('No customer details found');
       }
 
-      const subRes = await axios.post('/api/subscriptions/', {
+      const subRes = await axios.post('/api/subscriptions', {
         customer_id: dbCustomerId,
         plan_id: selectedPlan?.id || 1,
         status: 'ACTIVE',
@@ -250,7 +250,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
       const txnId = `TXN_${platform === 'NEXORA' ? 'NEX' : 'VEL'}_${Date.now()}`;
       const paymentDateStr = new Date().toISOString().split('T')[0];
 
-      const payRes = await axios.post('/api/payments/', {
+      const payRes = await axios.post('/api/payments', {
         subscription_id: createdSubId,
         amount: finalAmount,
         payment_method: paymentMethod === 'velora_wallet' ? 'Velora Wallet' : (paymentMethod === 'upi' ? 'UPI' : 'Credit Card'),
@@ -276,20 +276,9 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
 
       // Step 5: Trigger Platform Webhook & Smart Email Notification (Payment Success vs Payment Failed)
       const eventType = actualPaymentStatus === 'SUCCESS' ? 'subscription.created' : 'payment.failed';
-      const webhookRes = await axios.post('/api/velora/webhook-trigger', {
-        event_type: eventType,
-        email: custEmail,
-        customer_email: custEmail,
-        customer_name: custName,
-        plan: selectedPlan?.name || 'Premium Plan',
-        plan_name: selectedPlan?.name || 'Premium Plan',
-        amount: finalAmount,
-        totalDue: finalAmount,
-        status: actualPaymentStatus === 'SUCCESS' ? 'ACTIVE' : 'PAST_DUE',
-        platform: platform,
-        invoice_number: createdInvNum,
-        transaction_id: txnId,
-        payload: {
+      try {
+        await axios.post('/api/velora/webhook-trigger', {
+          event_type: eventType,
           email: custEmail,
           customer_email: custEmail,
           customer_name: custName,
@@ -301,8 +290,23 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
           platform: platform,
           invoice_number: createdInvNum,
           transaction_id: txnId,
-        },
-      });
+          payload: {
+            email: custEmail,
+            customer_email: custEmail,
+            customer_name: custName,
+            plan: selectedPlan?.name || 'Premium Plan',
+            plan_name: selectedPlan?.name || 'Premium Plan',
+            amount: finalAmount,
+            totalDue: finalAmount,
+            status: actualPaymentStatus === 'SUCCESS' ? 'ACTIVE' : 'PAST_DUE',
+            platform: platform,
+            invoice_number: createdInvNum,
+            transaction_id: txnId,
+          },
+        });
+      } catch (webhookErr) {
+        console.warn('Webhook notification notice:', webhookErr);
+      }
 
       // Generate Receipt Payload for Frontend Display
       const receipt = {
