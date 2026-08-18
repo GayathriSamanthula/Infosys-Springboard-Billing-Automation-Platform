@@ -231,7 +231,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         throw new Error('No customer details found');
       }
 
-      const subRes = await axios.post('/api/subscriptions/', {
+      const subRes = await axios.post('/api/subscriptions', {
         customer_id: dbCustomerId,
         plan_id: selectedPlan?.id || 1,
         status: 'ACTIVE',
@@ -250,7 +250,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
       const txnId = `TXN_${platform === 'NEXORA' ? 'NEX' : 'VEL'}_${Date.now()}`;
       const paymentDateStr = new Date().toISOString().split('T')[0];
 
-      const payRes = await axios.post('/api/payments/', {
+      const payRes = await axios.post('/api/payments', {
         subscription_id: createdSubId,
         amount: finalAmount,
         payment_method: paymentMethod === 'velora_wallet' ? 'Velora Wallet' : (paymentMethod === 'upi' ? 'UPI' : 'Credit Card'),

@@ -6,16 +6,16 @@ export const ENDPOINTS = {
   REGISTER: '/auth/admin/register',
 
   // Customers
-  CUSTOMERS: '/customers/',
+  CUSTOMERS: '/customers',
   CUSTOMER_BY_ID: (id) => `/customers/${id}`,
 
   // Plans
-  PLANS: '/plans/',
+  PLANS: '/plans',
   PLAN_BY_ID: (id) => `/plans/${id}`,
   ARCHIVE_PLAN: (id) => `/plans/${id}/archive`,
 
   // Subscriptions
-  SUBSCRIPTIONS: '/subscriptions/',
+  SUBSCRIPTIONS: '/subscriptions',
   SUBSCRIPTION_BY_ID: (id) => `/subscriptions/${id}`,
   PAUSE_SUBSCRIPTION: (id) => `/subscriptions/${id}/pause`,
   RESUME_SUBSCRIPTION: (id) => `/subscriptions/${id}/resume`,
@@ -25,13 +25,13 @@ export const ENDPOINTS = {
   PRORATION_CALCULATE: '/proration/calculate',
 
   // Invoices (Module 2)
-  INVOICES: '/invoices/',
+  INVOICES: '/invoices',
   INVOICE_BY_ID: (id) => `/invoices/${id}`,
   INVOICES_BY_CUSTOMER: (customerId) => `/invoices/customer/${customerId}`,
   GENERATE_INVOICE: '/invoices/generate-itemized',
 
   // Payments (Module 2)
-  PAYMENTS: '/payments/',
+  PAYMENTS: '/payments',
   PAYMENT_BY_ID: (id) => `/payments/${id}`,
   PROCESS_PAYMENT: '/payments/process',
 
@@ -40,6 +40,6 @@ export const ENDPOINTS = {
   PROCESS_REFUND: '/refunds/process',
 
   // Notifications & Audit Logs
-  NOTIFICATIONS: '/notifications/',
-  AUDIT_LOGS: '/audit-logs/',
+  NOTIFICATIONS: '/notifications',
+  AUDIT_LOGS: '/audit-logs',
 };
