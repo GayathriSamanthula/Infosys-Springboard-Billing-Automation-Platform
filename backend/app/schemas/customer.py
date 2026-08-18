@@ -36,7 +36,7 @@ class CustomerResponse(CustomerBase):
 
 
 class CustomerLogin(BaseModel):
-    email: str # Flexible string input to accept email, username, or customer ID without Pydantic 422 errors
+    email: str
     password: str
 
 
@@ -58,3 +58,8 @@ class CustomerRegister(BaseModel):
     country: Optional[str] = None
     address: Optional[str] = None
     platform_source: Optional[str] = "NEXORA_DIRECT"
+
+
+class CustomerVerifyOTP(BaseModel):
+    email: EmailStr
+    otp_code: str

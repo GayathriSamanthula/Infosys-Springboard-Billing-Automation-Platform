@@ -14,7 +14,8 @@ from app.services.invoice_service import (
     create_invoice,
     generate_itemized_invoice,
 )
-from app.services.notification_service import send_subscription_notification
+from app.services.notification_service import send_subscription_notification, create_notification
+from app.schemas.notification import NotificationCreate
 from app.schemas.invoice import InvoiceCreate
 from app.models.customer import Customer
 
@@ -108,6 +109,22 @@ def create_subscription(db: Session, subscription: SubscriptionCreate):
             description=f"Subscription #{db_subscription.id} created with initial status '{initial_status.value if hasattr(initial_status, 'value') else initial_status}' for plan '{plan.name}'." 
         )
     )
+
+    # Trigger in-app notification & email dispatch for subscription creation
+    try:
+        create_notification(
+            db,
+            NotificationCreate(
+                customer_id=db_subscription.customer_id,
+                notification_type="SUBSCRIPTION_CREATED",
+                message=f"Subscription #{db_subscription.id} for plan '{plan.name}' created with status '{initial_status.value if hasattr(initial_status, 'value') else initial_status}'.",
+                sent_date=date.today(),
+                status="SENT",
+                delivery_channel="EMAIL"
+            )
+        )
+    except Exception as notif_err:
+        print(f"Subscription notification error: {notif_err}")
 
     return db_subscription
 

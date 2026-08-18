@@ -10,7 +10,11 @@ import {
   Divider,
   Alert,
   Link as MuiLink,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
@@ -27,10 +31,15 @@ const VeloraCustomerRegisterContent = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [country, setCountry] = useState('');
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -41,7 +50,7 @@ const VeloraCustomerRegisterContent = () => {
       const payload = {
         username: fullName,
         email: email,
-        phone_number: phone || `+91${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+        phone_number: phone,
         password: password,
         country: country || '',
         address: address || '',
@@ -49,34 +58,58 @@ const VeloraCustomerRegisterContent = () => {
       };
 
       const res = await axios.post('/api/auth/customer/register', payload);
+      if (res.data && res.data.status === 'REQUIRES_OTP') {
+        setRegisteredEmail(email);
+        setOtpStep(true);
+      } else {
+        const custData = {
+          id: res.data?.customer_id,
+          full_name: res.data?.full_name || fullName,
+          email: res.data?.email || email,
+          platform_source: res.data?.platform_source || 'VELORA_DIRECT',
+        };
+        localStorage.setItem('customer_user', JSON.stringify(custData));
+        localStorage.setItem('customer_info', JSON.stringify(custData));
+        localStorage.setItem('customer_email', email);
+        navigate('/velora/customer');
+      }
+    } catch (err) {
+      if (err?.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else {
+        setError('Registration failed. Please check your details or phone format.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    if (!otpCode.trim() || otpCode.trim().length !== 6) {
+      setError('Please enter the 6-digit OTP code sent to your email inbox.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await axios.post('/api/auth/customer/verify-otp', { email: registeredEmail, otp_code: otpCode.trim() });
       const custData = {
         id: res.data?.customer_id,
         full_name: res.data?.full_name || fullName,
         email: res.data?.email || email,
         platform_source: res.data?.platform_source || 'VELORA_DIRECT',
       };
-
+      if (res.data?.access_token) {
+        localStorage.setItem('customer_token', res.data.access_token);
+      }
       localStorage.setItem('customer_user', JSON.stringify(custData));
       localStorage.setItem('customer_info', JSON.stringify(custData));
-      localStorage.setItem('customer_email', email);
-
+      localStorage.setItem('customer_email', registeredEmail);
       navigate('/velora/customer');
     } catch (err) {
-      console.warn('Register error fallback active:', err);
-      const fallbackCust = {
-        full_name: fullName,
-        email: email,
-        platform_source: 'VELORA_DIRECT',
-      };
-      localStorage.setItem('customer_user', JSON.stringify(fallbackCust));
-      localStorage.setItem('customer_info', JSON.stringify(fallbackCust));
-      localStorage.setItem('customer_email', email);
-
-      if (err?.response?.data?.detail) {
-        setError(err.response.data.detail);
-      } else {
-        navigate('/velora/customer');
-      }
+      setError(err?.response?.data?.detail || 'Invalid or expired OTP code. Please check your email inbox.');
     } finally {
       setLoading(false);
     }
@@ -142,101 +175,163 @@ const VeloraCustomerRegisterContent = () => {
               </Alert>
             )}
 
-            <form onSubmit={handleRegister}>
-              <TextField
-                fullWidth
-                label={t('customerPortal.fullName', 'Full Name')}
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                margin="normal"
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
-                  '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                }}
-              />
-              <TextField
-                fullWidth
-                label={t('customerPortal.email', 'Email Address')}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                margin="normal"
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
-                  '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                }}
-              />
-              <TextField
-                fullWidth
-                label={t('customerPortal.phone', 'Phone Number')}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                margin="normal"
-                sx={{
-                  '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
-                  '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                }}
-              />
-              <TextField
-                fullWidth
-                label={t('auth.passwordLabel', 'Password')}
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                margin="normal"
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
-                  '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                }}
-              />
-              <TextField
-                fullWidth
-                label={t('customerPortal.country', 'Country')}
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                margin="normal"
-                sx={{
-                  '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
-                  '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                }}
-              />
-              <TextField
-                fullWidth
-                label={t('customerPortal.address', 'Billing Address')}
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                margin="normal"
-                multiline
-                rows={2}
-                sx={{
-                  '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
-                  '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                }}
-              />
+            {otpStep ? (
+              <form onSubmit={handleVerifyOTP}>
+                <Alert severity="info" sx={{ mb: 3, borderRadius: 2, fontWeight: 700 }}>
+                  🔒 Velora Security OTP sent to <strong>{registeredEmail}</strong>.<br />
+                  Code is valid for <strong>10 minutes</strong>.
+                </Alert>
 
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                disabled={loading}
-                sx={{
-                  mt: 3,
-                  mb: 2,
-                  py: 1.5,
-                  borderRadius: 2.5,
-                  background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                  fontWeight: 800,
-                  fontSize: '1rem',
-                  textTransform: 'none',
-                  boxShadow: '0 10px 25px -5px rgba(99, 102, 241, 0.4)',
-                }}
-              >
-                {loading ? t('common.loading', 'Creating Account...') : t('auth.signUpButton', 'Create Account & Sign In')}
-              </Button>
-            </form>
+                <TextField
+                  fullWidth
+                  label="ENTER 6-DIGIT SECURITY OTP"
+                  placeholder="e.g. 584920"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  margin="normal"
+                  required
+                  inputProps={{ maxLength: 6, style: { textAlign: 'center', fontSize: '1.4rem', letterSpacing: '0.3em', fontWeight: 900 } }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
+                    '& .MuiInputBase-input': { color: '#0f172a' },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#6366f1', borderWidth: 2 },
+                  }}
+                />
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={loading}
+                  sx={{
+                    mt: 3,
+                    mb: 2,
+                    py: 1.5,
+                    borderRadius: 2.5,
+                    background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                    fontWeight: 800,
+                    fontSize: '1rem',
+                    textTransform: 'none',
+                    boxShadow: '0 10px 25px -5px rgba(99, 102, 241, 0.4)',
+                  }}
+                >
+                  {loading ? 'Verifying OTP...' : 'Verify OTP & Activate Velora Account'}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister}>
+                <TextField
+                  fullWidth
+                  label={t('customerPortal.fullName', 'Full Name')}
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  margin="normal"
+                  required
+                  sx={{
+                    '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
+                    '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  label={t('customerPortal.email', 'Email Address')}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  margin="normal"
+                  required
+                  sx={{
+                    '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
+                    '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  label={t('customerPortal.phone', 'Phone Number')}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  margin="normal"
+                  required
+                  helperText="Include country code"
+                  sx={{
+                    '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
+                    '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                    '& .MuiFormHelperText-root': { color: '#6366f1', fontWeight: 600 },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  label={t('auth.passwordLabel', 'Password')}
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  margin="normal"
+                  required
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          sx={{ color: '#6366f1' }}
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
+                    '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  label={t('customerPortal.country', 'Country')}
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  margin="normal"
+                  sx={{
+                    '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
+                    '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  label={t('customerPortal.address', 'Billing Address')}
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  margin="normal"
+                  multiline
+                  rows={2}
+                  sx={{
+                    '& .MuiOutlinedInput-root': { borderRadius: 2.5 },
+                    '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                  }}
+                />
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={loading}
+                  sx={{
+                    mt: 3,
+                    mb: 2,
+                    py: 1.5,
+                    borderRadius: 2.5,
+                    background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                    fontWeight: 800,
+                    fontSize: '1rem',
+                    textTransform: 'none',
+                    boxShadow: '0 10px 25px -5px rgba(99, 102, 241, 0.4)',
+                  }}
+                >
+                  {loading ? t('common.loading', 'Creating Account...') : t('auth.signUpButton', 'Create Account & Sign In')}
+                </Button>
+              </form>
+            )}
 
             <Divider sx={{ my: 2.5 }} />
 

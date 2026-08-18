@@ -213,29 +213,24 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
       const custEmail = activeCustomer.email || currentCustomerEmail || 'customer@example.com';
       const finalAmount = prorationDetails?.totalDue !== undefined ? prorationDetails.totalDue : (selectedPlan?.price || 0.0);
 
-      // Step 1: Auto-ensure customer exists in PostgreSQL DB
-      let dbCustomerId = selectedCustomerId;
+      // Step 1: Verify customer exists in PostgreSQL DB (No auto-creation)
+      let dbCustomerId = null;
       try {
         const checkCustRes = await axios.get(platform === 'NEXORA' ? '/api/customers' : '/api/velora/customers');
         const dbCusts = Array.isArray(checkCustRes.data) ? checkCustRes.data : [];
         const existing = dbCusts.find(c => String(c.id) === String(selectedCustomerId) || (c.email && c.email.toLowerCase() === custEmail.toLowerCase()));
         if (existing) {
           dbCustomerId = existing.id;
-        } else {
-          const newCustRes = await axios.post('/api/customers/', {
-            full_name: custName,
-            email: custEmail,
-            platform_source: platform === 'NEXORA' ? 'NEXORA_DIRECT' : 'VELORA_DIRECT'
-          });
-          if (newCustRes.data?.id) {
-            dbCustomerId = newCustRes.data.id;
-          }
         }
       } catch (custEnsureErr) {
-        console.warn('Customer DB sync notice:', custEnsureErr);
+        console.warn('Customer DB lookup notice:', custEnsureErr);
       }
 
-      // Step 2: Create & Persist Subscription Record in Database
+      // Step 2: Ensure customer is registered in Database
+      if (!dbCustomerId) {
+        throw new Error('No customer details found');
+      }
+
       const subRes = await axios.post('/api/subscriptions/', {
         customer_id: dbCustomerId,
         plan_id: selectedPlan?.id || 1,

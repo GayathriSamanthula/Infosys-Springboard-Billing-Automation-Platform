@@ -11,6 +11,8 @@ from app.models.plan import Plan
 from app.models.customer import Customer
 from app.models.payment import Payment
 from app.schemas.invoice import InvoiceCreate
+from app.services.notification_service import create_notification
+from app.schemas.notification import NotificationCreate
 
 
 def generate_unique_invoice_number(db: Session) -> str:
@@ -174,6 +176,24 @@ def generate_itemized_invoice(
 
     db.commit()
     db.refresh(db_invoice)
+
+    # Trigger in-app notification & email dispatch for generated invoice
+    try:
+        if subscription and subscription.customer_id:
+            create_notification(
+                db,
+                NotificationCreate(
+                    customer_id=subscription.customer_id,
+                    notification_type="INVOICE_GENERATED",
+                    message=f"Itemized Invoice #{db_invoice.invoice_number} issued for total amount ${db_invoice.amount}.",
+                    sent_date=date.today(),
+                    status="SENT",
+                    delivery_channel="EMAIL"
+                )
+            )
+    except Exception as notif_err:
+        print(f"Invoice notification error: {notif_err}")
+
     return _enrich_invoice(db, db_invoice)
 
 

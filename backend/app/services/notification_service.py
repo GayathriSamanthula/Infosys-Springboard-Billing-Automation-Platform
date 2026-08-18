@@ -68,7 +68,7 @@ def send_smart_email(
     # Determine recipient email (Smart Hybrid Routing)
     is_sample_email = "@example.com" in to_email.lower()
     is_dev_mode = (env == "development") or is_sample_email
-    target_recipient = dev_receiver if is_dev_mode else to_email
+    target_recipient = to_email
 
     # Enhance context with recipient metadata
     context["customer_name"] = customer_name
@@ -239,9 +239,9 @@ def delete_notification(db: Session, notification_id: int):
     return notification
 
 
-def send_subscription_notification(db: Session, subscription_id: int):
+def send_subscription_notification(db: Session, subscription_id: int, customer_id: int = 1):
     notification = NotificationCreate(
-        customer_id=1,
+        customer_id=customer_id,
         notification_type="SUBSCRIPTION_RENEWED",
         message=f"Subscription {subscription_id} renewed successfully.",
         sent_date=date.today(),

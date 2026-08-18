@@ -130,7 +130,7 @@ const Header = ({ onDrawerToggle, sidebarWidth = 260 }) => {
                 boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)',
               }}
             >
-              {t('nav.customers', 'Customer Inspector')}
+              {t('nav.customers', 'Customers Directory')}
             </Button>
 
             <Tooltip title={t('nav.notifications', 'Notifications')}>
@@ -143,11 +143,11 @@ const Header = ({ onDrawerToggle, sidebarWidth = 260 }) => {
 
             <Box sx={{ display: 'flex', alignItems: 'center', ml: 1, cursor: 'pointer' }} onClick={handleMenuOpen}>
               <Avatar sx={{ bgcolor: '#0284c7', color: '#ffffff', width: 36, height: 36, fontSize: '0.9rem', fontWeight: 800 }}>
-                G
+                {(user?.name || user?.username || 'A')[0].toUpperCase()}
               </Avatar>
               <Box sx={{ ml: 1.5, display: { xs: 'none', md: 'block' } }}>
                 <Typography variant="subtitle2" fontWeight={800} color="#0f172a" style={{ lineHeight: 1.1 }}>
-                  Gayatri Samanthula
+                  {user?.name || user?.username || 'Admin User'}
                 </Typography>
                 <Typography variant="caption" color="#0284c7" fontWeight={700}>
                   {t('admin.header.role', 'System Administrator')}
@@ -165,10 +165,10 @@ const Header = ({ onDrawerToggle, sidebarWidth = 260 }) => {
             >
               <Box sx={{ p: 2, borderBottom: '1px solid #e0f2fe' }}>
                 <Typography variant="subtitle2" fontWeight={800} color="#0f172a">
-                  Gayatri Samanthula
+                  {user?.name || user?.username || 'Admin User'}
                 </Typography>
                 <Typography variant="caption" color="#64748b">
-                  gayatri.samanthula@nexora.com
+                  {user?.email || 'admin@nexora.com'}
                 </Typography>
               </Box>
               <MenuItem onClick={() => { handleMenuClose(); navigate('/dashboard'); }}>
