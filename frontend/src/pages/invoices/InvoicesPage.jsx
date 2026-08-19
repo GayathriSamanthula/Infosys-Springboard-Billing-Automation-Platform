@@ -83,8 +83,8 @@ const InvoicesPage = () => {
 
   const handleDownload = () => {
     if (selectedInvoice) {
-      window.open(invoiceService.downloadHtmlUrl(selectedInvoice.id), '_blank');
-      showNotification(`Opening Tax Invoice ${selectedInvoice.invoice_number} for download/print`, 'success');
+      invoiceService.downloadPdfBlob(selectedInvoice.id, selectedInvoice.invoice_number, 'NEXORA');
+      showNotification(`Downloading Tax Invoice ${selectedInvoice.invoice_number} PDF`, 'success');
     }
   };
 

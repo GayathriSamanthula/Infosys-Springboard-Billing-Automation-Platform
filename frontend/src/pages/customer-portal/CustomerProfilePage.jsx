@@ -8,12 +8,21 @@ import {
   Divider,
   Chip,
   CircularProgress,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Alert,
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import PublicIcon from '@mui/icons-material/Public';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import EditIcon from '@mui/icons-material/Edit';
+import axios from 'axios';
 
 import { customerPortalService } from '../../services/customerPortalService';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +31,18 @@ const CustomerProfilePage = () => {
   const { t } = useTranslation();
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Edit Profile State
+  const [editOpen, setEditOpen] = useState(false);
+  const [form, setForm] = useState({
+    full_name: '',
+    email: '',
+    phone_number: '',
+    country: '',
+    address: '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   const currentCustomer = customerPortalService.getCurrentCustomer() || { customer_id: Date.now(), full_name: 'Customer Account', email: '' };
 
@@ -57,6 +78,47 @@ const CustomerProfilePage = () => {
 
   const profile = customer || currentCustomer;
 
+  const handleOpenEdit = () => {
+    setForm({
+      full_name: profile.full_name || profile.name || '',
+      email: profile.email || '',
+      phone_number: profile.phone_number || profile.phone || '',
+      country: profile.country || 'India',
+      address: profile.address || '',
+    });
+    setEditOpen(true);
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!profile?.id) return;
+    setSaving(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const payload = {
+        full_name: form.full_name,
+        email: form.email,
+        phone_number: form.phone_number,
+        country: form.country,
+        address: form.address,
+      };
+      const res = await axios.put(`/api/customers/${profile.id}`, payload);
+      const updated = { ...profile, ...res.data };
+      setCustomer(updated);
+      localStorage.setItem('customer_user', JSON.stringify(updated));
+      localStorage.setItem('customer_info', JSON.stringify(updated));
+      if (updated.email) localStorage.setItem('customer_email', updated.email);
+      
+      setMessage({ type: 'success', text: 'Profile updated successfully in database!' });
+      setEditOpen(false);
+    } catch (err) {
+      console.error('Profile update error:', err);
+      setMessage({ type: 'error', text: err?.response?.data?.detail || 'Failed to update profile changes.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Box sx={{ pb: 6 }}>
       <Box sx={{ mb: 4 }}>
@@ -67,6 +129,12 @@ const CustomerProfilePage = () => {
           {t('customerPortal.manageSubSubtext')}
         </Typography>
       </Box>
+
+      {message.text && (
+        <Alert severity={message.type || 'info'} sx={{ mb: 3, fontWeight: 700, borderRadius: 2 }}>
+          {message.text}
+        </Alert>
+      )}
 
       {loading ? (
         <CircularProgress color="primary" />
@@ -106,9 +174,20 @@ const CustomerProfilePage = () => {
 
           <Grid item xs={12} md={8}>
             <Paper sx={{ p: 3.5, borderRadius: 3.5, border: '3px solid #e76f51', bgcolor: '#FFFFFF !important', boxShadow: '0 10px 25px -5px rgba(231, 111, 81, 0.35)' }}>
-              <Typography variant="h6" fontWeight={800} color="#0f172a" sx={{ mb: 2 }}>
-                {t('customerPortal.accountDetails')}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" fontWeight={800} color="#0f172a">
+                  {t('customerPortal.accountDetails')}
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<EditIcon />}
+                  onClick={handleOpenEdit}
+                  sx={{ bgcolor: '#e76f51', '&:hover': { bgcolor: '#d45d3f' }, textTransform: 'none', fontWeight: 800, borderRadius: 2 }}
+                >
+                  Edit Profile
+                </Button>
+              </Box>
 
               <Divider sx={{ mb: 3, borderColor: '#fcdad2' }} />
 
@@ -158,6 +237,66 @@ const CustomerProfilePage = () => {
 
         </Grid>
       )}
+
+      {/* Edit Profile Dialog Modal */}
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 900, color: '#0f172a' }}>Edit Personal Profile</DialogTitle>
+        <Box component="form" onSubmit={handleSave}>
+          <DialogContent>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Full Name"
+                  value={form.full_name}
+                  onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Email Address"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Phone Number"
+                  value={form.phone_number}
+                  onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Country"
+                  value={form.country}
+                  onChange={(e) => setForm({ ...form, country: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Billing Address"
+                  multiline
+                  rows={2}
+                  value={form.address}
+                  onChange={(e) => setForm({ ...form, address: e.target.value })}
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions sx={{ p: 2.5 }}>
+            <Button onClick={() => setEditOpen(false)} sx={{ fontWeight: 700, color: '#64748b' }}>Cancel</Button>
+            <Button type="submit" variant="contained" disabled={saving} sx={{ bgcolor: '#e76f51', '&:hover': { bgcolor: '#d45d3f' }, fontWeight: 800 }}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
     </Box>
   );
 };

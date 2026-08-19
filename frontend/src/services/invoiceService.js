@@ -59,4 +59,24 @@ export const invoiceService = {
   previewPdfUrl: (id, platform = 'NEXORA') => {
     return `/api/invoices/${id}/preview?platform=${platform}`;
   },
+
+  downloadPdfBlob: async (id, invNum, platform = 'NEXORA') => {
+    try {
+      const response = await api.get(`/invoices/${id}/pdf?platform=${platform}`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', `${invNum || `Invoice_${id}`}_${platform}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Failed to download invoice PDF:', error);
+      alert('Failed to download PDF invoice. Please ensure the backend server is running.');
+    }
+  },
 };

@@ -70,6 +70,18 @@ const NexoraCustomerPage = () => {
     promotionalOffers: false,
   });
 
+  // Editable Profile Form State
+  const [profileForm, setProfileForm] = useState({
+    full_name: '',
+    email: '',
+    phone_number: '',
+    country: '',
+    address: '',
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const [profileError, setProfileError] = useState('');
+
   // Upgrade / Subscribe Modal State
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [selectedPlanForUpgrade, setSelectedPlanForUpgrade] = useState(null);
@@ -144,6 +156,16 @@ const NexoraCustomerPage = () => {
       } else {
         setActiveSub(null);
       }
+
+      if (currentCust) {
+        setProfileForm({
+          full_name: currentCust.full_name || currentCust.name || '',
+          email: currentCust.email || '',
+          phone_number: currentCust.phone_number || currentCust.phone || '',
+          country: currentCust.country || 'India',
+          address: currentCust.address || '',
+        });
+      }
       setCustomer(currentCust ? { ...currentCust } : null);
 
       // Fetch Live Active Plans (Guaranteed 4 Standard Plans: Basic ₹499, Premium ₹999, Premium Plus ₹1499, Premium Pro ₹2000)
@@ -215,6 +237,48 @@ const NexoraCustomerPage = () => {
     } catch (err) {
       console.error('Failed to download invoice PDF:', err);
       alert('Failed to download PDF invoice. Please ensure the backend server is running.');
+    }
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    if (!customer?.id) {
+      setProfileError('No valid customer account ID found.');
+      return;
+    }
+    setProfileSaving(true);
+    setProfileSuccess('');
+    setProfileError('');
+    try {
+      const payload = {
+        full_name: profileForm.full_name,
+        email: profileForm.email,
+        phone_number: profileForm.phone_number,
+        country: profileForm.country,
+        address: profileForm.address,
+      };
+      const res = await axios.put(`/api/customers/${customer.id}`, payload);
+      
+      const updatedCust = {
+        ...customer,
+        ...res.data,
+        name: res.data.full_name || profileForm.full_name,
+        full_name: res.data.full_name || profileForm.full_name,
+        email: res.data.email || profileForm.email,
+      };
+
+      setCustomer(updatedCust);
+      localStorage.setItem('customer_user', JSON.stringify(updatedCust));
+      localStorage.setItem('customer_info', JSON.stringify(updatedCust));
+      if (updatedCust.email) {
+        localStorage.setItem('customer_email', updatedCust.email);
+      }
+      setProfileSuccess('Profile details updated successfully in database!');
+    } catch (err) {
+      console.error('Profile update error:', err);
+      setProfileError(err?.response?.data?.detail || 'Failed to save profile changes. Please try again.');
+    } finally {
+      setProfileSaving(false);
     }
   };
 
@@ -1031,86 +1095,108 @@ const NexoraCustomerPage = () => {
                       </Box>
                     </Box>
 
-                    <Grid container spacing={3}>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Full Name"
-                          value={customer?.full_name || customer?.name || customer?.email?.split('@')[0] || ''}
-                          sx={{
-                            '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                            '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                            '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                          }}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Email Address"
-                          value={customer?.email || ''}
-                          sx={{
-                            '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                            '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                            '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                          }}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Phone Number"
-                          value={customer?.phone_number || customer?.phone || ''}
-                          sx={{
-                            '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                            '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                            '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                          }}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Country / Region"
-                          value={customer?.country || 'India'}
-                          sx={{
-                            '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                            '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                            '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                          }}
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label="Billing Address"
-                          value={customer?.address || ''}
-                          sx={{
-                            '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
-                            '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
-                            '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
-                          }}
-                        />
-                      </Grid>
-                    </Grid>
+                    {profileSuccess && (
+                      <Alert severity="success" sx={{ mb: 3, fontWeight: 700, borderRadius: 2 }}>
+                        {profileSuccess}
+                      </Alert>
+                    )}
+                    {profileError && (
+                      <Alert severity="error" sx={{ mb: 3, fontWeight: 700, borderRadius: 2 }}>
+                        {profileError}
+                      </Alert>
+                    )}
 
-                    <Button
-                      variant="contained"
-                      sx={{
-                        mt: 3,
-                        py: 1.2,
-                        px: 3,
-                        borderRadius: 2.5,
-                        fontWeight: 900,
-                        textTransform: 'none',
-                        bgcolor: '#C1DBB3',
-                        color: '#1b3818',
-                        '&:hover': { bgcolor: '#afd09e' },
-                      }}
-                      onClick={() => alert('Profile details updated successfully!')}
-                    >
-                      Save Profile Changes
-                    </Button>
+                    <Box component="form" onSubmit={handleSaveProfile}>
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            fullWidth
+                            label="Full Name"
+                            value={profileForm.full_name}
+                            onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
+                            sx={{
+                              '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                              '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
+                              '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            fullWidth
+                            label="Email Address"
+                            type="email"
+                            value={profileForm.email}
+                            onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                            sx={{
+                              '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                              '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
+                              '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            fullWidth
+                            label="Phone Number"
+                            value={profileForm.phone_number}
+                            onChange={(e) => setProfileForm({ ...profileForm, phone_number: e.target.value })}
+                            sx={{
+                              '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                              '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
+                              '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            fullWidth
+                            label="Country / Region"
+                            value={profileForm.country}
+                            onChange={(e) => setProfileForm({ ...profileForm, country: e.target.value })}
+                            sx={{
+                              '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                              '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
+                              '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={12}>
+                          <TextField
+                            fullWidth
+                            label="Billing Address"
+                            multiline
+                            rows={2}
+                            value={profileForm.address}
+                            onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
+                            sx={{
+                              '& .MuiInputBase-input': { color: '#0f172a', fontWeight: 700 },
+                              '& .MuiInputLabel-root': { color: '#64748b', fontWeight: 600 },
+                              '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cbd5e1' },
+                            }}
+                          />
+                        </Grid>
+                      </Grid>
+
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={profileSaving}
+                        sx={{
+                          mt: 3,
+                          py: 1.2,
+                          px: 3,
+                          borderRadius: 2.5,
+                          fontWeight: 900,
+                          textTransform: 'none',
+                          bgcolor: '#C1DBB3',
+                          color: '#1b3818',
+                          '&:hover': { bgcolor: '#afd09e' },
+                        }}
+                      >
+                        {profileSaving ? 'Saving Changes...' : 'Save Profile Changes'}
+                      </Button>
+                    </Box>
                   </Paper>
                 )}
 
