@@ -254,7 +254,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
       }
 
       // Step 3: Determine Payment Gateway Status (SUCCESS vs FAILED vs PENDING)
-      const isFailedAttempt = (paymentMethod === 'credit_card' && String(cardNumber || '').endsWith('0000'));
+      const isFailedAttempt = false;
       const actualPaymentStatus = isFailedAttempt ? 'FAILED' : 'SUCCESS';
 
       const txnId = `TXN_${platform === 'NEXORA' ? 'NEX' : 'VEL'}_${Date.now()}`;
