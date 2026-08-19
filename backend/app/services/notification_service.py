@@ -105,7 +105,7 @@ def send_smart_email(
         msg.set_content(context.get("message", subject))
         msg.add_alternative(html_content, subtype="html")
 
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=3) as server:
             server.starttls()
             server.login(sender_email, sender_password)
             server.send_message(msg)

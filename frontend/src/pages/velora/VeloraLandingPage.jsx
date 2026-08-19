@@ -26,7 +26,7 @@ import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import FintechBackground from '../../components/common/FintechBackground';
-import VeloraCheckoutModal from '../../components/velora/VeloraCheckoutModal';
+import NexoraCheckoutModal from '../../components/nexora/NexoraCheckoutModal';
 
 const VeloraLandingPage = () => {
   const navigate = useNavigate();
@@ -523,11 +523,12 @@ const VeloraLandingPage = () => {
         </Container>
 
         {/* Checkout Modal */}
-        <VeloraCheckoutModal
+        <NexoraCheckoutModal
           open={checkoutModalOpen}
           onClose={() => setCheckoutModalOpen(false)}
           selectedPlan={selectedPlanForCheckout}
           isAnnual={isAnnual}
+          platform="VELORA"
         />
 
         {/* Footer */}

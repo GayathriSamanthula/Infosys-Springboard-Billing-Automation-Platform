@@ -20,21 +20,17 @@ import {
   FormControlLabel,
   Radio,
   Paper,
-  Alert,
 } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
-import SecurityIcon from '@mui/icons-material/Security';
 import CloseIcon from '@mui/icons-material/Close';
-import TagIcon from '@mui/icons-material/Tag';
 import BoltIcon from '@mui/icons-material/Bolt';
 import axios from 'axios';
 import { prorationService } from '../../services/prorationService';
 
-const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, currentCustomerId = null, currentCustomerEmail = null, platform = 'VELORA' }) => {
+const NexoraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, currentCustomerId = null, currentCustomerEmail = null, platform = 'NEXORA' }) => {
   const isNexora = (platform || '').toUpperCase() === 'NEXORA';
   const platformName = isNexora ? 'Nexora' : 'Velora';
   const brandGradient = isNexora
@@ -99,7 +95,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
       const rawPrice = Number(selectedPlan?.price || 0.0);
       const basePrice = isAnnual ? Math.round(rawPrice * 0.8) : rawPrice;
 
-      // 1. Fetch live active subscriptions to check if this customer already has an active plan
       let activeSub = null;
       try {
         const subEndpoint = platform === 'NEXORA' ? '/api/subscriptions' : '/api/velora/subscriptions';
@@ -119,7 +114,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
       let changeType = 'NEW_SUBSCRIPTION';
 
       if (!activeSub) {
-        // NEW CUSTOMER: No proration credit or debit applied
         changeType = 'NEW_SUBSCRIPTION';
         prorationCredit = 0;
         taxAmount = Math.round(basePrice * 0.18);
@@ -128,7 +122,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         const currentPlanPrice = Number(activeSub.price || 0.0);
         let apiProrationSuccess = false;
 
-        // Option A: Backend FastAPI Proration Engine Call
         try {
           if (activeSub.id && selectedPlan?.id && String(activeSub.plan_id || '') !== String(selectedPlan.id)) {
             const apiRes = await prorationService.calculateProration(activeSub.id, selectedPlan.id);
@@ -160,7 +153,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
           apiProrationSuccess = false;
         }
 
-        // Fallback: Exact Daily Calendar Math (Option B) if API call skipped or unavailable
         if (!apiProrationSuccess) {
           const startDate = activeSub.start_date ? new Date(activeSub.start_date) : new Date(Date.now() - 15 * 86400000);
           const endDate = activeSub.end_date ? new Date(activeSub.end_date) : new Date(Date.now() + 15 * 86400000);
@@ -223,7 +215,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
       const custEmail = activeCustomer.email || currentCustomerEmail || 'customer@example.com';
       const finalAmount = prorationDetails?.totalDue !== undefined ? prorationDetails.totalDue : (selectedPlan?.price || 0.0);
 
-      // Step 1: Verify customer exists in PostgreSQL DB (No auto-creation)
       let dbCustomerId = null;
       try {
         const checkCustRes = await axios.get(platform === 'NEXORA' ? '/api/customers' : '/api/velora/customers');
@@ -236,7 +227,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         console.warn('Customer DB lookup notice:', custEnsureErr);
       }
 
-      // Step 2: Ensure customer is registered in Database
       if (!dbCustomerId) {
         throw new Error('No customer details found');
       }
@@ -253,7 +243,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         throw new Error('Subscription creation failed to return a valid subscription ID.');
       }
 
-      // Step 3: Determine Payment Gateway Status (SUCCESS vs FAILED vs PENDING)
       const isFailedAttempt = false;
       const actualPaymentStatus = isFailedAttempt ? 'FAILED' : 'SUCCESS';
 
@@ -263,7 +252,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
       const payRes = await axios.post('/api/payments', {
         subscription_id: createdSubId,
         amount: finalAmount,
-        payment_method: paymentMethod === 'velora_wallet' ? 'Velora Wallet' : (paymentMethod === 'upi' ? 'UPI' : 'Credit Card'),
+        payment_method: paymentMethod === 'velora_wallet' ? `${platformName} Wallet` : (paymentMethod === 'upi' ? 'UPI' : 'Credit Card'),
         transaction_id: txnId,
         payment_date: paymentDateStr,
         payment_status: actualPaymentStatus,
@@ -271,7 +260,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         platform_source: platform === 'NEXORA' ? 'NEXORA_DIRECT' : 'VELORA_DIRECT',
       }, { timeout: 10000 });
 
-      // Step 4: Create Itemized Invoice in Database
       let createdInvNum = `INV-2026-${platform === 'NEXORA' ? 'NEX' : 'VEL'}-${Math.floor(1000 + Math.random() * 9000)}`;
       let createdInvId = null;
       try {
@@ -284,7 +272,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         console.warn('Invoice generation notice:', invErr);
       }
 
-      // Step 5: Trigger Non-Blocking Background Webhook & Email Notification
       const eventType = actualPaymentStatus === 'SUCCESS' ? 'subscription.created' : 'payment.failed';
       axios.post('/api/velora/webhook-trigger', {
         event_type: eventType,
@@ -314,13 +301,11 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         },
       }).catch((webhookErr) => console.warn('Webhook notification notice:', webhookErr));
 
-      // Capture Real Response Data for Live Receipt
       const realTxnId = payRes.data?.transaction_id || txnId;
       const realInvNum = createdInvNum;
       const realAmount = payRes.data?.amount || finalAmount;
       const realStatus = payRes.data?.payment_status || actualPaymentStatus;
 
-      // Generate Real Live Receipt Payload for Frontend Display
       const receipt = {
         transactionId: realTxnId,
         invoiceNumber: realInvNum,
@@ -335,9 +320,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         timestamp: new Date().toLocaleString(),
       };
 
-      // Trigger Live Refresh Across Customer Portal & Admin Portals Immediately
       window.dispatchEvent(new CustomEvent('dashboard_refresh'));
-
       setSuccessReceipt(receipt);
     } catch (err) {
       console.error('Subscription checkout aborted due to step failure:', err);
@@ -364,7 +347,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         },
       }}
     >
-      {/* Modal Header */}
       <DialogTitle sx={{ p: 3, pb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Avatar
@@ -397,7 +379,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
 
       <DialogContent sx={{ p: 3 }}>
         {successReceipt ? (
-          /* Success Receipt View */
           <Box sx={{ textAlign: 'center', py: 2 }}>
             <Avatar
               sx={{
@@ -489,25 +470,19 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
                 </Grid>
               </Grid>
             </Paper>
-
-            <Alert severity="success" sx={{ bgcolor: 'rgba(16, 185, 129, 0.1)', color: '#34d399', borderRadius: 2 }}>
-              Zero Data Erasure Guaranteed: All customer records & invoices saved securely in PostgreSQL.
-            </Alert>
           </Box>
         ) : (
-          /* Checkout Form View */
           <Box>
-            {/* Plan Summary Header */}
             <Paper
               sx={{
-                p: 2,
+                p: 2.5,
                 mb: 3,
-                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%)',
-                border: '1px solid rgba(168, 85, 247, 0.3)',
+                bgcolor: 'rgba(30, 41, 59, 0.7)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: 3,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                justify: 'space-between',
               }}
             >
               <Box>
@@ -525,7 +500,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
               />
             </Paper>
 
-            {/* 1. Customer Selection */}
             <Typography variant="caption" color={brandAccent} fontWeight={800} letterSpacing="0.05em" sx={{ display: 'block', mb: 1 }}>
               1. SELECT SUBSCRIBER CUSTOMER
             </Typography>
@@ -550,7 +524,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
               </Select>
             </FormControl>
 
-            {/* 2. Proration Breakdown */}
             <Typography variant="caption" color={brandAccent} fontWeight={800} letterSpacing="0.05em" sx={{ display: 'block', mb: 1 }}>
               2. REAL-TIME PRORATION & BILLING BREAKDOWN
             </Typography>
@@ -625,7 +598,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
               )}
             </Paper>
 
-            {/* 3. Payment Method */}
             <Typography variant="caption" color={brandAccent} fontWeight={800} letterSpacing="0.05em" sx={{ display: 'block', mb: 1 }}>
               3. SELECT PAYMENT METHOD
             </Typography>
@@ -693,7 +665,6 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
                 />
               </Paper>
 
-              {/* UPI Payment Option */}
               <Paper
                 sx={{
                   p: 1.5,
@@ -789,4 +760,4 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
   );
 };
 
-export default VeloraCheckoutModal;
+export default NexoraCheckoutModal;
