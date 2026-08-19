@@ -246,7 +246,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         plan_id: selectedPlan?.id || 1,
         status: 'ACTIVE',
         platform_source: platform === 'NEXORA' ? 'NEXORA_DIRECT' : 'VELORA_DIRECT',
-      });
+      }, { timeout: 10000 });
       
       const createdSubId = subRes.data?.id;
       if (!createdSubId) {
@@ -269,13 +269,13 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         payment_status: actualPaymentStatus,
         gateway_name: platform === 'NEXORA' ? 'Nexora Gateway' : 'Velora Merchant Gateway',
         platform_source: platform === 'NEXORA' ? 'NEXORA_DIRECT' : 'VELORA_DIRECT',
-      });
+      }, { timeout: 10000 });
 
       // Step 4: Create Itemized Invoice in Database
       let createdInvNum = `INV-2026-${platform === 'NEXORA' ? 'NEX' : 'VEL'}-${Math.floor(1000 + Math.random() * 9000)}`;
       let createdInvId = null;
       try {
-        const invRes = await axios.post(`/api/invoices/generate-itemized?subscription_id=${createdSubId}`);
+        const invRes = await axios.post(`/api/invoices/generate-itemized?subscription_id=${createdSubId}`, {}, { timeout: 10000 });
         if (invRes.data?.invoice_number) {
           createdInvNum = invRes.data.invoice_number;
           createdInvId = invRes.data.id;
