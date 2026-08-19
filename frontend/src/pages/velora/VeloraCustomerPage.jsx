@@ -240,8 +240,24 @@ const VeloraCustomerPage = () => {
     setCheckoutModalOpen(true);
   };
 
-  const handleDownloadPDF = (invoiceId, invNum) => {
-    window.open(`/api/invoices/${invoiceId}/pdf?platform=VELORA`, '_blank');
+  const handleDownloadPDF = async (invoiceId, invNum) => {
+    try {
+      const response = await axios.get(`/api/invoices/${invoiceId}/pdf?platform=VELORA`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', `${invNum || `Invoice_${invoiceId}`}_VELORA.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error('Failed to download invoice PDF:', err);
+      alert('Failed to download PDF invoice. Please ensure the backend server is running.');
+    }
   };
 
   const handleSignOut = () => {
