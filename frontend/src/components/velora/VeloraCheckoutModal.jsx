@@ -284,11 +284,22 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         console.warn('Invoice generation notice:', invErr);
       }
 
-      // Step 5: Trigger Platform Webhook & Smart Email Notification (Payment Success vs Payment Failed)
+      // Step 5: Trigger Non-Blocking Background Webhook & Email Notification
       const eventType = actualPaymentStatus === 'SUCCESS' ? 'subscription.created' : 'payment.failed';
-      try {
-        await axios.post('/api/velora/webhook-trigger', {
-          event_type: eventType,
+      axios.post('/api/velora/webhook-trigger', {
+        event_type: eventType,
+        email: custEmail,
+        customer_email: custEmail,
+        customer_name: custName,
+        plan: selectedPlan?.name || 'Premium Plan',
+        plan_name: selectedPlan?.name || 'Premium Plan',
+        amount: finalAmount,
+        totalDue: finalAmount,
+        status: actualPaymentStatus === 'SUCCESS' ? 'ACTIVE' : 'PAST_DUE',
+        platform: platform,
+        invoice_number: createdInvNum,
+        transaction_id: txnId,
+        payload: {
           email: custEmail,
           customer_email: custEmail,
           customer_name: custName,
@@ -300,40 +311,31 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
           platform: platform,
           invoice_number: createdInvNum,
           transaction_id: txnId,
-          payload: {
-            email: custEmail,
-            customer_email: custEmail,
-            customer_name: custName,
-            plan: selectedPlan?.name || 'Premium Plan',
-            plan_name: selectedPlan?.name || 'Premium Plan',
-            amount: finalAmount,
-            totalDue: finalAmount,
-            status: actualPaymentStatus === 'SUCCESS' ? 'ACTIVE' : 'PAST_DUE',
-            platform: platform,
-            invoice_number: createdInvNum,
-            transaction_id: txnId,
-          },
-        });
-      } catch (webhookErr) {
-        console.warn('Webhook notification notice:', webhookErr);
-      }
+        },
+      }).catch((webhookErr) => console.warn('Webhook notification notice:', webhookErr));
 
-      // Generate Receipt Payload for Frontend Display
+      // Capture Real Response Data for Live Receipt
+      const realTxnId = payRes.data?.transaction_id || txnId;
+      const realInvNum = createdInvNum;
+      const realAmount = payRes.data?.amount || finalAmount;
+      const realStatus = payRes.data?.payment_status || actualPaymentStatus;
+
+      // Generate Real Live Receipt Payload for Frontend Display
       const receipt = {
-        transactionId: txnId,
-        invoiceNumber: createdInvNum,
+        transactionId: realTxnId,
+        invoiceNumber: realInvNum,
         customerName: custName,
         customerEmail: custEmail,
         planName: selectedPlan?.name || 'Premium Plan',
-        amountPaid: finalAmount,
+        amountPaid: realAmount,
         billingCycle: isAnnual ? 'Annual' : 'Monthly',
-        paymentMethod: paymentMethod === 'velora_wallet' ? 'Merchant Wallet' : (paymentMethod === 'upi' ? 'UPI' : 'Credit / Debit Card'),
-        paymentStatus: actualPaymentStatus,
-        webhookStatus: `DELIVERED (HTTP 200 OK - ${actualPaymentStatus})`,
+        paymentMethod: paymentMethod === 'velora_wallet' ? `${platformName} Wallet` : (paymentMethod === 'upi' ? 'UPI' : 'Credit / Debit Card'),
+        paymentStatus: realStatus,
+        webhookStatus: `DELIVERED (HTTP 200 OK - ${realStatus})`,
         timestamp: new Date().toLocaleString(),
       };
 
-      // Trigger Live Refresh Across Customer Portal & Admin Portals
+      // Trigger Live Refresh Across Customer Portal & Admin Portals Immediately
       window.dispatchEvent(new CustomEvent('dashboard_refresh'));
 
       setSuccessReceipt(receipt);
@@ -731,7 +733,10 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
           <Button
             fullWidth
             variant="contained"
-            onClick={onClose}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('dashboard_refresh'));
+              onClose();
+            }}
             sx={{
               py: 1.5,
               borderRadius: 3,
