@@ -35,6 +35,16 @@ import axios from 'axios';
 import { prorationService } from '../../services/prorationService';
 
 const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, currentCustomerId = null, currentCustomerEmail = null, platform = 'VELORA' }) => {
+  const isNexora = (platform || '').toUpperCase() === 'NEXORA';
+  const platformName = isNexora ? 'Nexora' : 'Velora';
+  const brandGradient = isNexora
+    ? 'linear-gradient(135deg, #e76f51 0%, #f4a261 100%)'
+    : 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)';
+  const brandAccent = isNexora ? '#f4a261' : '#818cf8';
+  const brandBadge = isNexora ? '#e76f51' : '#a855f7';
+  const brandButtonBg = isNexora ? '#e76f51' : '#6366f1';
+  const brandRadioBg = isNexora ? 'rgba(231, 111, 81, 0.15)' : 'rgba(99, 102, 241, 0.15)';
+
   const [customers, setCustomers] = useState([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState(currentCustomerId || '');
   const [paymentMethod, setPaymentMethod] = useState('velora_wallet');
@@ -359,16 +369,16 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
             sx={{
               width: 38,
               height: 38,
-              background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+              background: brandGradient,
             }}
           >
             <AccountBalanceWalletIcon sx={{ fontSize: '1.2rem', color: '#ffffff' }} />
           </Avatar>
           <Box>
             <Typography variant="h6" fontWeight={800} color="#ffffff" lineHeight={1.1}>
-              Velora Subscription Checkout
+              {platformName} Subscription Checkout
             </Typography>
-            <Typography variant="caption" color="#818cf8" fontWeight={700}>
+            <Typography variant="caption" color={brandAccent} fontWeight={700}>
               POWERED INVISIBLY BY NEXORA ENGINE
             </Typography>
           </Box>
@@ -509,24 +519,24 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
               <Chip
                 label={isAnnual ? 'ANNUAL BILLING' : 'MONTHLY BILLING'}
                 size="small"
-                sx={{ bgcolor: '#a855f7', color: '#ffffff', fontWeight: 800, fontSize: '0.7rem' }}
+                sx={{ bgcolor: brandBadge, color: '#ffffff', fontWeight: 800, fontSize: '0.7rem' }}
               />
             </Paper>
 
             {/* 1. Customer Selection */}
-            <Typography variant="caption" color="#818cf8" fontWeight={800} letterSpacing="0.05em" sx={{ display: 'block', mb: 1 }}>
+            <Typography variant="caption" color={brandAccent} fontWeight={800} letterSpacing="0.05em" sx={{ display: 'block', mb: 1 }}>
               1. SELECT SUBSCRIBER CUSTOMER
             </Typography>
             <FormControl fullWidth size="small" sx={{ mb: 3 }}>
-              <InputLabel sx={{ color: '#94a3b8' }}>Select Velora Customer</InputLabel>
+              <InputLabel sx={{ color: '#94a3b8' }}>Select {platformName} Customer</InputLabel>
               <Select
                 value={selectedCustomerId}
                 onChange={(e) => setSelectedCustomerId(e.target.value)}
-                label="Select Velora Customer"
+                label={`Select ${platformName} Customer`}
                 sx={{
                   color: '#ffffff',
                   '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.2)' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#818cf8' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: brandAccent },
                   '.MuiSvgIcon-root': { color: '#ffffff' },
                 }}
               >
@@ -539,7 +549,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
             </FormControl>
 
             {/* 2. Proration Breakdown */}
-            <Typography variant="caption" color="#818cf8" fontWeight={800} letterSpacing="0.05em" sx={{ display: 'block', mb: 1 }}>
+            <Typography variant="caption" color={brandAccent} fontWeight={800} letterSpacing="0.05em" sx={{ display: 'block', mb: 1 }}>
               2. REAL-TIME PRORATION & BILLING BREAKDOWN
             </Typography>
 
@@ -554,7 +564,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
             >
               {calculating ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 1 }}>
-                  <CircularProgress size={20} sx={{ color: '#818cf8' }} />
+                  <CircularProgress size={20} sx={{ color: brandAccent }} />
                   <Typography variant="body2" color="#94a3b8">
                     Calculating pro-rata credits & taxes...
                   </Typography>
@@ -596,7 +606,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
                   {prorationDetails?.walletRefundCredit > 0 && (
                     <Box sx={{ p: 1.2, my: 1, bgcolor: 'rgba(52, 211, 153, 0.15)', border: '1px solid #34d399', borderRadius: 2 }}>
                       <Typography variant="caption" color="#34d399" fontWeight={800} display="block">
-                        🎁 Plan Downgrade Credit: ₹{prorationDetails.walletRefundCredit.toLocaleString()} unused credit will be refunded to customer's Velora Wallet!
+                        🎁 Plan Downgrade Credit: ₹{prorationDetails.walletRefundCredit.toLocaleString()} unused credit will be refunded to customer's {platformName} Wallet!
                       </Typography>
                     </Box>
                   )}
@@ -605,7 +615,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
                     <Typography variant="subtitle1" fontWeight={800} color="#ffffff">
                       Total Net Amount Due
                     </Typography>
-                    <Typography variant="h5" fontWeight={900} color="#a855f7">
+                    <Typography variant="h5" fontWeight={900} color={brandBadge}>
                       ₹{(prorationDetails?.totalDue || 0).toLocaleString()}
                     </Typography>
                   </Box>
@@ -614,7 +624,7 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
             </Paper>
 
             {/* 3. Payment Method */}
-            <Typography variant="caption" color="#818cf8" fontWeight={800} letterSpacing="0.05em" sx={{ display: 'block', mb: 1 }}>
+            <Typography variant="caption" color={brandAccent} fontWeight={800} letterSpacing="0.05em" sx={{ display: 'block', mb: 1 }}>
               3. SELECT PAYMENT METHOD
             </Typography>
 
@@ -628,23 +638,23 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
                   p: 1.5,
                   px: 2,
                   mb: 1.5,
-                  bgcolor: paymentMethod === 'velora_wallet' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(30, 41, 59, 0.5)',
-                  border: paymentMethod === 'velora_wallet' ? '1px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                  bgcolor: paymentMethod === 'velora_wallet' ? brandRadioBg : 'rgba(30, 41, 59, 0.5)',
+                  border: paymentMethod === 'velora_wallet' ? `1px solid ${brandAccent}` : '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: 2.5,
                 }}
               >
                 <FormControlLabel
                   value="velora_wallet"
-                  control={<Radio sx={{ color: '#818cf8', '&.Mui-checked': { color: '#818cf8' } }} />}
+                  control={<Radio sx={{ color: brandAccent, '&.Mui-checked': { color: brandAccent } }} />}
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <AccountBalanceWalletIcon sx={{ color: '#818cf8' }} />
+                      <AccountBalanceWalletIcon sx={{ color: brandAccent }} />
                       <Box>
                         <Typography variant="body2" fontWeight={800} color="#ffffff">
-                          Velora Merchant Wallet (Instant Sync)
+                          {platformName} Merchant Wallet (Instant Sync)
                         </Typography>
                         <Typography variant="caption" color="#94a3b8">
-                          API Token: vel_live_sec_98234
+                          API Token: {isNexora ? 'nex_live_sec_98234' : 'vel_live_sec_98234'}
                         </Typography>
                       </Box>
                     </Box>
@@ -657,14 +667,14 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
                   p: 1.5,
                   px: 2,
                   mb: 1.5,
-                  bgcolor: paymentMethod === 'card' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(30, 41, 59, 0.5)',
-                  border: paymentMethod === 'card' ? '1px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                  bgcolor: paymentMethod === 'card' ? brandRadioBg : 'rgba(30, 41, 59, 0.5)',
+                  border: paymentMethod === 'card' ? `1px solid ${brandAccent}` : '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: 2.5,
                 }}
               >
                 <FormControlLabel
                   value="card"
-                  control={<Radio sx={{ color: '#818cf8', '&.Mui-checked': { color: '#818cf8' } }} />}
+                  control={<Radio sx={{ color: brandAccent, '&.Mui-checked': { color: brandAccent } }} />}
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <CreditCardIcon sx={{ color: '#34d399' }} />
@@ -686,14 +696,14 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
                 sx={{
                   p: 1.5,
                   px: 2,
-                  bgcolor: paymentMethod === 'upi' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(30, 41, 59, 0.5)',
-                  border: paymentMethod === 'upi' ? '1px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                  bgcolor: paymentMethod === 'upi' ? brandRadioBg : 'rgba(30, 41, 59, 0.5)',
+                  border: paymentMethod === 'upi' ? `1px solid ${brandAccent}` : '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: 2.5,
                 }}
               >
                 <FormControlLabel
                   value="upi"
-                  control={<Radio sx={{ color: '#818cf8', '&.Mui-checked': { color: '#818cf8' } }} />}
+                  control={<Radio sx={{ color: brandAccent, '&.Mui-checked': { color: brandAccent } }} />}
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <BoltIcon sx={{ color: '#f59e0b' }} />
@@ -726,11 +736,11 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
               py: 1.5,
               borderRadius: 3,
               fontWeight: 800,
-              bgcolor: '#6366f1',
-              '&:hover': { bgcolor: '#4f46e5' },
+              bgcolor: brandButtonBg,
+              '&:hover': { opacity: 0.9 },
             }}
           >
-            Close & Return to Velora Platform
+            Close & Return to {platformName} Platform
           </Button>
         ) : (
           <Box sx={{ width: '100%', display: 'flex', gap: 2 }}>
@@ -760,9 +770,9 @@ const VeloraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
                 borderRadius: 3,
                 fontWeight: 800,
                 textTransform: 'none',
-                background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-                boxShadow: '0 4px 15px rgba(168, 85, 247, 0.4)',
-                '&:hover': { background: 'linear-gradient(135deg, #4f46e5 0%, #9333ea 100%)' },
+                background: brandGradient,
+                boxShadow: isNexora ? '0 4px 15px rgba(231, 111, 81, 0.4)' : '0 4px 15px rgba(168, 85, 247, 0.4)',
+                '&:hover': { opacity: 0.9 },
               }}
             >
               {loading ? 'Processing...' : `Confirm & Pay ₹${(prorationDetails?.totalDue || 0).toLocaleString()}`}
