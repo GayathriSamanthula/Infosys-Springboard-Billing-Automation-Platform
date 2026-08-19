@@ -49,7 +49,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import FintechBackground from '../../components/common/FintechBackground';
-import VeloraCheckoutModal from '../../components/velora/VeloraCheckoutModal';
+import NexoraCheckoutModal from '../../components/nexora/NexoraCheckoutModal';
 
 const NexoraCustomerPage = () => {
   const navigate = useNavigate();
@@ -1371,8 +1371,8 @@ const NexoraCustomerPage = () => {
           )}
         </Container>
 
-        {/* Velora Checkout Modal for Subscribing & Upgrading */}
-        <VeloraCheckoutModal
+        {/* Nexora Checkout Modal for Subscribing & Upgrading */}
+        <NexoraCheckoutModal
           open={checkoutModalOpen}
           onClose={() => setCheckoutModalOpen(false)}
           selectedPlan={selectedPlanForUpgrade}

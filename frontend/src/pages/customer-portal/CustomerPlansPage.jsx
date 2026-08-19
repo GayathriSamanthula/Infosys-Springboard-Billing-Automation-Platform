@@ -17,7 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { planService } from '../../services/planService';
 import { customerPortalService } from '../../services/customerPortalService';
 import { formatCurrency } from '../../utils/formatters';
-import VeloraCheckoutModal from '../../components/velora/VeloraCheckoutModal';
+import NexoraCheckoutModal from '../../components/nexora/NexoraCheckoutModal';
 import { useTranslation } from 'react-i18next';
 
 const getPlanKey = (plan) => {
@@ -198,7 +198,7 @@ const CustomerPlansPage = () => {
       )}
 
       {selectedPlanForUpgrade && (
-        <VeloraCheckoutModal
+        <NexoraCheckoutModal
           open={checkoutModalOpen}
           onClose={() => {
             setCheckoutModalOpen(false);
