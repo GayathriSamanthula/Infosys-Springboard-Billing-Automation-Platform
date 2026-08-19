@@ -130,10 +130,7 @@ const CustomerInvoicesPage = () => {
                       variant="contained"
                       size="small"
                       startIcon={<DownloadIcon />}
-                      component="a"
-                      href={invoiceService.downloadPdfUrl(inv.id, 'NEXORA')}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      onClick={() => invoiceService.downloadPdfBlob(inv.id, inv.invoice_number, 'NEXORA')}
                       sx={{ bgcolor: '#e76f51', '&:hover': { bgcolor: '#d45d3f' }, textTransform: 'none', fontWeight: 800 }}
                     >
                       {t('customerPortal.downloadInvoice')}

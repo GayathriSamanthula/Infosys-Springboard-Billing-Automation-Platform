@@ -366,10 +366,7 @@ const CustomerDashboardPage = () => {
                     <TableCell align="right">
                       <Tooltip title="Download Branded PDF Invoice (ReportLab)">
                         <IconButton
-                          component="a"
-                          href={invoiceService.downloadPdfUrl(inv.id, 'NEXORA')}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          onClick={() => invoiceService.downloadPdfBlob(inv.id, inv.invoice_number, 'NEXORA')}
                           sx={{ bgcolor: '#fcdad2', color: '#e76f51', '&:hover': { bgcolor: '#f8b4a5', color: '#d45d3f' } }}
                         >
                           <DownloadIcon fontSize="small" />

@@ -82,7 +82,7 @@ const InvoiceDetailsPage = () => {
             variant="contained"
             color="success"
             startIcon={<DownloadIcon />}
-            onClick={() => window.open(invoiceService.downloadPdfUrl(invoice.id), '_blank')}
+            onClick={() => invoiceService.downloadPdfBlob(invoice.id, invoice.invoice_number, 'NEXORA')}
             sx={{ textTransform: 'none', fontWeight: 800 }}
           >
             Download ReportLab PDF
