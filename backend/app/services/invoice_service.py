@@ -88,6 +88,14 @@ def generate_itemized_invoice(
 
     final_amount = round(subtotal + tax_amount, 2)
 
+    # Dynamic status calculation: Auto-settle as PAID if covered by proration credit or zero balance
+    if proration_credit >= final_amount or (subtotal == 0 and final_amount == 0):
+        initial_status = "PAID"
+        payment_date_val = date.today()
+    else:
+        initial_status = "UNPAID"
+        payment_date_val = None
+
     db_invoice = Invoice(
         subscription_id=subscription.id,
         invoice_number=invoice_number,
@@ -95,13 +103,35 @@ def generate_itemized_invoice(
         due_date=due_date,
         amount=final_amount,
         tax_amount=tax_amount,
-        status="UNPAID",
+        status=initial_status,
+        payment_date=payment_date_val,
         remarks=remarks,
     )
 
     db.add(db_invoice)
     db.commit()
     db.refresh(db_invoice)
+
+    # Auto-log Payment transaction record when settled via proration credit
+    if initial_status == "PAID":
+        try:
+            pay_dt = datetime.combine(payment_date_val, datetime.min.time()) if isinstance(payment_date_val, date) and not isinstance(payment_date_val, datetime) else (payment_date_val or datetime.utcnow())
+            new_payment = Payment(
+                subscription_id=subscription.id,
+                invoice_id=db_invoice.id,
+                amount=db_invoice.amount,
+                payment_method="Proration Credit / Auto-Settlement",
+                transaction_id=f"TXN-PRORATION-{db_invoice.id}-{uuid4().hex[:6].upper()}",
+                payment_date=pay_dt,
+                payment_status="SUCCESS",
+                gateway_name="Proration Engine",
+                remarks=f"Auto-settled via proration credit for invoice {db_invoice.invoice_number}"
+            )
+            db.add(new_payment)
+            db.commit()
+        except Exception as pay_err:
+            db.rollback()
+            print(f"Proration settlement payment log notice: {pay_err}")
 
     if proration_credit > 0 or proration_debit > 0:
         line_item_desc = f"Mid-Cycle Plan Change ({previous_plan_name or 'Previous Plan'} -> {plan.name})"
@@ -216,17 +246,30 @@ def _enrich_invoice(db: Session, invoice: Invoice):
             invoice.customer_name = cust.full_name
             invoice.customer_email = cust.email
 
-    # Auto-reconcile invoice status if a successful payment transaction exists
+    # Auto-reconcile invoice status if a successful payment transaction or proration credit exists
     if str(getattr(invoice, 'status', '')).upper() != 'PAID':
         matching_pay = db.query(Payment).filter(
             or_(Payment.invoice_id == invoice.id, Payment.subscription_id == invoice.subscription_id),
             Payment.payment_status == 'SUCCESS',
             Payment.is_deleted == False
         ).first()
-        if matching_pay:
+
+        # Check if invoice line items contain proration credit or if previous paid invoice covered it
+        has_proration_credit = False
+        try:
+            credit_item = db.query(InvoiceLineItem).filter(
+                InvoiceLineItem.invoice_id == invoice.id,
+                InvoiceLineItem.item_type == LineItemType.PRORATION_CREDIT
+            ).first()
+            if credit_item or "Proration" in str(invoice.remarks or ""):
+                has_proration_credit = True
+        except Exception:
+            pass
+
+        if matching_pay or has_proration_credit:
             invoice.status = 'PAID'
-            if not invoice.payment_date and matching_pay.payment_date:
-                invoice.payment_date = matching_pay.payment_date
+            if not invoice.payment_date:
+                invoice.payment_date = matching_pay.payment_date if matching_pay else invoice.issue_date
             try:
                 db.commit()
                 db.refresh(invoice)

@@ -47,7 +47,7 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../services/api';
 import FintechBackground from '../../components/common/FintechBackground';
 import NexoraCheckoutModal from '../../components/nexora/NexoraCheckoutModal';
 
@@ -105,13 +105,13 @@ const NexoraCustomerPage = () => {
     setLoading(true);
     try {
       const [custRes, invRes, planRes, subRes, payRes] = await Promise.allSettled([
-        axios.get('/api/customers'),
-        axios.get('/api/invoices'),
-        axios.get('/api/plans'),
-        axios.get('/api/subscriptions'),
-        axios.get('/api/payments'),
+        api.get('/customers'),
+        api.get('/invoices'),
+        api.get('/plans'),
+        api.get('/subscriptions'),
+        api.get('/payments'),
       ]);
-
+        
       let custs = [];
       if (custRes.status === 'fulfilled') custs = custRes.value.data || [];
       
@@ -222,7 +222,7 @@ const NexoraCustomerPage = () => {
 
   const handleDownloadPDF = async (invoiceId, invNum) => {
     try {
-      const response = await axios.get(`/api/invoices/${invoiceId}/pdf?platform=NEXORA`, {
+      const response = await api.get(`/invoices/${invoiceId}/pdf?platform=NEXORA`, {
         responseType: 'blob',
       });
       const blob = new Blob([response.data], { type: 'application/pdf' });
@@ -257,7 +257,7 @@ const NexoraCustomerPage = () => {
         country: profileForm.country,
         address: profileForm.address,
       };
-      const res = await axios.put(`/api/customers/${customer.id}`, payload);
+      const res = await api.put(`/customers/${customer.id}`, payload);
       
       const updatedCust = {
         ...customer,
@@ -665,13 +665,13 @@ const NexoraCustomerPage = () => {
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                           <Button startIcon={<SyncAltIcon />} variant="outlined" onClick={() => handleSelectPlanToSubscribe({ id: 12, name: 'Premium Plus Plan', price: 1499.0 })} sx={{ borderColor: '#C1DBB3', color: '#3a612d', fontWeight: 900 }}>Upgrade Plan</Button>
                           {activeSub && (String(activeSub.status).toUpperCase() === 'ACTIVE' || String(activeSub.status).toUpperCase() === 'TRIAL') && (
-                            <Button variant="outlined" size="small" onClick={async () => { try { await axios.put(`/api/subscriptions/${activeSub.id}/pause`); fetchNexoraCustomerData(); } catch(e){ console.error(e); } }} sx={{ borderColor: '#0284c7', color: '#0284c7', fontWeight: 900 }}>Pause</Button>
+                            <Button variant="outlined" size="small" onClick={async () => { try { await api.put(`/subscriptions/${activeSub.id}/pause`); fetchNexoraCustomerData(); } catch(e){ console.error(e); } }} sx={{ borderColor: '#0284c7', color: '#0284c7', fontWeight: 900 }}>Pause</Button>
                           )}
                           {activeSub && String(activeSub.status).toUpperCase() === 'PAUSED' && (
-                            <Button variant="contained" size="small" onClick={async () => { try { await axios.put(`/api/subscriptions/${activeSub.id}/resume`); fetchNexoraCustomerData(); } catch(e){ console.error(e); } }} sx={{ bgcolor: '#10b981', color: '#ffffff', fontWeight: 900 }}>Resume</Button>
+                            <Button variant="contained" size="small" onClick={async () => { try { await api.put(`/subscriptions/${activeSub.id}/resume`); fetchNexoraCustomerData(); } catch(e){ console.error(e); } }} sx={{ bgcolor: '#10b981', color: '#ffffff', fontWeight: 900 }}>Resume</Button>
                           )}
                           {activeSub && String(activeSub.status).toUpperCase() !== 'CANCELLED' && (
-                            <Button variant="outlined" size="small" color="error" onClick={async () => { try { await axios.put(`/api/subscriptions/${activeSub.id}/cancel`); fetchNexoraCustomerData(); } catch(e){ console.error(e); } }} sx={{ fontWeight: 900 }}>Cancel Subscription</Button>
+                            <Button variant="outlined" size="small" color="error" onClick={async () => { try { await api.put(`/subscriptions/${activeSub.id}/cancel`); fetchNexoraCustomerData(); } catch(e){ console.error(e); } }} sx={{ fontWeight: 900 }}>Cancel Subscription</Button>
                           )}
                         </Box>
                       </Box>
