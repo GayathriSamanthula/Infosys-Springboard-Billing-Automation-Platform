@@ -247,20 +247,9 @@ def get_customer_portal_dashboard(db: Session, customer_id: int):
         .all()
     )
     enriched_invoices = []
+    from app.services.invoice_service import _enrich_invoice
     for inv in invoices:
-        if str(getattr(inv, 'status', '')).upper() != 'PAID':
-            matching_pay = db.query(Payment).filter(
-                or_(Payment.invoice_id == inv.id, Payment.subscription_id == inv.subscription_id),
-                Payment.payment_status == 'SUCCESS',
-                Payment.is_deleted == False
-            ).first()
-            if matching_pay:
-                inv.status = 'PAID'
-                if not inv.payment_date and matching_pay.payment_date:
-                    inv.payment_date = matching_pay.payment_date
-                db.commit()
-                db.refresh(inv)
-
+        inv = _enrich_invoice(db, inv)
         enriched_invoices.append({
             "id": inv.id,
             "invoice_number": inv.invoice_number,
@@ -269,7 +258,7 @@ def get_customer_portal_dashboard(db: Session, customer_id: int):
             "issue_date": inv.issue_date,
             "due_date": inv.due_date,
             "payment_date": inv.payment_date,
-            "refund_amount": inv.refund_amount,
+            "refund_amount": getattr(inv, "refund_amount", 0.0),
         })
 
     # Customer Payments

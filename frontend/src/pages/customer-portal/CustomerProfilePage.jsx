@@ -22,7 +22,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import PublicIcon from '@mui/icons-material/Public';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import EditIcon from '@mui/icons-material/Edit';
-import axios from 'axios';
+import api from '../../services/api';
 
 import { customerPortalService } from '../../services/customerPortalService';
 import { useTranslation } from 'react-i18next';
@@ -53,7 +53,7 @@ const CustomerProfilePage = () => {
         const loggedUser = customerPortalService.getCurrentCustomer();
         const loggedEmail = loggedUser?.email || localStorage.getItem('customer_email') || '';
 
-        const res = await fetch('/api/customers').then(r => r.json()).catch(() => []);
+        const res = await api.get('/customers').then(r => r.data).catch(() => []);
         const custs = Array.isArray(res) ? res : [];
         const matched = custs.find(c =>
           (loggedEmail && String(c.email || '').toLowerCase() === String(loggedEmail).toLowerCase()) ||
@@ -102,7 +102,7 @@ const CustomerProfilePage = () => {
         country: form.country,
         address: form.address,
       };
-      const res = await axios.put(`/api/customers/${profile.id}`, payload);
+      const res = await api.put(`/customers/${profile.id}`, payload);
       const updated = { ...profile, ...res.data };
       setCustomer(updated);
       localStorage.setItem('customer_user', JSON.stringify(updated));

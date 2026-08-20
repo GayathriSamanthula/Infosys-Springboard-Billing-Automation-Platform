@@ -27,7 +27,7 @@ import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import CloseIcon from '@mui/icons-material/Close';
 import BoltIcon from '@mui/icons-material/Bolt';
-import axios from 'axios';
+import api from '../../services/api';
 import { prorationService } from '../../services/prorationService';
 
 const NexoraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, currentCustomerId = null, currentCustomerEmail = null, platform = 'NEXORA' }) => {
@@ -217,7 +217,7 @@ const NexoraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
 
       let dbCustomerId = null;
       try {
-        const checkCustRes = await axios.get(platform === 'NEXORA' ? '/api/customers' : '/api/velora/customers');
+        const checkCustRes = await api.get(platform === 'NEXORA' ? '/customers' : '/velora/customers');
         const dbCusts = Array.isArray(checkCustRes.data) ? checkCustRes.data : [];
         const existing = dbCusts.find(c => String(c.id) === String(selectedCustomerId) || (c.email && c.email.toLowerCase() === custEmail.toLowerCase()));
         if (existing) {
@@ -231,7 +231,7 @@ const NexoraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
         throw new Error('No customer details found');
       }
 
-      const subRes = await axios.post('/api/subscriptions', {
+      const subRes = await api.post('/subscriptions', {
         customer_id: dbCustomerId,
         plan_id: selectedPlan?.id || 1,
         status: 'ACTIVE',
@@ -249,7 +249,7 @@ const NexoraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
       const txnId = `TXN_${platform === 'NEXORA' ? 'NEX' : 'VEL'}_${Date.now()}`;
       const paymentDateStr = new Date().toISOString().split('T')[0];
 
-      const payRes = await axios.post('/api/payments', {
+      const payRes = await api.post('/payments', {
         subscription_id: createdSubId,
         amount: finalAmount,
         payment_method: paymentMethod === 'velora_wallet' ? `${platformName} Wallet` : (paymentMethod === 'upi' ? 'UPI' : 'Credit Card'),
@@ -263,8 +263,8 @@ const NexoraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
       let createdInvNum = `INV-2026-${platform === 'NEXORA' ? 'NEX' : 'VEL'}-${Math.floor(1000 + Math.random() * 9000)}`;
       let createdInvId = null;
       try {
-        const invRes = await axios.post(`/api/invoices/generate-itemized?subscription_id=${createdSubId}`, {}, { timeout: 10000 });
-        if (invRes.data?.invoice_number) {
+        const invRes = await api.post(`/invoices/generate-itemized?subscription_id=${createdSubId}`, {}, { timeout: 10000 });
+                  if (invRes.data?.invoice_number) {
           createdInvNum = invRes.data.invoice_number;
           createdInvId = invRes.data.id;
         }
@@ -273,7 +273,7 @@ const NexoraCheckoutModal = ({ open, onClose, selectedPlan, isAnnual = false, cu
       }
 
       const eventType = actualPaymentStatus === 'SUCCESS' ? 'subscription.created' : 'payment.failed';
-      axios.post('/api/velora/webhook-trigger', {
+      api.post('/velora/webhook-trigger', {
         event_type: eventType,
         email: custEmail,
         customer_email: custEmail,
